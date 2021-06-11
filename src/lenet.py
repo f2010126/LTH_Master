@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchsummary import summary
 import numpy as np
+import torch
 
 
 def num_flat_features(x):
@@ -37,6 +38,12 @@ class LeNet(nn.Module):
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
+
+    # gaussian glorot init
+    def init_weights(m):
+        if type(m) == nn.Linear:
+            torch.nn.init.xavier_uniform(m.weight)
+            m.bias.data.fill_(0.01)
 
 
 if __name__ == '__main__':
