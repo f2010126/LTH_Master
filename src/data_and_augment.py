@@ -2,18 +2,15 @@ import torch
 from torchvision import datasets, transforms
 
 
-def load_data():
-    normalize = transforms.Normalize(
-        mean=[0.4914, 0.4822, 0.4465],
-        std=[0.2023, 0.1994, 0.2010],
-    )
+def load_data(batch=60):
+
     test_transform = transforms.Compose([
         transforms.ToTensor(),
-        normalize,
+        transforms.Normalize((0.1307,), (0.3081,)),
     ])
     train_transform = transforms.Compose([
         transforms.ToTensor(),
-        normalize,
+        transforms.Normalize((0.1307,), (0.3081,)),
     ])
     mnsit_dataset = datasets.MNIST('data',
                                    download=True,
@@ -24,12 +21,12 @@ def load_data():
         download=True, transform=test_transform,
     )
     train_set, val_set = torch.utils.data.random_split(mnsit_dataset, [55000, 5000])
-    train_loader = torch.utils.data.DataLoader(train_set, batch_size=60,
+    train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch,
                                                shuffle=True, num_workers=2)
-    val_loader = torch.utils.data.DataLoader(val_set, batch_size=60,
+    val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch,
                                              shuffle=False, num_workers=2)
 
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=60,
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch,
                                               shuffle=False, num_workers=2)
     return train_loader, val_loader, test_loader
 
