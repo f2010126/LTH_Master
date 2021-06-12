@@ -13,6 +13,19 @@ def num_flat_features(x):
     size = x.size()[1:]
     return np.prod(size)
 
+    # gaussian glorot init
+
+
+def init_weights(m):
+    if type(m) == nn.Linear:
+        torch.nn.init.xavier_uniform(m.weight)
+        m.bias.data.fill_(0.01)
+
+
+def print_weights(model):
+    for param in model.parameters():
+        print(param.data)
+
 
 class LeNet(nn.Module):
     # network structure
@@ -39,13 +52,8 @@ class LeNet(nn.Module):
         x = self.fc3(x)
         return x
 
-    # gaussian glorot init
-    def init_weights(m):
-        if type(m) == nn.Linear:
-            torch.nn.init.xavier_uniform(m.weight)
-            m.bias.data.fill_(0.01)
-
 
 if __name__ == '__main__':
     net = LeNet()
+    net.apply(init_weights)
     print(summary(net, (1, 28, 28)))
