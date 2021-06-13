@@ -3,6 +3,7 @@ from tqdm import tqdm
 import time
 from evaluation import AverageMeter, accuracy
 import torch.nn.functional as F
+import numpy as np
 
 
 def train():
@@ -38,6 +39,15 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         loss = criterion(logits, labels)
         total_correct += (logits.argmax(dim=1) == labels).sum()
         loss.backward()
+
+        # freeze pruned weights by making their gradients 0
+        for name, param in model.named_parameters():
+            if 'weight' in name:
+                tensor = param.data.cpu().numpy()
+                grad_tensor = param.grad.data.cpu().numpy()
+                grad_tensor = np.where(tensor == 0, 0, grad_tensor)
+                param.grad.data = torch.from_numpy(grad_tensor).to(device)
+
         optimizer.step()
 
         acc = accuracy(logits, labels)
@@ -49,4 +59,4 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
 
     time_train += time.time() - time_begin
     print(f"training time: {time_train}")
-    return total_correct.item()/len(loader.dataset), losses.avg
+    return total_correct.item() / len(loader.dataset), losses.avg
