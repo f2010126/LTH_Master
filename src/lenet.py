@@ -37,16 +37,36 @@ def print_weights(model):
         print(param.data)
 
 
+def countZeroWeights(model):
+    zeros = 0
+    for param in model.parameters():
+        if param is not None:
+            zeros += torch.sum((param == 0).int()).data.item()
+    # return % of 0 weights
+    return zeros / len(list(model.parameters())) * 100
+
+
 class LeNet(nn.Module):
     # network structure
     def __init__(self):
         super(LeNet, self).__init__()
-        # 1 input image channel, 6 output channels, 3x3 square conv kernel
+        # 1 input image channel, 6 output channels, 5x5 square conv kernel
         self.conv1 = nn.Conv2d(1, 6, 3)
         self.conv2 = nn.Conv2d(6, 16, 3)
         self.fc1 = nn.Linear(16 * 5 * 5, 120)  # 5x5 image dimension
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
+        self.create_mask()
+
+    def create_mask(self):
+        # TODO: are biases masked?
+        for name, module in self.named_modules():
+            if isinstance(module, torch.nn.Conv2d):
+                mask = torch.tensor(np.ones(module.weight.shape))
+                module.register_parameter("mask", torch.nn.parameter.Parameter(mask, requires_grad=False))
+            elif isinstance(module, torch.nn.Linear):
+                mask = torch.tensor(np.ones(module.weight.shape))
+                module.register_parameter("mask", torch.nn.parameter.Parameter(mask, requires_grad=False))
 
     def forward(self, x):
         """
@@ -57,7 +77,7 @@ class LeNet(nn.Module):
         """
         x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
-        x = x.view(-1, int(x.nelement() / x.shape[0]))
+        x = x.view(-1, num_flat_features(x))  # flatten all dimensions except the batch dimension
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
