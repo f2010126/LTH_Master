@@ -2,7 +2,7 @@ import torch
 from torchvision import datasets, transforms
 
 
-def load_data(batch=60):
+def load_mnist_data(batch=60):
 
     test_transform = transforms.Compose([
         transforms.ToTensor(),
@@ -32,5 +32,5 @@ def load_data(batch=60):
 
 
 if __name__ == '__main__':
-    train, val, test = load_data()
+    train, val, test = load_mnist_data()
     print("")

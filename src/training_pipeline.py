@@ -2,6 +2,7 @@ import torch
 from tqdm import tqdm
 import time
 from evaluation import AverageMeter, accuracy
+import torch.nn.functional as F
 
 
 def train():
@@ -25,6 +26,7 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
     losses = AverageMeter()
     model.train()
     time_train = 0
+    total_correct = 0
 
     t = tqdm(loader)
     for images, labels in t:
@@ -34,6 +36,7 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         optimizer.zero_grad()
         logits = model(images)
         loss = criterion(logits, labels)
+        total_correct += (logits.argmax(dim=1) == labels).sum()
         loss.backward()
         optimizer.step()
 
@@ -45,5 +48,5 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         # t.set_description('(=> Training) Loss: {:.4f}'.format(losses.avg))
 
     time_train += time.time() - time_begin
-    print('training time: ' + str(time_train))
-    return score.avg, losses.avg
+    print(f"training time: {time_train}")
+    return total_correct.item()/len(loader.dataset), losses.avg

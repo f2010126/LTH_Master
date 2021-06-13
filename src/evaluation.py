@@ -39,6 +39,7 @@ def eval_fn(model, loader, device, train=False):
     """
     score = AverageMeter()
     model.eval()
+    total_correct = 0
 
     t = tqdm(loader)
     with torch.no_grad():  # no gradient needed
@@ -48,11 +49,13 @@ def eval_fn(model, loader, device, train=False):
 
             outputs = model(images)
             acc = accuracy(outputs, labels)
+            total_correct += (outputs.argmax(dim=1) == labels).sum()
             score.update(acc.item(), images.size(0))
 
             t.set_description('(=> Test) Score: {:.4f}'.format(score.avg))
 
-    return score.avg
+    return total_correct.item()/len(loader.dataset)
+    #return score.avg
 
 
 def eval_model(model, saved_model_file):
