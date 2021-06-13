@@ -1,14 +1,27 @@
 from lenet import *
 from data_and_augment import *
 from run_lenet import run_training
-from prune_model import prune_once
+from prune_model import get_masks, update_apply_masks
 import torch.nn.utils.prune as prune
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-# def mask_weight(module, input):
-#     module.weight = module.weight * module.mask
+def init_model_masks(model):
+    masks = {}
+    for name, module in model.named_modules():
+        if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
+            masks[name] = torch.tensor(np.ones(module.weight.shape))
+
+    return masks
+
+
+# TODO: GET THIS LOGIC CHECKED
+def update_masks(masks, new_mask):
+    for name, mask in masks.items():
+        print(f"non zeros in old mask: {torch.count_nonzero(masks[name])} and created mask {torch.count_nonzero(new_mask[name])}")
+        masks[name] = mask * new_mask[name]
+        print(f"non zeros in updated: {torch.count_nonzero(masks[name])}")
 
 
 def pruned(model, n_epochs=5000, batch=128, n_prune=3):
@@ -21,49 +34,37 @@ def pruned(model, n_epochs=5000, batch=128, n_prune=3):
     :return:
     """
     model = model.to(device)
-    # summary(model, (1, 28, 28),
-    #         device='cuda' if torch.cuda.is_available() else 'cpu')
-    prune_once(model, p_rate=0.0)
     # get hold of w0
     original_state_dict = model.state_dict()
-    hooks = {}
-    # register the pre hook
-    # for name, module in model.named_modules():
-    #     if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
-    #         hooks[name] = module.register_forward_pre_hook(mask_weight)
+
     # Run and train the lenet OG, done in run_lenet.py
     metrics = run_training(model, n_epochs, batch)
     print(f"Original metrics {metrics}")
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pt")
-    for name, module in model.named_modules():
-        if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
-            hooks[name] = module.register_forward_pre_hook(mask_weight)
-    lastlayer = None
+
+    all_masks = init_model_masks(model)
     for epoch in range(n_prune):
-        # Prune and get the new mask.
-        print(f"Number of Zeros: {countZeroWeights(model)}")
-        masks = prune_once(model, p_rate=0.2)
+        # Prune and get the new mask. prune rate will vary with epoch.
+        # TODO: IS THIS PRUNE RATE CORRECT??
+        masks = get_masks(model, p_rate=(20 ** (1 / (epoch + 1))) / 100)
         # create a dict that has the same keys as state dict w/o being linked to model.
         detached = dict([(name.replace(".weight_mask", ""), mask.clone()) for name, mask in masks])
-        if lastlayer is not None:
-            print(f"mask in lask layer same? {torch.equal(detached['fc3'], lastlayer)}")
-        lastlayer = detached['fc3']
-        # Load the OG weights and save the new mask to the layer
-        # TODO: Freeze the 0 weights.
-        model.load_state_dict(original_state_dict)
+        update_masks(all_masks, detached)
+        # Load the OG weights and mask it
         for name, module in model.named_modules():
             if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
-                mask_val = detached[name]
-                module.mask = torch.nn.parameter.Parameter(mask_val, requires_grad=False)
-
+                prune.remove(module, name='weight')
+        model.load_state_dict(original_state_dict)
+        # apply combined masks here
+        model = update_apply_masks(model, all_masks)
+        print(f"Zero weights {countZeroWeights(model)}")
         pruned_metrics = run_training(model, n_epochs, batch)
-        print(f"Pruned metrics {metrics}")
-
+        print(f"Pruned metrics {pruned_metrics}")
 
 
 if __name__ == '__main__':
     net = LeNet()
     net.apply(init_weights)
-    pruned(net, n_epochs=1, batch=128, n_prune=2)
+    pruned(net, n_epochs=40, batch=128, n_prune=3)
     print("")

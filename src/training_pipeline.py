@@ -39,12 +39,14 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         loss = criterion(logits, labels)
         total_correct += (logits.argmax(dim=1) == labels).sum()
         loss.backward()
-
+        # TODO: IS THIS CORRECTLY IMPLEMENETD?
         # freeze pruned weights by making their gradients 0
         for name, param in model.named_parameters():
             if 'weight' in name:
                 tensor = param.data.cpu().numpy()
                 grad_tensor = param.grad.data.cpu().numpy()
+                if np.all(tensor == 0):
+                    print(f"DONT TRAIN")
                 grad_tensor = np.where(tensor == 0, 0, grad_tensor)
                 param.grad.data = torch.from_numpy(grad_tensor).to(device)
 

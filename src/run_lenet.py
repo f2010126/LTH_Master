@@ -9,10 +9,9 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 def run_training(model, n_epochs=10, batch=60):
     model = model.to(device)
-    summary(model, (1, 28, 28),
-            device='cuda' if torch.cuda.is_available() else 'cpu')
     train_load, val_load, test_data = load_mnist_data(batch)
     criterion = torch.nn.CrossEntropyLoss().to(device)
+    # TODO: optimiser? Scheduler?
     optimizer = torch.optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
     # optimizer = torch.optim.Adam(model.parameters(), lr=0.12)
     # t_max = int(len(train_load) / batch)
@@ -34,12 +33,11 @@ def run_training(model, n_epochs=10, batch=60):
                        "train_score": train_score,
                        "val_score": val_score}
         # scheduler.step()
-
-    print(f"TRAINING OVER. ZERO % = {countZeroWeights(model)}")
     return metrics
 
 
 if __name__ == '__main__':
     net = LeNet()
-    metrics = run_training(net, n_epochs=5, batch=128)
-    print(f"% of zeros:{countZeroWeights(net)}")
+    summary(net, (1, 28, 28),
+            device='cuda' if torch.cuda.is_available() else 'cpu')
+    metrics = run_training(net, n_epochs=2, batch=128)

@@ -4,13 +4,8 @@ import torch.nn.utils.prune as prune
 
 from lenet import *
 
-def check_hook(module):
-    for hook in module._forward_pre_hooks.values():
-        print(hook)
-        # if hook.__name__ == "weight":  # select out the correct hook
-        #     break
 
-def prune_once(model, p_rate=0.5, prune_amts={}):
+def get_masks(model, p_rate=0.2, prune_amts={}):
     """
     prune the lowest p% weights by magnitude per layer
 
@@ -27,37 +22,33 @@ def prune_once(model, p_rate=0.5, prune_amts={}):
         # prune 90% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
             module = prune.l1_unstructured(module, name='weight', amount=p_rate)
-
-        print(f"module {name} has {len(module._forward_pre_hooks)}")
     return list(model.named_buffers())
 
 
-def sameModel(model1, model2):
-    for p1, p2 in zip(model1.parameters(), model2.parameters()):
-        if p1.data.ne(p2.data).sum() > 0:
-            return False
-    return True
+def update_apply_masks(model, masks):
+    for name, module in model.named_modules():
+        if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
+            module = prune.custom_from_mask(module, name='weight', mask=masks[name])
+            prune.remove(module, "weight")
+            print("")
+    return model
 
 
 def prune_tut(net):
-    module = net.conv1
-    prune.random_unstructured(module, name="weight", amount=0.3)
-    print(list(module.named_buffers())) # has the mask from my addition
+    module = net.conv1  # has the mask from my addition
+    prune.custom_from_mask(module, name='bias', mask=torch.Tensor([0., 1., 1., 0., 0., 1.]))
+    prune.custom_from_mask(module, name='bias', mask=torch.Tensor([0., 1., 0., 1., 0., 1.]))
     print(module._forward_pre_hooks)
+    prune.remove(module, "bias")
     prune.l1_unstructured(module, name="bias", amount=2)
     prune.l1_unstructured(module, name="bias", amount=1)
     prune.l1_unstructured(module, name="bias", amount=1)
-    print("")
+    prune.remove(module, "bias")
 
 
 if __name__ == '__main__':
     net = LeNet()
     net.apply(init_weights)
     prune_tut(net)
-    prune_once(net, p_rate=0.0)
-    original_state_dict = net.state_dict()
+    masks = get_masks(net)
     print(f"Count zero : {countZeroWeights(net)}")
-    masks = prune_once(net)
-    print(f"Count zero : {countZeroWeights(net)}")
-    detached = [(name, masks[0][1].clone()) for name, mask in masks]
-

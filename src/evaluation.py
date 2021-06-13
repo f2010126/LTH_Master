@@ -54,8 +54,7 @@ def eval_fn(model, loader, device, train=False):
 
             t.set_description('(=> Test) Score: {:.4f}'.format(score.avg))
 
-    return total_correct.item()/len(loader.dataset)
-    #return score.avg
+    return total_correct.item() / len(loader.dataset)
 
 
 def eval_model(model, saved_model_file):
