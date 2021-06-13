@@ -17,12 +17,22 @@ def num_flat_features(x):
 
 
 def init_weights(m):
+    """
+        Initialise weights acc the Xavier initialisation and bias set to 0.01
+        :param m:
+        :return:
+        """
     if type(m) == nn.Linear:
-        torch.nn.init.xavier_uniform(m.weight)
+        torch.nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
 
 
 def print_weights(model):
+    """
+    Print the weights of the model
+    :param model:
+    :return:
+    """
     for param in model.parameters():
         print(param.data)
 
@@ -31,9 +41,10 @@ class LeNet(nn.Module):
     # network structure
     def __init__(self):
         super(LeNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 6, 5, padding=2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        # 1 input image channel, 6 output channels, 3x3 square conv kernel
+        self.conv1 = nn.Conv2d(1, 6, 3)
+        self.conv2 = nn.Conv2d(6, 16, 3)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)  # 5x5 image dimension
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
@@ -45,8 +56,8 @@ class LeNet(nn.Module):
             x: input
         """
         x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
-        x = F.max_pool2d(F.relu(self.conv2(x)), (2, 2))
-        x = x.view(-1, num_flat_features(x))
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2)
+        x = x.view(-1, int(x.nelement() / x.shape[0]))
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
