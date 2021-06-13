@@ -7,8 +7,12 @@ from evaluation import eval_fn
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-def run_training(model, n_epochs=10, batch=60):
+def run_training(model, n_epochs=10, batch=60, args=None):
     model = model.to(device)
+    if args is not None:
+        print("")
+        n_epochs = args.epochs
+        batch = args.batch_size
     train_load, val_load, test_data = load_mnist_data(batch)
     criterion = torch.nn.CrossEntropyLoss().to(device)
     # TODO: optimiser? Scheduler?
@@ -18,7 +22,6 @@ def run_training(model, n_epochs=10, batch=60):
     # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
     logging.info('Model being trained:')
     score = []
-    metrics = {}
     for epoch in range(n_epochs):
         logging.info('#' * 50)
         logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
@@ -29,15 +32,16 @@ def run_training(model, n_epochs=10, batch=60):
             val_score = eval_fn(model, val_load, device)
             logging.info('Validation accuracy: %f', val_score)
             print('Validation accuracy: %f', val_score)
-            metrics = {"train_loss": train_loss,
-                       "train_score": train_score,
-                       "val_score": val_score}
+            score.append({"train_loss": train_loss,
+                          "train_score": train_score,
+                          "val_score": val_score})
         # scheduler.step()
-    return metrics
+    return score[-1], score
 
 
 if __name__ == '__main__':
     net = LeNet()
     summary(net, (1, 28, 28),
             device='cuda' if torch.cuda.is_available() else 'cpu')
-    metrics = run_training(net, n_epochs=2, batch=128)
+    metrics, train_data = run_training(net, n_epochs=2, batch=128)
+    print(f"{metrics} and  score ; {train_data}")
