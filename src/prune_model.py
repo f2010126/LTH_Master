@@ -4,13 +4,19 @@ import torch.nn.utils.prune as prune
 
 from lenet import *
 
+def check_hook(module):
+    for hook in module._forward_pre_hooks.values():
+        print(hook)
+        # if hook.__name__ == "weight":  # select out the correct hook
+        #     break
 
-def prune_once(model, p_rate=0.2):
+def prune_once(model, p_rate=0.5, prune_amts={}):
     """
     prune the lowest p% weights by magnitude per layer
 
     :param model: model to prune
     :param p_rate: prune rate = 0.2 as per paper
+    :param prune_amts: dictionary
     :return: the created mask. model has served it's purpose.
     """
     # TODO: Adjust pruning
@@ -21,6 +27,8 @@ def prune_once(model, p_rate=0.2):
         # prune 90% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
             module = prune.l1_unstructured(module, name='weight', amount=p_rate)
+
+        print(f"module {name} has {len(module._forward_pre_hooks)}")
     return list(model.named_buffers())
 
 
@@ -31,16 +39,25 @@ def sameModel(model1, model2):
     return True
 
 
+def prune_tut(net):
+    module = net.conv1
+    prune.random_unstructured(module, name="weight", amount=0.3)
+    print(list(module.named_buffers())) # has the mask from my addition
+    print(module._forward_pre_hooks)
+    prune.l1_unstructured(module, name="bias", amount=2)
+    prune.l1_unstructured(module, name="bias", amount=1)
+    prune.l1_unstructured(module, name="bias", amount=1)
+    print("")
+
+
 if __name__ == '__main__':
     net = LeNet()
     net.apply(init_weights)
+    prune_tut(net)
     prune_once(net, p_rate=0.0)
     original_state_dict = net.state_dict()
-    torch.save(net.state_dict(), "prune_lenet_OG.pt")
-
-    masks = prune_once(net, p_rate=1.0)
-    # detached = [(name, masks[0][1].clone().detach()) for name, mask in masks]
+    print(f"Count zero : {countZeroWeights(net)}")
+    masks = prune_once(net)
+    print(f"Count zero : {countZeroWeights(net)}")
     detached = [(name, masks[0][1].clone()) for name, mask in masks]
-    for (name, mask) in masks:
-        print(name)
-    net.load_state_dict(original_state_dict)
+
