@@ -41,13 +41,13 @@ def pruned(model, args):
     original_state_dict = model.state_dict()
 
     # Run and train the lenet OG, done in run_lenet.py
-    metrics, _ = run_training(model,args=args)
+    metrics, _ = run_training(model, args=args)
     print(f"Original metrics {metrics}")
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pt")
 
     all_masks = init_model_masks(model)
-    prune_data=[]
+    prune_data = []
     for epoch in range(args.pruning_epochs):
         # Prune and get the new mask. prune rate will vary with epoch.
         # TODO: IS THIS PRUNE RATE CORRECT??
@@ -66,10 +66,10 @@ def pruned(model, args):
         print(f"Zero weights {per_zero}")
         last_run, pruned_metrics = run_training(model, args=args)
         print(f"Pruned metrics {pruned_metrics}")
-        prune_data.append({"rem_weight":100-per_zero,
-                           "val_score":last_run['val_score']})
+        prune_data.append({"rem_weight": 100 - per_zero,
+                           "val_score": last_run['val_score']})
     print(prune_data)
-    return metrics['val_score'],prune_data
+    return metrics['val_score'], prune_data
 
 
 if __name__ == '__main__':
@@ -89,6 +89,6 @@ if __name__ == '__main__':
 
     net = LeNet()
     net.apply(init_weights)
-    baseline, pruned = pruned(net,args)
+    baseline, pruned = pruned(net, args)
     plot_graph(baseline, pruned)
     print("")
