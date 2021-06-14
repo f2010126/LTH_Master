@@ -10,6 +10,7 @@ def plot_graph(baseline,pruned, file_at="pruned.png"):
     fig = ax.get_figure()
     plt.show()
     main_path = os.getcwd()
+
     fig.savefig(os.path.join(os.getcwd(), file_at))
     print("")
 

@@ -21,8 +21,9 @@ def init_model_masks(model):
 # TODO: GET THIS LOGIC CHECKED
 def update_masks(masks, new_mask):
     for name, mask in masks.items():
-        print(f"non zeros in old mask: {torch.count_nonzero(masks[name])} and created mask {torch.count_nonzero(new_mask[name])}")
-        masks[name] = torch.logical_and(mask,new_mask[name])
+        print(
+            f"non zeros in old mask: {torch.count_nonzero(masks[name])} and created mask {torch.count_nonzero(new_mask[name])}")
+        masks[name] = torch.logical_and(mask, new_mask[name])
         # masks[name] = mask * new_mask[name]
         print(f"non zeros in updated: {torch.count_nonzero(masks[name])}")
 
@@ -30,6 +31,7 @@ def update_masks(masks, new_mask):
 def pruned(model, args):
     """
     Run the LTH experiment
+    :param args:
     :param model:
     :param n_epochs: numebr of epochs to train for
     :param batch: batch size
@@ -77,13 +79,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH MNSIT LeNet')
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
-    parser.add_argument('--epochs', type=int, default=40,
+
+    parser.add_argument('--epochs', type=int, default=4,
                         help='number of epochs to train (default: 10)')
+
     parser.add_argument('--lr', type=float, default=0.005,
                         help='learning rate 0.005')
+
     parser.add_argument('--pruning-rate', type=int, default=20,
                         help='how much to prune. taken as a % (default: 20)')
-    parser.add_argument('--pruning-epochs', type=int, default=10,
+
+    parser.add_argument('--pruning-epochs', type=int, default=8,
                         help='No. of times to prune (default: 3)')
     args = parser.parse_args()
 
