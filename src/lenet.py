@@ -37,20 +37,20 @@ def print_weights(model):
         print(param.data)
 
 
-def countZeroWeights(model):
+def countRemWeights(model):
     """
-    Count of 0s in the model
+    Percetage of weights that remain for training
     :param model:
-    :return: % of zero weights and number of zeros
+    :return: % of weights remaining
     """
-    zeros = 0
     total_weights = 0
-    for name, param in model.named_parameters():
-        if param is not None and "bias" not in name:
-            zeros += torch.sum((param == 0).int()).data.item()
-        total_weights += param.numel()
-    # return % of 0 weights
-    return (zeros / total_weights * 100), zeros
+    rem_weights = 0
+    for name, module in model.named_modules():
+        if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
+            rem_weights += torch.count_nonzero(module.weight)
+            total_weights += sum([param.numel() for param in module.parameters()])
+    # return % of non 0 weights
+    return rem_weights.item() / total_weights * 100
 
 
 class LeNet(nn.Module):
@@ -73,8 +73,6 @@ class LeNet(nn.Module):
         Args:
             x: input
         """
-        # x = self.conv1(x)
-        # x = F.max_pool2d(F.relu(x), (2, 2))
         x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
         x = x.view(-1, num_flat_features(x))  # flatten all dimensions except the batch dimension

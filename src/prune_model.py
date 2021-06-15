@@ -1,5 +1,3 @@
-import torch
-import torch.nn as nn
 import torch.nn.utils.prune as prune
 
 from lenet import *
@@ -28,9 +26,7 @@ def get_masks(model, p_rate=0.2, prune_amts={}):
 def update_apply_masks(model, masks):
     for name, module in model.named_modules():
         if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
-            module = prune.custom_from_mask(module, name='weight', mask=masks[name])
-            prune.remove(module, "weight")
-            print("")
+            module = prune.custom_from_mask(module, name='weight', mask=masks[name+".weight_mask"])
     return model
 
 
@@ -51,4 +47,4 @@ if __name__ == '__main__':
     net.apply(init_weights)
     prune_tut(net)
     masks = get_masks(net)
-    print(f"Count zero : {countZeroWeights(net)}")
+    print(f"Count zero : {countRemWeights(net)}")
