@@ -16,6 +16,7 @@ def update_masks(masks, new_mask):
     :param new_mask: new mask from pruned
     """
     for name, mask in masks.items():
+        print(f"who's not in cuda?:old mask {mask.is_cuda} new mask {new_mask[name].is_cuda}")
         masks[name] = torch.logical_and(mask, new_mask[name])
 
 
@@ -81,7 +82,7 @@ def pruned(model, args):
 
 if __name__ == '__main__':
     # Training settings
-    parser = argparse.ArgumentParser(description='LTH MNSIT LeNet')
+    parser = argparse.ArgumentParser(description='LTH LeNet')
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
