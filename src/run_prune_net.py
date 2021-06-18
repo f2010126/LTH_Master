@@ -34,13 +34,10 @@ def handle_OG_model(model, args):
     # model.load_state_dict(original_state_dict)
     # Run and train the lenet OG, done in run_lenet.py
     metrics, _ = run_training(model, args=args)
-    print(f"Original metrics {metrics}")
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
-    non_zero = countRemWeights(model)
-    print(f"Weights remaining in baseline {non_zero}%")
 
-    return original_state_dict, all_masks
+    return original_state_dict, all_masks, metrics['val_score'] * 100
 
 
 def pruned(model, args):
@@ -50,29 +47,36 @@ def pruned(model, args):
     :param model: model to train
     :return: dictionary with pruning data
     """
-    original_state_dict, all_masks = handle_OG_model(model, args)
-
-    prune_data = []
+    original_state_dict, all_masks, full_val = handle_OG_model(model, args)
+    prune_data = [{"rem_weight": 100,
+                   "val_score": full_val}]
     for level in range(args.pruning_levels):
         # Prune and get the new mask. prune rate will vary with epoch.
         # TODO: IS THIS PRUNE RATE CORRECT??
-        # prune_rate = args.pruning_rate ** (1 / (epoch + 1))
-        masks = get_masks(model, p_rate=args.pruning_rate / 100)
+        # prune_rate = args.pruning_rate ** (1 / (level+ 1))
+        prune_rate = args.pruning_rate
+        masks = get_masks(model, p_rate=prune_rate / 100)
         # create a dict that has the same keys as state dict w/o being linked to model.
         detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
         update_masks(all_masks, detached)
         # Load the OG weights and mask it
         model.load_state_dict(original_state_dict)
+        # init a randomModel
+        in_chan = 1 if args.dataset == 'mnist' else 3
+        rando_net = LeNet(in_channels=in_chan)
+        rando_net.apply(init_weights)
         # apply combined masks here
         model = update_apply_masks(model, all_masks)
+        rando_net = update_apply_masks(model, all_masks)
         non_zero = countRemWeights(model)
-        print(f"Weights remaining {non_zero}%")
+        print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}%")
         last_run, pruned_metrics = run_training(model, args=args)
+        rand_run, rand_metrics = run_training(rando_net, args)
         prune_data.append({"rem_weight": non_zero,
-                           "val_score": last_run['val_score']})
-    print(prune_data)
+                           "val_score": last_run['val_score'] * 100,
+                           "rand_init": rand_run['val_score'] * 100})
     # metrics
-    return last_run['val_score'], prune_data
+    return full_val, prune_data
 
 
 if __name__ == '__main__':
@@ -81,7 +85,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=4,
+    parser.add_argument('--epochs', type=int, default=10,
                         help='number of epochs to train (default: 10)')
 
     parser.add_argument('--lr', type=float, default=0.005,
@@ -90,12 +94,22 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-rate', type=int, default=20,
                         help='how much to prune. taken as a % (default: 20)')
 
-    parser.add_argument('--pruning-levels', type=int, default=8,
+    parser.add_argument('--pruning-levels', type=int, default=3,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
+
+    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
+                        help='Data to use for training')
+    # prune to 30 to get 0.1% weights
     args = parser.parse_args()
 
-    net = LeNet()
+    args.dataset = 'mnist'
+    in_chan = 1 if args.dataset == 'mnist' else 3
+    net = LeNet(in_channels=in_chan)
+
     net.apply(init_weights)
     baseline, pruned = pruned(net, args)
-    plot_graph(baseline, pruned)
+    json_dump = {"baseline": baseline, "prune_data": pruned}
+    file_name = f"prune_{args.dataset}_{args.pruning_levels}.png"
+    stored_at = save_data(json_dump, file_name)
+    plot_graph(json_dump, file_at=file_name)
     print("")

@@ -60,5 +60,5 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         # t.set_description('(=> Training) Loss: {:.4f}'.format(losses.avg))
 
     time_train += time.time() - time_begin
-    print(f"training time: {time_train}")
+    # print(f"training time: {time_train}")
     return total_correct.item() / len(loader.dataset), losses.avg
