@@ -28,7 +28,7 @@ def handle_OG_model(model, args):
     :return: the original weights of the network, initial masks
     """
     # get hold of w0
-    all_masks = dict(get_masks(model, p_rate=0))
+    all_masks = {key:mask.to(device) for key,mask in get_masks(model, p_rate=0)}
     original_state_dict = model.state_dict()
     # # incase loading happens
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
