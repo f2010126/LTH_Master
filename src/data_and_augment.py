@@ -9,10 +9,12 @@ def load_mnist_data(batch=60):
     :return: loaders for train, validation and test
     """
     test_transform = transforms.Compose([
+        transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
     train_transform = transforms.Compose([
+        transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
@@ -42,12 +44,14 @@ def load_cifar10_data(batch=60):
     :return: loaders for train, validation and test
     """
     test_transform = transforms.Compose([
+        transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
     train_transform = transforms.Compose([
+        transforms.Resize((32, 32)),
         transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,)),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
     mnsit_dataset = datasets.CIFAR10('data',
                                      download=True,

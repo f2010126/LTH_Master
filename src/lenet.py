@@ -55,12 +55,12 @@ def countRemWeights(model):
 
 class LeNet(nn.Module):
     # network structure
-    def __init__(self):
+    def __init__(self, in_channels=1):
         super(LeNet, self).__init__()
         # 1 input image channel, 6 output channels, 5x5 square conv kernel
-        self.conv1 = nn.Conv2d(1, 6, 3)
+        self.conv1 = nn.Conv2d(in_channels, 6, 3)
         self.conv2 = nn.Conv2d(6, 16, 3)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)  # 5x5 image dimension
+        self.fc1 = nn.Linear(16 * 6 * 6, 120)  # 5x5 image dimension
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
@@ -73,7 +73,8 @@ class LeNet(nn.Module):
         Args:
             x: input
         """
-        x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
+        x = self.conv1(x)
+        x = F.max_pool2d(F.relu(x), (2, 2))
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
         x = x.view(-1, num_flat_features(x))  # flatten all dimensions except the batch dimension
         x = F.relu(self.fc1(x))
@@ -83,9 +84,10 @@ class LeNet(nn.Module):
 
 
 if __name__ == '__main__':
-    net = LeNet()
+    in_chan = 3
+    net = LeNet(in_channels=in_chan)
     net.apply(init_weights)
-    # summary(net, (1, 28, 28),
-    #         device='cuda' if torch.cuda.is_available() else 'cpu')
+    summary(net, (in_chan, 32, 32),
+            device='cuda' if torch.cuda.is_available() else 'cpu')
     net.fc2.weight = torch.nn.Parameter(torch.zeros(net.fc2.weight.shape))
     # print(summary(net, (1, 28, 28)))
