@@ -48,7 +48,7 @@ def run_training(model, args=None):
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
         # logging.info('Train accuracy: %f', train_score)
-        if epoch % 10 == 0 or epoch == (args.epochs - 1):
+        if epoch % 2 == 0 or epoch == (args.epochs - 1):
             val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
             logging.info('Validation accuracy: %f', val_score)
             print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=20,
+    parser.add_argument('--epochs', type=int, default=10,
                         help='number of epochs to train (default: 10)')
 
     parser.add_argument('--lr', type=float, default=0.005,
