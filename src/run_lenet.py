@@ -71,11 +71,11 @@ if __name__ == '__main__':
                         help='Data to use for training')
     # prune to 30 to get 0.1% weights
     args = parser.parse_args()
-    args.dataset = 'mnist'
+    args.dataset = 'cifar10'
     in_chan = 1 if args.dataset == 'mnist' else 3
     net = LeNet(in_channels=in_chan)
     net.apply(init_weights)
     # summary(net, (3, 32, 32),
     #         device='cuda' if torch.cuda.is_available() else 'cpu')
     metrics, train_data = run_training(net, args)
-    # print(f"{metrics} and  score ; {train_data}")
+    print(f"{metrics['val_score']}")

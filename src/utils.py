@@ -39,7 +39,7 @@ def plot_graph(graph_data, file_at="pruned.png"):
     xticks = mtick.FormatStrFormatter(fmt)
     ax.xaxis.set_major_formatter(xticks)
     fig = ax.get_figure()
-    plt.show()
+    # plt.show()
     json_path = os.path.join(os.getcwd(), "LTH_Results")
     fig.savefig(os.path.join(json_path, file_at))
     print("")
