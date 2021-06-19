@@ -4,6 +4,7 @@ import logging
 from training_pipeline import train_fn
 from evaluation import eval_fn
 import argparse
+from EarlyStopping import *
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -39,18 +40,28 @@ def run_training(model, args=None):
     config = setup_training(model, args)
     logging.info('Model being trained:')
     score = []
+    if args.early_stop:
+        e_stop = EarlyStopping()
+
     for epoch in range(args.epochs):
         # logging.info('#' * 50)
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
         # logging.info('Train accuracy: %f', train_score)
         if epoch % 10 == 0 or epoch == (args.epochs - 1):
-            val_score = eval_fn(model, config["data"][1], device)
+            val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
             logging.info('Validation accuracy: %f', val_score)
-            # print('Validation accuracy: %f', val_score)
+            print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
             score.append({"train_loss": train_loss,
                           "train_score": train_score,
-                          "val_score": val_score})
+                          "val_score": val_score,
+                          "val_loss": val_loss})
+            if args.early_stop:
+                e_stop(val_loss)
+                if e_stop.early_stop:
+                    print(f"Stop here!! at epoch {epoch}")
+                    break
+
         # scheduler.step()
     return score[-1], score
 
@@ -61,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=2,
+    parser.add_argument('--epochs', type=int, default=20,
                         help='number of epochs to train (default: 10)')
 
     parser.add_argument('--lr', type=float, default=0.005,
@@ -69,9 +80,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='cifar', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
+    parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done?')
     # prune to 30 to get 0.1% weights
     args = parser.parse_args()
-    args.dataset = 'cifar10'
+    # args.dataset = 'cifar10'
     in_chan = 1 if args.dataset == 'mnist' else 3
     net = LeNet(in_channels=in_chan)
     net.apply(init_weights)
