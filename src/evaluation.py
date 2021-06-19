@@ -28,16 +28,18 @@ def accuracy(logits, labels):
     return torch.sum(preds == labels) / len(labels)
 
 
-def eval_fn(model, loader, device, train=False):
+def eval_fn(model, loader, device, criterion, train=False):
     """
     Evaluation method
     :param model: model to evaluate
     :param loader: data loader for either training or testing set
     :param device: torch device
+    :param criterion: loss criterion
     :param train: boolean to indicate if training or test set is used
     :return: accuracy on the data
     """
     score = AverageMeter()
+    losses = AverageMeter()
     model.eval()
     total_correct = 0
 
@@ -49,12 +51,15 @@ def eval_fn(model, loader, device, train=False):
 
             outputs = model(images)
             acc = accuracy(outputs, labels)
+            loss = criterion(outputs, labels)
             total_correct += (outputs.argmax(dim=1) == labels).sum()
-            score.update(acc.item(), images.size(0))
+            n = images.size(0)
+            score.update(acc.item(), n)
+            losses.update(loss.item(), n)
 
             t.set_description('(=> Test) Score: {:.4f}'.format(score.avg))
 
-    return total_correct.item() / len(loader.dataset)
+    return total_correct.item() / len(loader.dataset), losses.avg
 
 
 def eval_model(model, saved_model_file):
@@ -77,6 +82,6 @@ def eval_model(model, saved_model_file):
                              batch_size=60,
                              shuffle=False)
 
-    score = eval_fn(model, test_loader, device, train=False)
+    score = eval_fn(model, test_loader, device, criterion=torch.nn.CrossEntropyLoss().to(device), train=False)
 
     print('Avg accuracy:', str(score * 100) + '%')
