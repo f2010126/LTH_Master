@@ -68,7 +68,7 @@ def pruned(model, args):
         rando_net.apply(init_weights)
         prune_random(rando_net, prune_rate)
         non_zero = countRemWeights(model)
-        print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}%")
+        print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_metrics = run_training(model, args=args)
         rand_run, rand_metrics = run_training(rando_net, args)
         prune_data.append({"rem_weight": non_zero,
