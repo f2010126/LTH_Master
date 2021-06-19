@@ -26,8 +26,18 @@ def get_masks(model, p_rate=0.2, prune_amts={}):
 def update_apply_masks(model, masks):
     for name, module in model.named_modules():
         if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
-            module = prune.custom_from_mask(module, name='weight', mask=masks[name+".weight_mask"])
+            module = prune.custom_from_mask(module, name='weight', mask=masks[name + ".weight_mask"])
     return model
+
+
+def prune_random(model, p_rate=0.2):
+    for name, module in model.named_modules():
+        # prune 20% of connections in all 2D-conv layers
+        if isinstance(module, torch.nn.Conv2d):
+            module = prune.random_unstructured(module, name='weight', amount=p_rate)
+        # prune 90% of connections in all linear layers
+        elif isinstance(module, torch.nn.Linear):
+            module = prune.random_unstructured(module, name='weight', amount=p_rate)
 
 
 def prune_tut(net):

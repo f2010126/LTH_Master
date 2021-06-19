@@ -1,7 +1,7 @@
 from lenet import *
 from data_and_augment import *
 from run_lenet import run_training
-from prune_model import get_masks, update_apply_masks
+from prune_model import *
 import argparse
 from utils import *
 
@@ -54,20 +54,19 @@ def pruned(model, args):
         # Prune and get the new mask. prune rate will vary with epoch.
         # TODO: IS THIS PRUNE RATE CORRECT??
         # prune_rate = args.pruning_rate ** (1 / (level+ 1))
-        prune_rate = args.pruning_rate
-        masks = get_masks(model, p_rate=prune_rate / 100)
+        prune_rate = args.pruning_rate / 100
+        masks = get_masks(model, p_rate=prune_rate)
         # create a dict that has the same keys as state dict w/o being linked to model.
         detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
         update_masks(all_masks, detached)
         # Load the OG weights and mask it
         model.load_state_dict(original_state_dict)
-        # init a randomModel
+        model = update_apply_masks(model, all_masks)
+        # init a randomModel and prune it randomly
         in_chan = 1 if args.dataset == 'mnist' else 3
         rando_net = LeNet(in_channels=in_chan)
         rando_net.apply(init_weights)
-        # apply combined masks here
-        model = update_apply_masks(model, all_masks)
-        rando_net = update_apply_masks(model, all_masks)
+        prune_random(rando_net, prune_rate)
         non_zero = countRemWeights(model)
         print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}%")
         last_run, pruned_metrics = run_training(model, args=args)
@@ -85,7 +84,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=10,
+    parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs to train (default: 10)')
 
     parser.add_argument('--lr', type=float, default=0.005,
@@ -94,7 +93,7 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-rate', type=int, default=20,
                         help='how much to prune. taken as a % (default: 20)')
 
-    parser.add_argument('--pruning-levels', type=int, default=3,
+    parser.add_argument('--pruning-levels', type=int, default=1,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
