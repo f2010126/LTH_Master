@@ -16,7 +16,6 @@ def update_masks(masks, new_mask):
     :param new_mask: new mask from pruned
     """
     for name, mask in masks.items():
-        print(f"who's not in cuda?:old mask {mask.is_cuda} new mask {new_mask[name].is_cuda}")
         masks[name] = torch.logical_and(mask, new_mask[name])
 
 
