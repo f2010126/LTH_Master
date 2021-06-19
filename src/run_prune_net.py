@@ -69,7 +69,7 @@ def pruned(model, args):
         # prune randomly inited model randomly
         prune_random(rando_net, prune_rate)
         non_zero = countRemWeights(model)
-        print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}%")
+        print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_metrics = run_training(model, args=args)
         rand_run, rand_metrics = run_training(rando_net, args)
         prune_data.append({"rem_weight": non_zero,
@@ -102,14 +102,13 @@ if __name__ == '__main__':
     # prune to 30 to get 0.1% weights
     args = parser.parse_args()
 
-    args.dataset = 'mnist'
     in_chan = 1 if args.dataset == 'mnist' else 3
     net = LeNet(in_channels=in_chan)
 
     net.apply(init_weights)
     baseline, pruned = pruned(net, args)
     json_dump = {"baseline": baseline, "prune_data": pruned}
-    file_name = f"prune_{args.dataset}_{args.pruning_levels}.png"
-    stored_at = save_data(json_dump, file_name)
-    plot_graph(json_dump, file_at=file_name)
+    file_name = f"prune_{args.dataset}_{args.pruning_levels}"
+    stored_at = save_data(json_dump, file_name + ".json")
+    plot_graph(json_dump, file_at=file_name + ".png")
     print("")
