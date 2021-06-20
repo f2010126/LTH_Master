@@ -1,5 +1,5 @@
 class EarlyStopping:
-    def __init__(self, patience=5, min_delta=0.0009):
+    def __init__(self, patience=5, min_delta=.005):
         """
 
         :param patience: how long to wait w/o loss improving
@@ -14,10 +14,14 @@ class EarlyStopping:
     def __call__(self, val_loss):
         if self.best_loss is None:
             self.best_loss = val_loss
-        elif self.best_loss - val_loss > self.min_delta:
-            self.best_loss = val_loss
         elif self.best_loss - val_loss < self.min_delta:
+            # no improvement found
+            print(f"no improvement")
             self.counter += 1
             print(f"counter {self.counter} of {self.patience}")
             if self.counter >= self.patience:
                 self.early_stop = True
+        else:
+            print(f"reducing loss")
+            self.best_loss = val_loss
+            self.counter = 0

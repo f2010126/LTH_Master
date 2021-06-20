@@ -27,6 +27,12 @@ def rounddown(x):
 
 
 def plot_graph(graph_data, file_at="pruned.png"):
+    """
+    Plots the graph. need a baseline and x,y points
+    :param graph_data: dict of data
+    :param file_at: location of plot
+    :return: location
+    """
     df = pd.DataFrame.from_dict(graph_data['prune_data'])
     df.set_index('rem_weight')
     # (t, t, 'r--', t, t**2, 'bs', t, t**3, 'g^')

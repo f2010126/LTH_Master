@@ -106,7 +106,7 @@ if __name__ == '__main__':
                         help='Data to use for training')
     parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done?')
 
-    # prune to 30 to get 0.1% weights
+    # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
 
     in_chan = 1 if args.dataset == 'mnist' else 3
