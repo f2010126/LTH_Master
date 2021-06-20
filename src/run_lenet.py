@@ -50,8 +50,8 @@ def run_training(model, args=None):
         # logging.info('Train accuracy: %f', train_score)
         if epoch % 2 == 0 or epoch == (args.epochs - 1):
             val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
-            logging.info('Validation accuracy: %f', val_score)
-            print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
+            # logging.info('Validation accuracy: %f', val_score)
+            # print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
             score.append({"train_loss": train_loss,
                           "train_score": train_score,
                           "val_score": val_score,

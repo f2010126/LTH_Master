@@ -16,12 +16,11 @@ class EarlyStopping:
             self.best_loss = val_loss
         elif self.best_loss - val_loss < self.min_delta:
             # no improvement found
-            print(f"no improvement")
             self.counter += 1
-            print(f"counter {self.counter} of {self.patience}")
+            # print(f"counter {self.counter} of {self.patience}")
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
-            print(f"reducing loss")
+            # loss is reducing
             self.best_loss = val_loss
             self.counter = 0

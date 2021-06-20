@@ -51,7 +51,7 @@ def pruned(model, args):
     original_state_dict, all_masks, full_val, full_es = handle_OG_model(model, args)
     prune_data = [{"rem_weight": 100,
                    "val_score": full_val,
-                   "full_es":full_es}]
+                   "full_es": full_es}]
     # init a random model
     in_chan = 1 if args.dataset == 'mnist' else 3
     rando_net = LeNet(in_channels=in_chan)
@@ -71,14 +71,14 @@ def pruned(model, args):
         # prune randomly inited model randomly
         prune_random(rando_net, prune_rate)
         non_zero = countRemWeights(model)
-        print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
+        # print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es = run_training(model, args=args)
         rand_run, rand_es = run_training(rando_net, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
                            "rand_init": rand_run['val_score'] * 100,
-                           "pruned_es":pruned_es,
-                           "rand_es":rand_es})
+                           "pruned_es": pruned_es,
+                           "rand_es": rand_es})
     # metrics
     return full_val, prune_data
 
