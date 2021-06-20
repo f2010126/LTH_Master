@@ -41,9 +41,9 @@ def run_training(model, args=None):
     logging.info('Model being trained:')
     score = []
     stop_epoch = args.epochs
-    if args.early_stop:
+    if args.early_stop is not None:
         e_stop = EarlyStopping()
-
+    print(args.early_stop)
     for epoch in range(args.epochs):
         # logging.info('#' * 50)
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
@@ -52,7 +52,7 @@ def run_training(model, args=None):
         if epoch % 2 == 0 or epoch == (args.epochs - 1):
             val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
             logging.info('Validation accuracy: %f', val_score)
-            print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
+            # print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
             score.append({"train_loss": train_loss,
                           "train_score": train_score,
                           "val_score": val_score,
@@ -60,7 +60,6 @@ def run_training(model, args=None):
             if args.early_stop:
                 e_stop(val_loss)
                 if e_stop.early_stop:
-                    print(f"Stop here!! at epoch {epoch}")
                     stop_epoch = epoch
                     break
 
