@@ -70,11 +70,13 @@ def pruned(model, args):
         prune_random(rando_net, prune_rate)
         non_zero = countRemWeights(model)
         print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
-        last_run, pruned_metrics = run_training(model, args=args)
-        rand_run, rand_metrics = run_training(rando_net, args)
+        last_run, pruned_es = run_training(model, args=args)
+        rand_run, rand_es = run_training(rando_net, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
-                           "rand_init": rand_run['val_score'] * 100})
+                           "rand_init": rand_run['val_score'] * 100,
+                           "pruned_es":pruned_es,
+                           "rand_es":rand_es})
     # metrics
     return full_val, prune_data
 
@@ -99,6 +101,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
+    parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done?')
+
     # prune to 30 to get 0.1% weights
     args = parser.parse_args()
 
