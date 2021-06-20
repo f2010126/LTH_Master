@@ -43,7 +43,6 @@ def run_training(model, args=None):
     stop_epoch = args.epochs
     if args.early_stop is not None:
         e_stop = EarlyStopping()
-    print(args.early_stop)
     for epoch in range(args.epochs):
         # logging.info('#' * 50)
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
