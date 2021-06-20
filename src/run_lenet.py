@@ -40,6 +40,7 @@ def run_training(model, args=None):
     config = setup_training(model, args)
     logging.info('Model being trained:')
     score = []
+    stop_epoch = args.epochs
     if args.early_stop:
         e_stop = EarlyStopping()
 
@@ -60,10 +61,11 @@ def run_training(model, args=None):
                 e_stop(val_loss)
                 if e_stop.early_stop:
                     print(f"Stop here!! at epoch {epoch}")
+                    stop_epoch = epoch
                     break
 
         # scheduler.step()
-    return score[-1], score
+    return score[-1], stop_epoch
 
 
 if __name__ == '__main__':
@@ -89,5 +91,5 @@ if __name__ == '__main__':
     net.apply(init_weights)
     # summary(net, (3, 32, 32),
     #         device='cuda' if torch.cuda.is_available() else 'cpu')
-    metrics, train_data = run_training(net, args)
-    print(f"{metrics['val_score']}")
+    metrics, es_epoch = run_training(net, args)
+    print(f"{metrics['val_score']} early stop = {es_epoch}")
