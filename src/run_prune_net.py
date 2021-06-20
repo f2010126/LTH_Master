@@ -4,6 +4,7 @@ from run_lenet import run_training
 from prune_model import *
 import argparse
 from utils import *
+import time
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -33,11 +34,11 @@ def handle_OG_model(model, args):
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
     # model.load_state_dict(original_state_dict)
     # Run and train the lenet OG, done in run_lenet.py
-    metrics, _ = run_training(model, args=args)
+    metrics, full_es = run_training(model, args=args)
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
 
-    return original_state_dict, all_masks, metrics['val_score'] * 100
+    return original_state_dict, all_masks, metrics['val_score'] * 100, full_es
 
 
 def pruned(model, args):
@@ -47,9 +48,10 @@ def pruned(model, args):
     :param model: model to train
     :return: dictionary with pruning data
     """
-    original_state_dict, all_masks, full_val = handle_OG_model(model, args)
+    original_state_dict, all_masks, full_val, full_es = handle_OG_model(model, args)
     prune_data = [{"rem_weight": 100,
-                   "val_score": full_val}]
+                   "val_score": full_val,
+                   "full_es":full_es}]
     # init a random model
     in_chan = 1 if args.dataset == 'mnist' else 3
     rando_net = LeNet(in_channels=in_chan)
@@ -70,16 +72,19 @@ def pruned(model, args):
         prune_random(rando_net, prune_rate)
         non_zero = countRemWeights(model)
         print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
-        last_run, pruned_metrics = run_training(model, args=args)
-        rand_run, rand_metrics = run_training(rando_net, args)
+        last_run, pruned_es = run_training(model, args=args)
+        rand_run, rand_es = run_training(rando_net, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
-                           "rand_init": rand_run['val_score'] * 100})
+                           "rand_init": rand_run['val_score'] * 100,
+                           "pruned_es":pruned_es,
+                           "rand_es":rand_es})
     # metrics
     return full_val, prune_data
 
 
 if __name__ == '__main__':
+    start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH LeNet')
     parser.add_argument('--batch-size', type=int, default=128,
@@ -99,6 +104,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
+    parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done?')
+
     # prune to 30 to get 0.1% weights
     args = parser.parse_args()
 
@@ -107,6 +114,10 @@ if __name__ == '__main__':
 
     net.apply(init_weights)
     baseline, pruned = pruned(net, args)
+    end = time.time()
+    hours, rem = divmod(end - start, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
     json_dump = {"baseline": baseline, "prune_data": pruned}
     file_name = f"prune_{args.dataset}_{args.pruning_levels}"
     stored_at = save_data(json_dump, file_name + ".json")
