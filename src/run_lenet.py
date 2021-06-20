@@ -5,6 +5,7 @@ from training_pipeline import train_fn
 from evaluation import eval_fn
 import argparse
 from EarlyStopping import *
+import time
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -14,8 +15,7 @@ def setup_training(model, args):
     Setup optimiser, dataloaders, loss
     :param model
     :param args
-    :return:
-    config dict to run
+    :return: config dict to run
     """
     if args.dataset == 'mnist':
         train_load, val_load, test_data = load_mnist_data(args.batch_size)
@@ -43,7 +43,6 @@ def run_training(model, args=None):
     stop_epoch = args.epochs
     if args.early_stop is not None:
         e_stop = EarlyStopping()
-    print(args.early_stop)
     for epoch in range(args.epochs):
         # logging.info('#' * 50)
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
@@ -51,7 +50,7 @@ def run_training(model, args=None):
         # logging.info('Train accuracy: %f', train_score)
         if epoch % 2 == 0 or epoch == (args.epochs - 1):
             val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
-            logging.info('Validation accuracy: %f', val_score)
+            # logging.info('Validation accuracy: %f', val_score)
             # print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
             score.append({"train_loss": train_loss,
                           "train_score": train_score,
@@ -68,6 +67,7 @@ def run_training(model, args=None):
 
 
 if __name__ == '__main__':
+    start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH LeNet')
     parser.add_argument('--batch-size', type=int, default=128,
@@ -76,8 +76,8 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=10,
                         help='number of epochs to train (default: 10)')
 
-    parser.add_argument('--lr', type=float, default=0.005,
-                        help='learning rate 0.005')
+    parser.add_argument('--lr', type=float, default=0.0012,
+                        help='learning rate 0.0012')
 
     parser.add_argument('--dataset', type=str, default='cifar', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
@@ -91,4 +91,9 @@ if __name__ == '__main__':
     # summary(net, (3, 32, 32),
     #         device='cuda' if torch.cuda.is_available() else 'cpu')
     metrics, es_epoch = run_training(net, args)
+    end = time.time()
+    hours, rem = divmod(end - start, 3600)
+    minutes, seconds = divmod(rem, 60)
+    print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
+
     print(f"{metrics['val_score']} early stop = {es_epoch}")

@@ -6,11 +6,6 @@ import torch.nn.functional as F
 import numpy as np
 
 
-def train():
-    # adam
-    optimizer = torch.optim.Adam([], lr=0)
-
-
 def train_fn(model, optimizer, criterion, loader, device, train=True):
     """
   Training method
@@ -45,8 +40,7 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
             if 'weight' in name:
                 tensor = param.data.cpu().numpy()
                 grad_tensor = param.grad.data.cpu().numpy()
-                if np.all(tensor == 0):
-                    print(f"DONT TRAIN")
+                # set grad to 0 for 0 tensors, ie freeze their training
                 grad_tensor = np.where(tensor == 0, 0, grad_tensor)
                 param.grad.data = torch.from_numpy(grad_tensor).to(device)
 
@@ -57,8 +51,5 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         losses.update(loss.item(), n)
         score.update(acc.item(), n)
 
-        # t.set_description('(=> Training) Loss: {:.4f}'.format(losses.avg))
-
     time_train += time.time() - time_begin
-    # print(f"training time: {time_train}")
     return total_correct.item() / len(loader.dataset), losses.avg
