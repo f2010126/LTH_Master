@@ -3,6 +3,18 @@ import pandas as pd
 import os
 import matplotlib.ticker as mtick
 import math
+import torch
+
+
+def init_weights(m):
+    """
+        Initialise weights acc the Xavier initialisation and bias set to 0.01
+        :param m:
+        :return:
+        """
+    if type(m) == torch.nn.Linear:
+        torch.nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.01)
 
 
 def save_data(json_dump, name_file="exp_result.json"):

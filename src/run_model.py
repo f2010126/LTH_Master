@@ -1,4 +1,4 @@
-from lenet import *
+from convnets import *
 from data_and_augment import *
 import logging
 from training_pipeline import train_fn
@@ -6,6 +6,7 @@ from evaluation import eval_fn
 import argparse
 from EarlyStopping import *
 import time
+from lenet import *
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -69,7 +70,11 @@ def run_training(model, args=None):
 if __name__ == '__main__':
     start = time.time()
     # Training settings
-    parser = argparse.ArgumentParser(description='LTH LeNet')
+    parser = argparse.ArgumentParser(description='LTH Model')
+    parser.add_argument('-m', '--model',
+                        default='Net2',
+                        help='Class name of model to train',
+                        type=str, choices=['LeNet', 'Net2'])
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
@@ -82,14 +87,14 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='cifar', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
     parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done?')
-    # prune to 30 to get 0.1% weights
     args = parser.parse_args()
     # args.dataset = 'cifar10'
-    in_chan = 1 if args.dataset == 'mnist' else 3
-    net = LeNet(in_channels=in_chan)
+    in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
+    net = Net2(in_chan)
+    net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
-    # summary(net, (3, 32, 32),
-    #         device='cuda' if torch.cuda.is_available() else 'cpu')
+    summary(net, (in_chan, img, img),
+            device='cuda' if torch.cuda.is_available() else 'cpu')
     metrics, es_epoch = run_training(net, args)
     end = time.time()
     hours, rem = divmod(end - start, 3600)

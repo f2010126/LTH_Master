@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from torchsummary import summary
 import numpy as np
 import torch
+from utils import *
 
 
 def num_flat_features(x):
@@ -16,15 +17,15 @@ def num_flat_features(x):
     # gaussian glorot init
 
 
-def init_weights(m):
-    """
-        Initialise weights acc the Xavier initialisation and bias set to 0.01
-        :param m:
-        :return:
-        """
-    if type(m) == nn.Linear:
-        torch.nn.init.xavier_uniform_(m.weight)
-        m.bias.data.fill_(0.01)
+# def init_weights(m):
+#     """
+#         Initialise weights acc the Xavier initialisation and bias set to 0.01
+#         :param m:
+#         :return:
+#         """
+#     if type(m) == nn.Linear:
+#         torch.nn.init.xavier_uniform_(m.weight)
+#         m.bias.data.fill_(0.01)
 
 
 def print_weights(model):

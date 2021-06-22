@@ -1,6 +1,6 @@
 from lenet import *
 from data_and_augment import *
-from run_lenet import run_training
+from run_model import run_training
 from prune_model import *
 import argparse
 from utils import *
@@ -33,7 +33,7 @@ def handle_OG_model(model, args):
     # # incase loading happens
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
     # model.load_state_dict(original_state_dict)
-    # Run and train the lenet OG, done in run_lenet.py
+    # Run and train the lenet OG, done in run_model.py
     metrics, full_es = run_training(model, args=args)
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
@@ -54,7 +54,7 @@ def pruned(model, args):
                    "full_es": full_es}]
     # init a random model
     in_chan = 1 if args.dataset == 'mnist' else 3
-    rando_net = LeNet(in_channels=in_chan)
+    rando_net = eval(args.model)(in_channels=in_chan)
     rando_net.apply(init_weights)
     for level in range(args.pruning_levels):
         # Prune and get the new mask. prune rate will vary with epoch.
@@ -86,7 +86,10 @@ def pruned(model, args):
 if __name__ == '__main__':
     start = time.time()
     # Training settings
-    parser = argparse.ArgumentParser(description='LTH LeNet')
+    parser = argparse.ArgumentParser(description='LTH Experiments')
+    parser.add_argument('-m', '--model', default='LeNet',
+                        help='Class name of model to train',
+                        type=str, choices=['LeNet', 'Net2'])
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
@@ -109,10 +112,12 @@ if __name__ == '__main__':
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
 
-    in_chan = 1 if args.dataset == 'mnist' else 3
-    net = LeNet(in_channels=in_chan)
-
+    in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
+    # net = LeNet(in_channels=in_chan)
+    net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
+    summary(net, (in_chan, img, img),
+            device='cuda' if torch.cuda.is_available() else 'cpu')
     baseline, pruned = pruned(net, args)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
