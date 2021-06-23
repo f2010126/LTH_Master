@@ -71,15 +71,16 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Model')
-    parser.add_argument('--model',
-                        default='Net2',
-                        help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2'])
+    parser.add_argument('--model' ,type=str, default='Net2',
+                        help='Class name of modeto train',
+                        choices=['LeNet', 'Net2'])
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
     parser.add_argument('--epochs', type=int, default=10,
                         help='number of epochs to train (default: 10)')
+    parser.add_argument('--iterations', type=int, default=1700,
+                        help='number of iterations to train (default: 1700)')
 
     parser.add_argument('--lr', type=float, default=0.0012,
                         help='learning rate 0.0012')
@@ -90,7 +91,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # args.dataset = 'cifar10'
     in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
-    net = Net2(in_chan)
+    # net = Net2(in_chan)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
