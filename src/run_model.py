@@ -4,9 +4,9 @@ import logging
 from training_pipeline import train_fn
 from evaluation import eval_fn
 import argparse
-from EarlyStopping import *
 import time
 from lenet import *
+from convnets import *
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -42,8 +42,6 @@ def run_training(model, args=None):
     logging.info('Model being trained:')
     score = []
     stop_epoch = args.epochs
-    if args.early_stop is not None:
-        e_stop = EarlyStopping()
     for epoch in range(args.epochs):
         # logging.info('#' * 50)
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
@@ -57,11 +55,6 @@ def run_training(model, args=None):
                           "train_score": train_score,
                           "val_score": val_score,
                           "val_loss": val_loss})
-            if args.early_stop:
-                e_stop(val_loss)
-                if e_stop.early_stop:
-                    stop_epoch = epoch
-                    break
 
         # scheduler.step()
     return score[-1], stop_epoch
@@ -71,7 +64,7 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Model')
-    parser.add_argument('--model' ,type=str, default='Net2',
+    parser.add_argument('--model', type=str, default='Net2',
                         help='Class name of modeto train',
                         choices=['LeNet', 'Net2'])
     parser.add_argument('--batch-size', type=int, default=128,
@@ -85,13 +78,11 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=0.0012,
                         help='learning rate 0.0012')
 
-    parser.add_argument('--dataset', type=str, default='cifar', choices=['mnist', 'cifar10'],
+    parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
-    parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done?')
+    parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done?')
     args = parser.parse_args()
-    # args.dataset = 'cifar10'
     in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
-    # net = Net2(in_chan)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
