@@ -1,4 +1,5 @@
 from lenet import *
+from convnets import *
 from data_and_augment import *
 from run_model import run_training
 from prune_model import *
@@ -87,17 +88,17 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Experiments')
-    parser.add_argument('-m', '--model', default='LeNet',
+    parser.add_argument('-m', '--model', default='Net2',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2'])
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=10,
+    parser.add_argument('--epochs', type=int, default=20,
                         help='number of epochs to train (default: 10)')
 
-    parser.add_argument('--lr', type=float, default=0.005,
-                        help='learning rate 0.005')
+    parser.add_argument('--lr', type=float, default=0.0012,
+                        help='learning rate 0.0012')
 
     parser.add_argument('--pruning-rate', type=int, default=20,
                         help='how much to prune. taken as a % (default: 20)')
@@ -105,9 +106,9 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-levels', type=int, default=3,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
-    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
+    parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
-    parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done?')
+    parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done?')
 
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
@@ -124,7 +125,7 @@ if __name__ == '__main__':
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
     json_dump = {"baseline": baseline, "prune_data": pruned}
-    file_name = f"prune_{args.dataset}_{args.pruning_levels}"
+    file_name = f"prune_{args.model}_{args.dataset}_{args.pruning_levels}"
     stored_at = save_data(json_dump, file_name + ".json")
     plot_graph(json_dump, file_at=file_name + ".png")
     print("")
