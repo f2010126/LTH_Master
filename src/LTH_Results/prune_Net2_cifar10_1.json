@@ -1,1 +1,0 @@
-{"baseline": 50.760000000000005, "prune_data": [{"rem_weight": 100, "val_score": 50.760000000000005, "full_es": 1}, {"rem_weight": 79.98852710394837, "val_score": 56.10000000000001, "rand_init": 46.9, "pruned_es": 1, "rand_es": 1}]}
