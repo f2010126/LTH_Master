@@ -88,7 +88,7 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Experiments')
-    parser.add_argument('-m', '--model', default='Net2',
+    parser.add_argument('--model', default='Net2',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2'])
     parser.add_argument('--batch-size', type=int, default=128,
