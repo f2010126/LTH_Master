@@ -3,7 +3,7 @@ import torch.nn.utils.prune as prune
 from lenet import *
 
 
-def get_masks(model, p_rate=0.2, prune_amts={}):
+def get_masks(model, prune_amts={}, p_rate=0.2, ):
     """
     prune the lowest p% weights by magnitude per layer
 
@@ -14,12 +14,12 @@ def get_masks(model, p_rate=0.2, prune_amts={}):
     """
     # TODO: Adjust pruning
     for name, module in model.named_modules():
-        # prune 20% of connections in all 2D-conv layers
+        # prune 10% of connections in all 2D-conv layers
         if isinstance(module, torch.nn.Conv2d):
-            module = prune.l1_unstructured(module, name='weight', amount=p_rate)
-        # prune 90% of connections in all linear layers
+            module = prune.l1_unstructured(module, name='weight', amount=prune_amts['conv'])
+        # prune 20% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
-            module = prune.l1_unstructured(module, name='weight', amount=p_rate)
+            module = prune.l1_unstructured(module, name='weight', amount=prune_amts['linear'])
     return list(model.named_buffers())
 
 
@@ -55,6 +55,6 @@ def prune_tut(net):
 if __name__ == '__main__':
     net = LeNet()
     net.apply(init_weights)
-    prune_tut(net)
-    masks = get_masks(net)
+
+    masks = get_masks(net, prune_amts={"linear": 0.2, "conv": 0.1, "last": 0.1})
     print(f"Count zero : {countRemWeights(net)}")

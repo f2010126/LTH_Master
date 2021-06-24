@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
-    parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done?')
+    parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done? Default False')
     args = parser.parse_args()
     in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
@@ -92,5 +92,4 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-
-    print(f"{metrics['val_score']} early stop = {es_epoch}")
+    print(f"Validation: {metrics['val_score']}")

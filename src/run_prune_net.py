@@ -6,6 +6,7 @@ from prune_model import *
 import argparse
 from utils import *
 import time
+import LTH_Constants
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -29,7 +30,7 @@ def handle_OG_model(model, args):
     :return: the original weights of the network, initial masks
     """
     # get hold of w0
-    all_masks = {key: mask.to(device) for key, mask in get_masks(model, p_rate=0)}
+    all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=LTH_Constants.init_mask)}
     original_state_dict = model.state_dict()
     # # incase loading happens
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
@@ -39,7 +40,8 @@ def handle_OG_model(model, args):
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
 
-    return original_state_dict, all_masks, metrics['val_score'] * 100, full_es
+    return original_state_dict, all_masks, {"val_score": metrics['val_score'] * 100,
+                                            "full_es": full_es}
 
 
 def pruned(model, args):
@@ -49,20 +51,18 @@ def pruned(model, args):
     :param model: model to train
     :return: dictionary with pruning data
     """
-    original_state_dict, all_masks, full_val, full_es = handle_OG_model(model, args)
-    prune_data = [{"rem_weight": 100,
-                   "val_score": full_val,
-                   "full_es": full_es}]
+    original_state_dict, all_masks, baselines = handle_OG_model(model, args)
+    prune_data = []
     # init a random model
     in_chan = 1 if args.dataset == 'mnist' else 3
     rando_net = eval(args.model)(in_channels=in_chan)
     rando_net.apply(init_weights)
+    # set pruning configs
+    prune_amt = LTH_Constants.conv2_prune if args.model == 'Net2' else LTH_Constants.lenet_prune
     for level in range(args.pruning_levels):
-        # Prune and get the new mask. prune rate will vary with epoch.
-        # TODO: IS THIS PRUNE RATE CORRECT??
-        # prune_rate = args.pruning_rate ** (1 / (level+ 1))
+        # Prune and get the new mask. prune masks combine
         prune_rate = args.pruning_rate / 100
-        masks = get_masks(model, p_rate=prune_rate)
+        masks = get_masks(model, prune_amts=prune_amt)
         # create a dict that has the same keys as state dict w/o being linked to model.
         detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
         update_masks(all_masks, detached)
@@ -81,7 +81,8 @@ def pruned(model, args):
                            "pruned_es": pruned_es,
                            "rand_es": rand_es})
     # metrics
-    return full_val, prune_data
+    # TODO: baseline
+    return baselines, prune_data
 
 
 if __name__ == '__main__':
@@ -114,18 +115,17 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
-    # net = LeNet(in_channels=in_chan)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
             device='cuda' if torch.cuda.is_available() else 'cpu')
-    baseline, pruned = pruned(net, args)
+    run_data, pruned = pruned(net, args)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    json_dump = {"baseline": baseline, "prune_data": pruned}
+    run_data["prune_data"] = pruned
     file_name = f"prune_{args.model}_{args.dataset}_{args.pruning_levels}"
-    stored_at = save_data(json_dump, file_name + ".json")
-    plot_graph(json_dump, file_at=file_name + ".png")
+    stored_at = save_data(run_data, file_name + ".json")
+    plot_graph(run_data, file_at=file_name + ".png")
     print("")

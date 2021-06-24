@@ -17,6 +17,22 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
+def countRemWeights(model):
+    """
+    Percetage of weights that remain for training
+    :param model:
+    :return: % of weights remaining
+    """
+    total_weights = 0
+    rem_weights = 0
+    for name, module in model.named_modules():
+        if any([isinstance(module, cl) for cl in [torch.nn.Conv2d, torch.nn.Linear]]):
+            rem_weights += torch.count_nonzero(module.weight)
+            total_weights += sum([param.numel() for param in module.parameters()])
+    # return % of non 0 weights
+    return rem_weights.item() / total_weights * 100
+
+
 def save_data(json_dump, name_file="exp_result.json"):
     """
     Saves the results as a json file
