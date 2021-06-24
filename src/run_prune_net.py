@@ -120,12 +120,24 @@ if __name__ == '__main__':
     summary(net, (in_chan, img, img),
             device='cuda' if torch.cuda.is_available() else 'cpu')
     run_data, pruned = pruned(net, args)
+    run_data["prune_data"] = pruned
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    run_data["prune_data"] = pruned
     file_name = f"prune_{args.model}_{args.dataset}_{args.pruning_levels}"
     stored_at = save_data(run_data, file_name + ".json")
-    plot_graph(run_data, file_at=file_name + ".png")
+    # plot = {'title': file_name,
+    #         'x_label': "Weights remaining",
+    #         'y_label': "Early Stop Epoch",
+    #         'baseline': "full_es",
+    #         'x_val': 'rem_weight',
+    #         'y_val': ['pruned_es', 'rand_es']}
+    plot= {'title': file_name,
+           'x_label': "Weights remaining",
+           'y_label':"Validation Accuracy",
+           'baseline': "val_score",
+           'x_val': 'rem_weight',
+           'y_val': ['val_score','rand_init']}
+    plot_graph(run_data, plot,file_at=file_name + ".png")
     print("")
