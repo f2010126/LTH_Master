@@ -13,25 +13,26 @@ def get_masks(model, prune_amts={}, p_rate=0.2, ):
     :return: the created mask. model has served it's purpose.
     """
     # TODO: Adjust pruning
-    for name, module in model.named_modules():
+    for i, (name, module) in enumerate(model.named_children()):
         # prune 10% of connections in all 2D-conv layers
         if isinstance(module, torch.nn.Conv2d):
             module = prune.l1_unstructured(module, name='weight', amount=prune_amts['conv'])
         # prune 20% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
             module = prune.l1_unstructured(module, name='weight', amount=prune_amts['linear'])
+
     return list(model.named_buffers())
 
 
 def update_apply_masks(model, masks):
-    for name, module in model.named_modules():
+    for name, module in model.named_children():
         if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
             module = prune.custom_from_mask(module, name='weight', mask=masks[name + ".weight_mask"])
     return model
 
 
 def prune_random(model, p_rate=0.2):
-    for name, module in model.named_modules():
+    for name, module in model.named_children():
         # prune 20% of connections in all 2D-conv layers
         if isinstance(module, torch.nn.Conv2d):
             module = prune.random_unstructured(module, name='weight', amount=p_rate)
