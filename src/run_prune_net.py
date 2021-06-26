@@ -129,6 +129,7 @@ if __name__ == '__main__':
             'baseline': "full_es",
             'x_val': 'rem_weight',
             'y_val': ['pruned_es', 'rand_es'],
+            'y_max': args.epochs,
             'y_min': 'rand_es'}
     plot_graph(run_data, plot, file_at=file_name + "_es.png")
     plot = {'title': file_name,
@@ -137,6 +138,7 @@ if __name__ == '__main__':
             'baseline': "val_score",
             'x_val': 'rem_weight',
             'y_val': ['val_score', 'rand_init'],
+            'y_max': 100,
             'y_min': 'rand_init'}
     plot_graph(run_data, plot, file_at=file_name + ".png")
     print("")

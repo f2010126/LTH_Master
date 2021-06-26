@@ -67,7 +67,7 @@ def plot_graph(graph_data, plot_config, file_at="pruned.png"):
     ax = df.plot(x=plot_config['x_val'], y=plot_config['y_val'], title=plot_config['title'])
     ax.axhline(y=graph_data[plot_config['baseline']], color='r', linestyle='-')
     fmt = '%.0f%%'  # Format you want the ticks, e.g. '40%'
-    ax.set_ylim(rounddown(df[plot_config['y_min']].min()), 100)
+    ax.set_ylim(rounddown(df[plot_config['y_min']].min()), plot_config['y_max'])
     ax.set_xlim(0, 100)
     ax.invert_xaxis()
     xticks = mtick.FormatStrFormatter(fmt)
