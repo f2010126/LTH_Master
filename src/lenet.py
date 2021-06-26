@@ -16,17 +16,6 @@ def num_flat_features(x):
     # gaussian glorot init
 
 
-def init_weights(m):
-    """
-        Initialise weights acc the Xavier initialisation and bias set to 0.01
-        :param m:
-        :return:
-        """
-    if type(m) == nn.Linear:
-        torch.nn.init.xavier_uniform_(m.weight)
-        m.bias.data.fill_(0.01)
-
-
 def print_weights(model):
     """
     Print the weights of the model
@@ -35,22 +24,6 @@ def print_weights(model):
     """
     for param in model.parameters():
         print(param.data)
-
-
-def countRemWeights(model):
-    """
-    Percetage of weights that remain for training
-    :param model:
-    :return: % of weights remaining
-    """
-    total_weights = 0
-    rem_weights = 0
-    for name, module in model.named_modules():
-        if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
-            rem_weights += torch.count_nonzero(module.weight)
-            total_weights += sum([param.numel() for param in module.parameters()])
-    # return % of non 0 weights
-    return rem_weights.item() / total_weights * 100
 
 
 class LeNet(nn.Module):

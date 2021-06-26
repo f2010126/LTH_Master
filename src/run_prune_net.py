@@ -38,7 +38,8 @@ def handle_OG_model(model, args):
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
 
-    return original_state_dict, all_masks, metrics['val_score'] * 100, full_es
+    return original_state_dict, all_masks, {"val_score": metrics['val_score'] * 100,
+                                            "full_es": full_es}
 
 
 def pruned(model, args):
@@ -48,18 +49,14 @@ def pruned(model, args):
     :param model: model to train
     :return: dictionary with pruning data
     """
-    original_state_dict, all_masks, full_val, full_es = handle_OG_model(model, args)
-    prune_data = [{"rem_weight": 100,
-                   "val_score": full_val,
-                   "full_es": full_es}]
+    original_state_dict, all_masks, baselines = handle_OG_model(model, args)
+    prune_data = []
     # init a random model
     in_chan = 1 if args.dataset == 'mnist' else 3
     rando_net = LeNet(in_channels=in_chan)
     rando_net.apply(init_weights)
     for level in range(args.pruning_levels):
-        # Prune and get the new mask. prune rate will vary with epoch.
-        # TODO: IS THIS PRUNE RATE CORRECT??
-        # prune_rate = args.pruning_rate ** (1 / (level+ 1))
+        # Prune and get the new mask.
         prune_rate = args.pruning_rate / 100
         masks = get_masks(model, p_rate=prune_rate)
         # create a dict that has the same keys as state dict w/o being linked to model.
@@ -80,13 +77,17 @@ def pruned(model, args):
                            "pruned_es": pruned_es,
                            "rand_es": rand_es})
     # metrics
-    return full_val, prune_data
+    return baselines, prune_data
 
 
 if __name__ == '__main__':
     start = time.time()
     # Training settings
-    parser = argparse.ArgumentParser(description='LTH LeNet')
+    parser = argparse.ArgumentParser(description='LTH Experiments')
+    parser.add_argument('--model', default='LeNet',
+                        help='Class name of model to train',
+                        type=str, choices=['LeNet', 'Net2'])
+
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
@@ -110,16 +111,31 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     in_chan = 1 if args.dataset == 'mnist' else 3
-    net = LeNet(in_channels=in_chan)
-
+    net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
-    baseline, pruned = pruned(net, args)
+
+    run_data, pruned = pruned(net, args)
+    run_data["prune_data"] = pruned
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    json_dump = {"baseline": baseline, "prune_data": pruned}
-    file_name = f"prune_{args.dataset}_{args.pruning_levels}"
-    stored_at = save_data(json_dump, file_name + ".json")
-    plot_graph(json_dump, file_at=file_name + ".png")
+    file_name = f"prune_{args.model}_{args.dataset}_{args.pruning_levels}"
+    stored_at = save_data(run_data, file_name + ".json")
+    plot = {'title': file_name,
+            'x_label': "Weights remaining",
+            'y_label': "Early Stop Epoch",
+            'baseline': "full_es",
+            'x_val': 'rem_weight',
+            'y_val': ['pruned_es', 'rand_es'],
+            'y_min': 'rand_es'}
+    plot_graph(run_data, plot, file_at=file_name + "_es.png")
+    plot = {'title': file_name,
+            'x_label': "Weights remaining",
+            'y_label': "Validation Accuracy",
+            'baseline': "val_score",
+            'x_val': 'rem_weight',
+            'y_val': ['val_score', 'rand_init'],
+            'y_min': 'rand_init'}
+    plot_graph(run_data, plot, file_at=file_name + ".png")
     print("")
