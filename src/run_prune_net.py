@@ -115,7 +115,7 @@ if __name__ == '__main__':
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
 
-    in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
+    in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
