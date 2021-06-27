@@ -1,5 +1,5 @@
 class EarlyStopping:
-    def __init__(self, patience=5, min_delta=.0005):
+    def __init__(self, patience=5, min_delta=.009):
         """
 
         :param patience: how long to wait w/o loss improving
