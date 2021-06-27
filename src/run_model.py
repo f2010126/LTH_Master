@@ -7,6 +7,7 @@ import argparse
 import time
 from lenet import *
 from convnets import *
+from EarlyStopping import *
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -42,11 +43,11 @@ def run_training(model, args=None):
     logging.info('Model being trained:')
     score = []
     stop_epoch = args.epochs
+    if args.early_stop is not None:
+        e_stop = EarlyStopping(min_delta=0.09)
     for epoch in range(args.epochs):
-        # logging.info('#' * 50)
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
-        # logging.info('Train accuracy: %f', train_score)
         val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
         # logging.info('Validation accuracy: %f', val_score)
         # print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
@@ -99,7 +100,7 @@ if __name__ == '__main__':
                         help='Data to use for training')
     parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done? Default False')
     args = parser.parse_args()
-    in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
+    in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
@@ -109,4 +110,4 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    print(f"Validation: {metrics['val_score']}")
+    print(f"Validation: {metrics['val_score']} and Stopping :{0 if args.early_stop is not None else es_epoch}")

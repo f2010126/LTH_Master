@@ -64,4 +64,3 @@ if __name__ == '__main__':
     summary(net, (in_chan, 32, 32),
             device='cuda' if torch.cuda.is_available() else 'cpu')
     net.fc2.weight = torch.nn.Parameter(torch.zeros(net.fc2.weight.shape))
-    # print(summary(net, (1, 28, 28)))
