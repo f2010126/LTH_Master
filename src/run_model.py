@@ -97,15 +97,15 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
-    parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done? Default False')
-    parser.add_argument('--early-delta', type=float, default=0.001, help='Difference b/w best and current to decide to stop early')
+    parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done? Default False')
+    parser.add_argument('--early-delta', type=float, default=.009, help='Difference b/w best and current to decide to stop early')
     args = parser.parse_args()
     in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
             device='cuda' if torch.cuda.is_available() else 'cpu')
-    metrics, es_epoch = run_training(net, args)
+    metrics, es_epoch, _ = run_training(net, args)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)

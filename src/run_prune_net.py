@@ -148,4 +148,5 @@ if __name__ == '__main__':
             'y_max': 100,
             'y_min': 'rand_init'}
     plot_graph(run_data, plot, file_at=file_name + ".png")
+    print(f"Files saved at {stored_at}")
     print("")
