@@ -36,7 +36,7 @@ def handle_OG_model(model, args):
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
     # model.load_state_dict(original_state_dict)
     # Run and train the lenet OG, done in run_model.py
-    metrics, full_es = run_training(model, args=args)
+    metrics, full_es, _ = run_training(model, args=args)
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
 
@@ -73,14 +73,15 @@ def pruned(model, args):
         prune_random(rando_net, prune_rate)
         non_zero = countRemWeights(model)
         print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
-        last_run, pruned_es = run_training(model, args=args)
+        last_run, pruned_es, training = run_training(model, args=args)
         # rand_run, rand_es = {'val_score':0}, 0
-        rand_run, rand_es = run_training(rando_net, args)
+        rand_run, rand_es, _ = run_training(rando_net, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
                            "rand_init": rand_run['val_score'] * 100,
                            "pruned_es": pruned_es,
-                           "rand_es": rand_es})
+                           "rand_es": rand_es,
+                           "training_data": training})
     # metrics
     # TODO: baseline
     return baselines, prune_data
