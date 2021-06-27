@@ -44,13 +44,13 @@ def run_training(model, args=None):
     score = []
     stop_epoch = args.epochs
     if args.early_stop is not None:
-        e_stop = EarlyStopping(min_delta=0.09)
+        e_stop = EarlyStopping(min_delta=args.early_delta)
     for epoch in range(args.epochs):
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
         val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
         # logging.info('Validation accuracy: %f', val_score)
-        # print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
+        print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
         score.append({"train_loss": train_loss,
                       "train_score": train_score,
                       "val_score": val_score,
@@ -98,7 +98,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
-    parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done? Default False')
+    parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done? Default False')
+    parser.add_argument('--early-delta', type=float, default=0.1, help='Difference b/w best and current to decide to stop early')
     args = parser.parse_args()
     in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
@@ -110,4 +111,4 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    print(f"Validation: {metrics['val_score']} and Stopping :{0 if args.early_stop is not None else es_epoch}")
+    print(f"Validation: {metrics['val_score']} and Stopping :{0 if not args.early_stop else es_epoch}")
