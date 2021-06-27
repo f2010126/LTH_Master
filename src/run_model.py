@@ -84,10 +84,10 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='Net2',
                         help='Class name of modeto train',
                         choices=['LeNet', 'Net2'])
-    parser.add_argument('--batch-size', type=int, default=128,
+    parser.add_argument('--batch-size', type=int, default=512,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=10,
+    parser.add_argument('--epochs', type=int, default=30,
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--iterations', type=int, default=1700,
                         help='number of iterations to train (default: 1700)')
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
     parser.add_argument('--early-stop', type=bool, default=True, help='Should Early stopping be done? Default False')
-    parser.add_argument('--early-delta', type=float, default=0.1, help='Difference b/w best and current to decide to stop early')
+    parser.add_argument('--early-delta', type=float, default=0.001, help='Difference b/w best and current to decide to stop early')
     args = parser.parse_args()
     in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
