@@ -98,8 +98,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
-    parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done? Default False')
-    parser.add_argument('--early-delta', type=float, default=.009, help='Difference b/w best and current to decide to stop early')
+    parser.add_argument('--early-stop',
+                        action='store_true', help='Does Early if enabled')
+    parser.add_argument('--early-delta', type=float, default=.009, help='Difference b/w best and current to decide to '
+                                                                        'stop early')
     args = parser.parse_args()
     in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
