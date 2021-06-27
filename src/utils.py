@@ -76,7 +76,7 @@ def plot_graph(graph_data, plot_config, file_at="pruned.png"):
     ax.set_xlabel(plot_config['x_label'])
     ax.set_ylabel(plot_config['y_label'])
     fig = ax.get_figure()
-    # ax.plt.show()
+    # fig.show()
     json_path = os.path.join(os.getcwd(), "LTH_Results")
     fig.savefig(os.path.join(json_path, file_at))
     print("")
