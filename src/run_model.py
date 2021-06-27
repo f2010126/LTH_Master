@@ -49,8 +49,8 @@ def run_training(model, args=None):
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
         val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
         # logging.info('Validation accuracy: %f', val_score)
-        print(f"Validation loss {val_loss} and training loss {train_loss} best loss {e_stop.best_loss}")
-        score.append({"train_loss": train_loss,
+        score.append({"epoch": epoch,
+                      "train_loss": train_loss,
                       "train_score": train_score,
                       "val_score": val_score,
                       "val_loss": val_loss})
@@ -74,7 +74,7 @@ def run_training(model, args=None):
         #             break
 
         # scheduler.step()
-    return score[-1], stop_epoch
+    return score[-1], stop_epoch, score
 
 
 if __name__ == '__main__':
