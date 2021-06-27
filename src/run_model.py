@@ -55,6 +55,7 @@ def run_training(model, args=None):
                       "val_score": val_score,
                       "val_loss": val_loss})
         if args.early_stop:
+            print(f"early stopping set {args.early_stop} and delt {args.early_delta}")
             e_stop(val_loss)
             if e_stop.early_stop:
                 stop_epoch = epoch
