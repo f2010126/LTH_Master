@@ -65,7 +65,8 @@ def plot_graph(graph_data, plot_config, file_at="pruned.png"):
     df.set_index('rem_weight')
     # (t, t, 'r--', t, t**2, 'bs', t, t**3, 'g^')
     ax = df.plot(x=plot_config['x_val'], y=plot_config['y_val'], marker='o', title=plot_config['title'])
-    ax.axhline(y=graph_data[plot_config['baseline']], color='r', linestyle='-')
+    ax.axhline(y=graph_data[plot_config['baseline']], color='r', linestyle='-', label= plot_config['baseline'])
+    ax.annotate(plot_config['baseline'], (0, graph_data[plot_config['baseline']]))
     fmt = '%.0f%%'  # Format you want the ticks, e.g. '40%'
     ax.set_ylim(rounddown(df[plot_config['y_min']].min()), plot_config['y_max'])
     ax.set_xlim(0, 100)
