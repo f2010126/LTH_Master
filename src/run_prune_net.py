@@ -111,7 +111,8 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
     parser.add_argument('--early-stop', type=bool, default=False, help='Should Early stopping be done?')
-
+    parser.add_argument('--early-delta', type=float, default=0.1,
+                        help='Difference b/w best and current to decide to stop early')
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
 

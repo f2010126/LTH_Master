@@ -43,8 +43,7 @@ def run_training(model, args=None):
     logging.info('Model being trained:')
     score = []
     stop_epoch = args.epochs
-    if args.early_stop is not None:
-        e_stop = EarlyStopping(min_delta=args.early_delta)
+    e_stop = EarlyStopping(min_delta=args.early_delta)
     for epoch in range(args.epochs):
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
