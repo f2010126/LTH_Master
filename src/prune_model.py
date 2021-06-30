@@ -1,7 +1,8 @@
 import torch.nn.utils.prune as prune
-
-from lenet import *
-
+import torch
+import torch.nn as nn
+from utils import countRemWeights
+from lenet import LeNet, init_weights
 
 def get_masks(model, prune_amts={}, p_rate=0.2, ):
     """

@@ -1,7 +1,8 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchsummary import summary
-from utils import *
+from utils import init_weights
 
 
 class Net2(nn.Module):
