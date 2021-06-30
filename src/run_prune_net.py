@@ -1,12 +1,16 @@
-from lenet import *
-from convnets import *
-from data_and_augment import *
-from run_model import run_training
-from prune_model import *
 import argparse
-from utils import *
 import time
 import LTH_Constants
+import torch
+from torchsummary import summary
+from lenet import LeNet
+from convnets import Net2
+from run_model import run_training
+from prune_model import get_masks, update_apply_masks
+from prune_model import prune_random
+from utils import save_data, plot_graph
+from utils import init_weights, countRemWeights
+
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -55,7 +59,7 @@ def pruned(model, args):
     prune_data = []
     # init a random model
     in_chan = 1 if args.dataset == 'mnist' else 3
-    rando_net = eval(args.model)(in_channels=in_chan)
+    rando_net = globals()[args.model](in_channels=in_chan)
     rando_net.apply(init_weights)
     # set pruning configs
     prune_amt = LTH_Constants.conv2_prune if args.model == 'Net2' else LTH_Constants.lenet_prune
@@ -119,7 +123,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
-    net = eval(args.model)(in_channels=in_chan)
+    net = globals()[args.model](in_channels=in_chan).to(device)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
             device='cuda' if torch.cuda.is_available() else 'cpu')
