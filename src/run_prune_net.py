@@ -2,8 +2,9 @@ import argparse
 import time
 import LTH_Constants
 import torch
+import copy
 from torchsummary import summary
-from lenet import LeNet
+from lenet import LeNet, LinearNet
 from convnets import Net2
 from run_model import run_training
 from prune_model import get_masks, update_apply_masks
