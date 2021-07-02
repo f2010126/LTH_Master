@@ -35,7 +35,7 @@ def handle_OG_model(model, args):
     """
     # get hold of w0
     all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=LTH_Constants.init_mask)}
-    original_state_dict = model.state_dict()
+    original_state_dict = copy.deepcopy(model.state_dict())
     # # incase loading happens
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
     # model.load_state_dict(original_state_dict)
