@@ -57,7 +57,7 @@ def load_cifar10_data(batch=60):
                                      download=True,
                                      train=True,
                                      transform=train_transform, )
-    test_dataset = datasets.MNIST(
+    test_dataset = datasets.CIFAR10(
         root='data', train=False,
         download=True, transform=test_transform,
     )
