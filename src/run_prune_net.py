@@ -127,8 +127,8 @@ if __name__ == '__main__':
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
             device=device.type)
-    run_data, pruned = pruned(net, args)
-    run_data["prune_data"] = pruned
+    run_data, pruned_data = pruned(net, args)
+    run_data["prune_data"] = pruned_data
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
