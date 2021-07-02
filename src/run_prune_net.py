@@ -78,7 +78,6 @@ def pruned(model, args):
         non_zero = countRemWeights(model)
         print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, args=args)
-        # rand_run, rand_es = {'val_score':0}, 0
         rand_run, rand_es, _ = run_training(rando_net, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
@@ -135,23 +134,12 @@ if __name__ == '__main__':
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
     file_name = f"prune_{args.model}_{args.dataset}_{args.pruning_levels}"
     stored_at = save_data(run_data, file_name + ".json")
-    plot = {'title': file_name,
-            'x_label': "Weights remaining",
-            'y_label': "Early Stop Epoch",
-            'baseline': "full_es",
-            'x_val': 'rem_weight',
-            'y_val': ['pruned_es', 'rand_es'],
-            'y_max': args.epochs,
-            'y_min': 'rand_es'}
+    plot = LTH_Constants.default_plot_es
+    plot['title'] = file_name
+    plot['y_max'] = args.epochs
     plot_graph(run_data, plot, file_at=file_name + "_es.png")
-    plot = {'title': file_name,
-            'x_label': "Weights remaining",
-            'y_label': "Validation Accuracy",
-            'baseline': "val_score",
-            'x_val': 'rem_weight',
-            'y_val': ['val_score', 'rand_init'],
-            'y_max': 100,
-            'y_min': 'rand_init'}
+    plot = LTH_Constants.default_plot_acc
+    plot['title'] = file_name
+    plot['y_max'] = 100
     plot_graph(run_data, plot, file_at=file_name + ".png")
     print(f"Files saved at {stored_at}")
-
