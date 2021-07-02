@@ -126,7 +126,7 @@ if __name__ == '__main__':
     net = globals()[args.model](in_channels=in_chan).to(device)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
-            device='cuda' if torch.cuda.is_available() else 'cpu')
+            device=device.type)
     run_data, pruned = pruned(net, args)
     run_data["prune_data"] = pruned
     end = time.time()
