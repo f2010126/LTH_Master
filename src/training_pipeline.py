@@ -1,9 +1,7 @@
-import torch
 from tqdm import tqdm
 import time
 from evaluation import AverageMeter, accuracy
-import torch.nn.functional as F
-import numpy as np
+
 
 
 def train_fn(model, optimizer, criterion, loader, device, train=True):
@@ -32,17 +30,19 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         optimizer.zero_grad()
         logits = model(images)
         loss = criterion(logits, labels)
-        total_correct += (logits.argmax(dim=1) == labels).sum()
+        total_correct += (logits.argmax(dim=1) == labels).sum().item()
         loss.backward()
         # TODO: IS THIS CORRECTLY IMPLEMENETD?
         # freeze pruned weights by making their gradients 0
-        for name, param in model.named_parameters():
-            if 'weight' in name:
-                tensor = param.data.cpu().numpy()
-                grad_tensor = param.grad.data.cpu().numpy()
-                # set grad to 0 for 0 tensors, ie freeze their training
-                grad_tensor = np.where(tensor == 0, 0, grad_tensor)
-                param.grad.data = torch.from_numpy(grad_tensor).to(device)
+        for  module in model.modules():
+            if hasattr(module,"weight_mask"):
+                weight = next(param for name,param in module.named_parameters() if "weight" in name)
+                weight.grad = weight.grad * module.weight_mask
+                # tensor = param.data.cpu().numpy()
+                # grad_tensor = param.grad.data.cpu().numpy()
+                # # set grad to 0 for 0 tensors, ie freeze their training
+                # grad_tensor = np.where(tensor == 0, 0, grad_tensor)
+                # param.grad.data = torch.from_numpy(grad_tensor).to(device)
 
         optimizer.step()
 
@@ -52,4 +52,4 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         score.update(acc.item(), n)
 
     time_train += time.time() - time_begin
-    return total_correct.item() / len(loader.dataset), losses.avg
+    return total_correct / len(loader.dataset), losses.avg
