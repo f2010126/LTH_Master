@@ -40,7 +40,7 @@ def handle_OG_model(model, args):
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
     # model.load_state_dict(original_state_dict)
     # Run and train the lenet OG, done in run_model.py
-    metrics, full_es, _ = run_training(model, args=args)
+    metrics, full_es, _ = run_training(model,device, args=args)
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
 
