@@ -35,7 +35,6 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         loss = criterion(logits, labels)
         total_correct += (logits.argmax(dim=1) == labels).sum().item()
         loss.backward()
-        # TODO: IS THIS CORRECTLY IMPLEMENETD?
         # freeze pruned weights by making their gradients 0
         for  module in model.modules():
             if hasattr(module,"weight_mask"):

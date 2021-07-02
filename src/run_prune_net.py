@@ -99,7 +99,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Experiments')
     parser.add_argument('--model', default='Net2',
                         help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2'])
+                        type=str, choices=['LeNet', 'Net2','LinearNet'])
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
