@@ -70,8 +70,6 @@ def pruned(model, args):
         masks = get_masks(model, prune_amts=prune_amt)
         # create a dict that has the same keys as state dict w/o being linked to model.
         detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
-        if not (torch.logical_and(all_masks['fc1.weight_mask'],detached['fc1.weight_mask'])==detached['fc1.weight_mask']).all().item():
-            print("detached is different than masks")
         update_masks(all_masks, detached)
         # Load the OG weights and mask it
         model.load_state_dict(original_state_dict)
