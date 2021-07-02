@@ -21,7 +21,10 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
     model.train()
     time_train = 0
     total_correct = 0
-
+    for module in model.modules():
+        if hasattr(module,"weight_mask"):
+            weight = next(param for name,param in module.named_parameters() if "weight" in name)
+            weight.data = weight.data * module.weight_mask
     t = tqdm(loader)
     for images, labels in t:
         images = images.to(device)
