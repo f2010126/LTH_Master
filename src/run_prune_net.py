@@ -66,18 +66,19 @@ def pruned(model, args):
     prune_amt = LTH_Constants.conv2_prune if args.model == 'Net2' else LTH_Constants.lenet_prune
     for level in range(args.pruning_levels):
         # Prune and get the new mask.
-        prune_rate = args.pruning_rate / 100
-        masks = get_masks(model, prune_amts=prune_amt)
-        # create a dict that has the same keys as state dict w/o being linked to model.
-        detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
-        update_masks(all_masks, detached)
-        # Load the OG weights and mask it
-        model.load_state_dict(original_state_dict)
-        model = update_apply_masks(model, all_masks)
-        # prune randomly inited model randomly
-        prune_random(rando_net, prune_rate)
-        non_zero = countRemWeights(model)
-        print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
+        with torch.no_grad():
+            prune_rate = args.pruning_rate / 100
+            masks = get_masks(model, prune_amts=prune_amt)
+            # create a dict that has the same keys as state dict w/o being linked to model.
+            detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
+            update_masks(all_masks, detached)
+            # Load the OG weights and mask it
+            model.load_state_dict(original_state_dict)
+            model = update_apply_masks(model, all_masks)
+            # prune randomly inited model randomly
+            prune_random(rando_net, prune_rate)
+            non_zero = countRemWeights(model)
+            print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
         # rand_run, rand_es = {'val_score':0}, 0
         rand_run, rand_es, _ = run_training(rando_net, device, args)
