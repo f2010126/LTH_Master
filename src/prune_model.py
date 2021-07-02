@@ -26,9 +26,12 @@ def get_masks(model, prune_amts={}, p_rate=0.2, ):
 
 
 def update_apply_masks(model, masks):
-    for name, module in model.named_children():
-        if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
-            module = prune.custom_from_mask(module, name='weight', mask=masks[name + ".weight_mask"])
+    for key,val in masks.items():
+        layer = getattr(model,key.split('.')[0])
+        layer.weight_mask = val
+    # for name, module in model.named_children():
+    #     if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
+    #         module = prune.custom_from_mask(module, name='weight', mask=masks[name + ".weight_mask"])
     return model
 
 

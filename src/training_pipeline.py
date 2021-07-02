@@ -49,8 +49,8 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
 
         optimizer.step()
 
-        acc = accuracy(logits, labels)
-        n = images.size(0)
+        acc = accuracy(logits.detach(), labels)
+        n = images.shape[0]
         losses.update(loss.item(), n)
         score.update(acc.item(), n)
 
