@@ -119,7 +119,7 @@ if __name__ == '__main__':
                         help='Data to use for training')
     parser.add_argument('--early-stop',
                         action='store_true', help='Does Early if enabled')
-    parser.add_argument('--early-delta', type=float, default=1.0,
+    parser.add_argument('--early-delta', type=float, default=0.0005,
                         help='Difference b/w best and current to decide to stop early')
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
@@ -137,23 +137,12 @@ if __name__ == '__main__':
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
     file_name = f"prune_{args.model}_{args.dataset}_{args.pruning_levels}"
     stored_at = save_data(run_data, file_name + ".json")
-    plot = {'title': file_name,
-            'x_label': "Weights remaining",
-            'y_label': "Early Stop Epoch",
-            'baseline': "full_es",
-            'x_val': 'rem_weight',
-            'y_val': ['pruned_es', 'rand_es'],
-            'y_max': args.epochs,
-            'y_min': 'rand_es'}
+    plot = LTH_Constants.default_plot_es
+    plot['title'] = file_name
+    plot['y_max'] = args.epochs
     plot_graph(run_data, plot, file_at=file_name + "_es.png")
-    plot = {'title': file_name,
-            'x_label': "Weights remaining",
-            'y_label': "Validation Accuracy",
-            'baseline': "val_score",
-            'x_val': 'rem_weight',
-            'y_val': ['val_score', 'rand_init'],
-            'y_max': 100,
-            'y_min': 'rand_init'}
+    plot = LTH_Constants.default_plot_acc
+    plot['title'] = file_name
+    plot['y_max'] = 100
     plot_graph(run_data, plot, file_at=file_name + ".png")
     print(f"Files saved at {stored_at}")
-
