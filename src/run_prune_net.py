@@ -119,7 +119,7 @@ if __name__ == '__main__':
                         help='Data to use for training')
     parser.add_argument('--early-stop',
                         action='store_true', help='Does Early if enabled')
-    parser.add_argument('--early-delta', type=float, default=1.0,
+    parser.add_argument('--early-delta', type=float, default=0.0005,
                         help='Difference b/w best and current to decide to stop early')
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
