@@ -11,10 +11,10 @@ from lenet import LeNet
 from EarlyStopping import EarlyStopping
 from utils import init_weights
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-def setup_training(model, args):
+
+def setup_training(model, device, args):
     """
     Setup optimiser, dataloaders, loss
     :param model
@@ -39,9 +39,9 @@ def setup_training(model, args):
             "loss": criterion}
 
 
-def run_training(model, args=None):
+def run_training(model,device, args=None):
     model = model.to(device)
-    config = setup_training(model, args)
+    config = setup_training(model, device, args)
     logging.info('Model being trained:')
     score = []
     stop_epoch = args.epochs
@@ -103,13 +103,14 @@ if __name__ == '__main__':
                         action='store_true', help='Does Early if enabled')
     parser.add_argument('--early-delta', type=float, default=.009, help='Difference b/w best and current to decide to '
                                                                         'stop early')
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     args = parser.parse_args()
     in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
-            device='cuda' if torch.cuda.is_available() else 'cpu')
-    metrics, es_epoch, _ = run_training(net, args)
+            device=device.type)
+    metrics, es_epoch, _ = run_training(net,device, args)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)

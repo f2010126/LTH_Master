@@ -2,8 +2,9 @@ import argparse
 import time
 import LTH_Constants
 import torch
+import copy
 from torchsummary import summary
-from lenet import LeNet
+from lenet import LeNet, LinearNet
 from convnets import Net2
 from run_model import run_training
 from prune_model import get_masks, update_apply_masks
@@ -35,12 +36,12 @@ def handle_OG_model(model, args):
     """
     # get hold of w0
     all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=LTH_Constants.init_mask)}
-    original_state_dict = model.state_dict()
+    original_state_dict = copy.deepcopy(model.state_dict())
     # # incase loading happens
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
     # model.load_state_dict(original_state_dict)
     # Run and train the lenet OG, done in run_model.py
-    metrics, full_es, _ = run_training(model, args=args)
+    metrics, full_es, _ = run_training(model,device, args=args)
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
 
@@ -65,20 +66,22 @@ def pruned(model, args):
     prune_amt = LTH_Constants.conv2_prune if args.model == 'Net2' else LTH_Constants.lenet_prune
     for level in range(args.pruning_levels):
         # Prune and get the new mask.
-        prune_rate = args.pruning_rate / 100
-        masks = get_masks(model, prune_amts=prune_amt)
-        # create a dict that has the same keys as state dict w/o being linked to model.
-        detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
-        update_masks(all_masks, detached)
-        # Load the OG weights and mask it
-        model.load_state_dict(original_state_dict)
-        model = update_apply_masks(model, all_masks)
-        # prune randomly inited model randomly
-        prune_random(rando_net, prune_rate)
-        non_zero = countRemWeights(model)
-        print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
-        last_run, pruned_es, training = run_training(model, args=args)
-        rand_run, rand_es, _ = run_training(rando_net, args)
+        with torch.no_grad():
+            prune_rate = args.pruning_rate / 100
+            masks = get_masks(model, prune_amts=prune_amt)
+            # create a dict that has the same keys as state dict w/o being linked to model.
+            detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
+            update_masks(all_masks, detached)
+            # Load the OG weights and mask it
+            model.load_state_dict(original_state_dict)
+            model = update_apply_masks(model, all_masks)
+            # prune randomly inited model randomly
+            prune_random(rando_net, prune_rate)
+            non_zero = countRemWeights(model)
+            print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
+        last_run, pruned_es, training = run_training(model, device, args=args)
+        # rand_run, rand_es = {'val_score':0}, 0
+        rand_run, rand_es, _ = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
                            "rand_init": rand_run['val_score'] * 100,
@@ -96,7 +99,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Experiments')
     parser.add_argument('--model', default='Net2',
                         help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2'])
+                        type=str, choices=['LeNet', 'Net2','LinearNet'])
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
@@ -125,9 +128,9 @@ if __name__ == '__main__':
     net = globals()[args.model](in_channels=in_chan).to(device)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
-            device='cuda' if torch.cuda.is_available() else 'cpu')
-    run_data, pruned = pruned(net, args)
-    run_data["prune_data"] = pruned
+            device=device.type)
+    run_data, pruned_data = pruned(net, args)
+    run_data["prune_data"] = pruned_data
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
