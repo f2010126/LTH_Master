@@ -7,7 +7,7 @@ import torch
 import LTH_Constants
 import matplotlib.pyplot as plt
 
-
+#TODO: shift inside each class?
 def init_weights(m):
     """
         Initialise weights acc the Xavier initialisation and bias set to 0.01

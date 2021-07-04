@@ -2,7 +2,8 @@ import torch.nn.utils.prune as prune
 import torch
 import torch.nn as nn
 from utils import countRemWeights
-from lenet import LeNet, init_weights
+from linearnets import LeNet, init_weights
+
 
 def get_masks(model, prune_amts={}, p_rate=0.2, ):
     """
@@ -26,8 +27,8 @@ def get_masks(model, prune_amts={}, p_rate=0.2, ):
 
 
 def update_apply_masks(model, masks):
-    for key,val in masks.items():
-        layer = getattr(model,key.split('.')[0])
+    for key, val in masks.items():
+        layer = getattr(model, key.split('.')[0])
         layer.weight_mask = val
     # for name, module in model.named_children():
     #     if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):

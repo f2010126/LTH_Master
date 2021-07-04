@@ -3,7 +3,6 @@ import time
 from evaluation import AverageMeter, accuracy
 
 
-
 def train_fn(model, optimizer, criterion, loader, device, train=True):
     """
   Training method
@@ -21,7 +20,7 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
     model.train()
     time_train = 0
     total_correct = 0
-    
+
     t = tqdm(loader)
     for images, labels in t:
         images = images.to(device)
@@ -33,9 +32,9 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
         total_correct += (logits.argmax(dim=1) == labels).sum().item()
         loss.backward()
         # freeze pruned weights by making their gradients 0
-        for  module in model.modules():
-            if hasattr(module,"weight_mask"):
-                weight = next(param for name,param in module.named_parameters() if "weight" in name)
+        for module in model.modules():
+            if hasattr(module, "weight_mask"):
+                weight = next(param for name, param in module.named_parameters() if "weight" in name)
                 weight.grad = weight.grad * module.weight_mask
                 # tensor = param.data.cpu().numpy()
                 # grad_tensor = param.grad.data.cpu().numpy()

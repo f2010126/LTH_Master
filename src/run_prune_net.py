@@ -4,14 +4,13 @@ import LTH_Constants
 import torch
 import copy
 from torchsummary import summary
-from lenet import LeNet, LinearNet
+from linearnets import LeNet, LinearNet
 from convnets import Net2
 from run_model import run_training
 from prune_model import get_masks, update_apply_masks
 from prune_model import prune_random
 from utils import save_data, plot_graph
 from utils import init_weights, countRemWeights
-
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -41,7 +40,7 @@ def handle_OG_model(model, args):
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
     # model.load_state_dict(original_state_dict)
     # Run and train the lenet OG, done in run_model.py
-    metrics, full_es, _ = run_training(model,device, args=args)
+    metrics, full_es, _ = run_training(model, device, args=args)
     # Save OG model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
 
@@ -99,7 +98,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Experiments')
     parser.add_argument('--model', default='Net2',
                         help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2','LinearNet'])
+                        type=str, choices=['LeNet', 'Net2', 'LinearNet'])
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
