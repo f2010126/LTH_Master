@@ -10,8 +10,8 @@ class Net2(nn.Module):
         super(Net2, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, 32, 3, 1)
         self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        # self.dropout1 = nn.Dropout(0.25)
-        # self.dropout2 = nn.Dropout(0.5)
+        self.dropout_lin = nn.Dropout(0.5)
+        self.dropout_vis = nn.Dropout(0.2)
         self.fc1 = nn.Linear(64 * 14 * 14, 128)
         self.fc2 = nn.Linear(128, 10)
 
@@ -21,12 +21,13 @@ class Net2(nn.Module):
         x = self.conv2(x)
         x = F.relu(x)
         x = F.max_pool2d(x, 2)
-        # x = self.dropout1(x)
         x = torch.flatten(x, 1)
         x = self.fc1(x)
         x = F.relu(x)
-        # x = self.dropout2(x)
+        x = self.dropout_lin(x)
         x = self.fc2(x)
+        # TODO: Is this a visible layer?
+        x = self.dropout_vis(x)
         output = F.log_softmax(x, dim=1)
         return output
 
