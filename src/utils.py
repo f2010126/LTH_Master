@@ -71,6 +71,7 @@ def plot_graph(graph_data, plot_config, file_at="pruned.png"):
     ax.set_ylim(rounddown(df[plot_config['y_min']].min()), plot_config['y_max'])
     ax.set_xlim(0, 100)
     ax.invert_xaxis()
+    ax.semilogx()
     xticks = mtick.FormatStrFormatter(fmt)
     ax.xaxis.set_major_formatter(xticks)
     ax.set_xlabel(plot_config['x_label'])
