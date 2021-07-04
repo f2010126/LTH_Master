@@ -73,7 +73,7 @@ def pruned(model, args):
             detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
             update_masks(all_masks, detached)
             # Load the OG weights and mask it
-            model.load_state_dict(original_state_dict)
+            model.load_state_dict(copy.deepcopy(original_state_dict))
             model = update_apply_masks(model, all_masks)
             # prune randomly inited model randomly
             prune_random(rando_net, prune_rate)
