@@ -46,8 +46,8 @@ def save_data(json_dump, name_file="exp_result.json"):
     if not os.path.exists(json_path):
         os.makedirs(json_path)
     fname = os.path.join(json_path, name_file)
-    fh = open(fname, "w")
-    json.dump(json_dump, fh)
+    with open(fname, "w") as fh:
+        json.dump(json_dump, fh)
     return fname
 
 
@@ -107,21 +107,23 @@ def plot_graph(graph_data, plot_config, file_at="pruned.png"):
     :return: location
     """
     df = pd.DataFrame.from_dict(graph_data['prune_data'])
-    df.set_index('rem_weight')
+    df['index'] = list(df.index)
     # (t, t, 'r--', t, t**2, 'bs', t, t**3, 'g^')
     ax = df.plot(x=plot_config['x_val'], y=plot_config['y_val'], marker='o', title=plot_config['title'])
     ax.axhline(y=graph_data[plot_config['baseline']], color='r', linestyle='-', label=plot_config['baseline'])
     ax.annotate(plot_config['baseline'], (0, graph_data[plot_config['baseline']]))
     fmt = '%.0f%%'  # Format you want the ticks, e.g. '40%'
     ax.set_ylim(rounddown(df[plot_config['y_min']].min()), plot_config['y_max'])
-    ax.set_xlim(0, 100)
-    ax.invert_xaxis()
-    xticks = mtick.FormatStrFormatter(fmt)
-    ax.xaxis.set_major_formatter(xticks)
+    
+    # ax.set_xlim(0, 100)
+    # ax.invert_xaxis()
+    
     ax.set_xlabel(plot_config['x_label'])
     ax.set_ylabel(plot_config['y_label'])
+    ax.legend(loc='best')
+    if  not save_figure:
+        return 
     fig = ax.get_figure()
-    # fig.show()
     json_path = os.path.join(os.getcwd(), "LTH_Results")
     fig.savefig(os.path.join(json_path, file_at))
     print("")

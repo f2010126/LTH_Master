@@ -73,10 +73,10 @@ def pruned(model, args):
             detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
             update_masks(all_masks, detached)
             # Load the OG weights and mask it
-            model.load_state_dict(original_state_dict)
+            model.load_state_dict(copy.deepcopy(original_state_dict))
             model = update_apply_masks(model, all_masks)
             # prune randomly inited model randomly
-            prune_random(rando_net, prune_rate)
+            prune_random(rando_net,prune_rate, prune_amts=prune_amt )
             non_zero = countRemWeights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
@@ -121,6 +121,9 @@ if __name__ == '__main__':
                         action='store_true', help='Does Early if enabled')
     parser.add_argument('--early-delta', type=float, default=0.0005,
                         help='Difference b/w best and current to decide to stop early')
+    parser.add_argument('--name', default='prune',
+                        help='name to save data files and plots',
+                        type=str)
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
 
@@ -135,7 +138,7 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    file_name = f"prune_{args.model}_{args.dataset}_{args.pruning_levels}"
+    file_name = f"{args.name}_{args.model}_{args.dataset}_{args.pruning_levels}"
     stored_at = save_data(run_data, file_name + ".json")
     plot = LTH_Constants.default_plot_es
     plot['title'] = file_name
