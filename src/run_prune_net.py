@@ -76,7 +76,7 @@ def pruned(model, args):
             model.load_state_dict(copy.deepcopy(original_state_dict))
             model = update_apply_masks(model, all_masks)
             # prune randomly inited model randomly
-            prune_random(rando_net, prune_rate)
+            prune_random(rando_net,prune_rate, prune_amts=prune_amt )
             non_zero = countRemWeights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)

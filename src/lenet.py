@@ -30,7 +30,7 @@ class LinearNet(nn.Module):
     def __init__(self,in_channels=1):
         super().__init__()
         if in_channels == 1:
-            features = 784
+            features = 1024
         elif in_channels == 3:
             features = 3072
         self.fc1 = nn.Linear(in_features=features,out_features=10)
