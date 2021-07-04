@@ -121,6 +121,9 @@ if __name__ == '__main__':
                         action='store_true', help='Does Early if enabled')
     parser.add_argument('--early-delta', type=float, default=1.0,
                         help='Difference b/w best and current to decide to stop early')
+    parser.add_argument('--name', default='prune',
+                        help='name to save data files and plots',
+                        type=str)
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
 
@@ -135,7 +138,7 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    file_name = f"prune_{args.model}_{args.dataset}_{args.pruning_levels}"
+    file_name = f"{args.name}_{args.model}_{args.dataset}_{args.pruning_levels}"
     stored_at = save_data(run_data, file_name + ".json")
     plot = {'title': file_name,
             'x_label': "Weights remaining",
