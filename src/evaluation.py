@@ -4,7 +4,6 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
 class AverageMeter(object):
@@ -62,7 +61,7 @@ def eval_fn(model, loader, device, criterion, train=False):
     return total_correct.item() / len(loader.dataset), losses.avg
 
 
-def eval_model(model, saved_model_file):
+def eval_model(model,device, saved_model_file):
     model = model.to(device)
     model.load_state_dict(torch.load(os.path.join(os.getcwd(), 'models', saved_model_file)))
     normalize = transforms.Normalize(
