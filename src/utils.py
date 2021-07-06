@@ -12,7 +12,7 @@ def init_weights(m):
     """
         Initialise weights acc the Xavier initialisation and bias set to 0.01
         :param m:
-        :return:
+        :return: somethibf
         """
     if type(m) == torch.nn.Linear:
         torch.nn.init.xavier_uniform_(m.weight)
