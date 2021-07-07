@@ -4,14 +4,12 @@ import time
 import torch
 from torchsummary import summary
 from convnets import Net2
-from data_and_augment import load_cifar10_data,load_mnist_data
+from data_and_augment import load_cifar10_data, load_mnist_data
 from training_pipeline import train_fn
 from evaluation import eval_fn
-from lenet import LeNet
+from linearnets import LeNet, LinearNet
 from EarlyStopping import EarlyStopping
 from utils import init_weights
-
-
 
 
 def setup_training(model, device, args):
@@ -39,7 +37,7 @@ def setup_training(model, device, args):
             "loss": criterion}
 
 
-def run_training(model,device, args=None):
+def run_training(model, device, args=None):
     model = model.to(device)
     config = setup_training(model, device, args)
     logging.info('Model being trained:')
@@ -85,7 +83,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Model')
     parser.add_argument('--model', type=str, default='Net2',
                         help='Class name of modeto train',
-                        choices=['LeNet', 'Net2'])
+                        choices=['LeNet', 'Net2', 'LinearNet'])
     parser.add_argument('--batch-size', type=int, default=512,
                         help='input batch size for training (default: 128)')
 
@@ -110,7 +108,7 @@ if __name__ == '__main__':
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
             device=device.type)
-    metrics, es_epoch, _ = run_training(net,device, args)
+    metrics, es_epoch, _ = run_training(net, device, args)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)

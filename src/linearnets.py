@@ -26,17 +26,21 @@ def print_weights(model):
     for param in model.parameters():
         print(param.data)
 
+
 class LinearNet(nn.Module):
-    def __init__(self,in_channels=1):
+    def __init__(self, in_channels=1):
         super().__init__()
         if in_channels == 1:
             features = 1024
         elif in_channels == 3:
             features = 3072
-        self.fc1 = nn.Linear(in_features=features,out_features=10)
+        self.fc1 = nn.Linear(in_features=features, out_features=10)
         self.sig = nn.Sigmoid()
-    def forward(self,x):
-        return self.sig(self.fc1(x.view(x.shape[0],-1)))
+
+    def forward(self, x):
+        return self.sig(self.fc1(x.view(x.shape[0], -1)))
+
+
 class LeNet(nn.Module):
     # network structure
     def __init__(self, in_channels=1):
@@ -57,8 +61,7 @@ class LeNet(nn.Module):
         Args:
             x: input
         """
-        x = self.conv1(x)
-        x = F.max_pool2d(F.relu(x), (2, 2))
+        x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
         x = F.max_pool2d(F.relu(self.conv2(x)), 2)
         x = x.view(-1, num_flat_features(x))  # flatten all dimensions except the batch dimension
         x = F.relu(self.fc1(x))
@@ -66,11 +69,32 @@ class LeNet(nn.Module):
         x = self.fc3(x)
         return x
 
+class LeNet300(nn.Module):
+    """
+    2 FC layers with 300, 100 units
+    """
+
+    def __init__(self, in_channels=1):
+        super(LeNet300, self).__init__()
+        if in_channels == 1:
+            features = 784
+        elif in_channels == 3:
+            features = 3072
+        self.fc1 = nn.Linear(in_features=features, out_features=300)
+        self.fc2 = nn.Linear(in_features=300, out_features=100)
+        self.output = nn.Linear(in_features=100, out_features=10)
+
+    def forward(self,x):
+        out = F.relu(self.fc1(x))
+        out = F.relu(self.fc2(out))
+        return self.output(out)
+
+
 
 if __name__ == '__main__':
-    in_chan = 3
-    net = LeNet(in_channels=in_chan)
+    in_chan = 1
+    net = LeNet300(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, 32, 32),
             device='cuda' if torch.cuda.is_available() else 'cpu')
-    net.fc2.weight = torch.nn.Parameter(torch.zeros(net.fc2.weight.shape))
+
