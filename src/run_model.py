@@ -27,8 +27,8 @@ def setup_training(model, device, args):
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
     # TODO: optimiser? Scheduler?
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
-    # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     max_epochs = args.epochs  # if (args.epochs > math.floor(args.iterations / len(train_load))) else math.floor(
     # args.iterations / len(train_load))
     return {"optim": optimizer,
