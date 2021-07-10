@@ -77,6 +77,7 @@ def pruned(model, args):
             # prune randomly inited model randomly
             prune_random(rando_net, prune_rate, prune_amts=prune_amt)
             non_zero = countRemWeights(model)
+            print(f"random wghts {countRemWeights(rando_net)}")
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
         # rand_run, rand_es = {'val_score':0}, 0
