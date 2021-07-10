@@ -8,7 +8,7 @@ from convnets import Net2
 from data_and_augment import load_cifar10_data, load_mnist_data
 from training_pipeline import train_fn
 from evaluation import eval_fn
-from linearnets import LeNet, LinearNet, LeNet300
+from linearnets import LeNet, LeNet300
 from EarlyStopping import EarlyStopping
 from utils import init_weights
 
@@ -27,8 +27,8 @@ def setup_training(model, device, args):
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
     # TODO: optimiser? Scheduler?
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+    # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     max_epochs = args.epochs  # if (args.epochs > math.floor(args.iterations / len(train_load))) else math.floor(
     # args.iterations / len(train_load))
     return {"optim": optimizer,

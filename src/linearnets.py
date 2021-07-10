@@ -73,6 +73,7 @@ class LeNet300(nn.Module):
         self.relu_fc2 = nn.ReLU(inplace=True)
         self.fc3 = nn.Linear(100, 10)
 
+
     def forward(self, x):
         x = x.view(x.size(0), self.feat)
         x = self.fc1(x)
@@ -85,7 +86,7 @@ class LeNet300(nn.Module):
 
 if __name__ == '__main__':
     in_chan = 1
-    net = LeNet(in_channels=in_chan)
+    net = LeNet300(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, 28, 28),
             device='cuda' if torch.cuda.is_available() else 'cpu')
