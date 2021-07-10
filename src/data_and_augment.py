@@ -18,7 +18,6 @@ def load_mnist_data(batch=60):
         transforms.RandomCrop(28, padding=4),
         transforms.ColorJitter(brightness=.5, hue=.3),
         transforms.RandomPerspective(distortion_scale=0.6, p=1.0),
-        transforms.RandomAffine(degrees=(30, 70), translate=(0.1, 0.3), scale=(0.5, 0.75)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
