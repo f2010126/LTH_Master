@@ -75,7 +75,7 @@ def pruned(model, args):
             model.load_state_dict(copy.deepcopy(original_state_dict))
             model = update_apply_masks(model, all_masks)
             # prune randomly inited model randomly
-            prune_random(rando_net,prune_rate, prune_amts=prune_amt )
+            prune_random(rando_net, prune_rate, prune_amts=prune_amt)
             non_zero = countRemWeights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
@@ -96,9 +96,9 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Experiments')
-    parser.add_argument('--model', default='Net2',
+    parser.add_argument('--model', default='LeNet300',
                         help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2', 'LinearNet'])
+                        type=str, choices=['LeNet', 'Net2', 'LinearNet', 'LeNet300'])
     parser.add_argument('--batch-size', type=int, default=128,
                         help='input batch size for training (default: 128)')
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     # prune to 30 to get 0.1% weights but 25 is ok too
     args = parser.parse_args()
 
-    in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
+    in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
     net = globals()[args.model](in_channels=in_chan).to(device)
     net.apply(init_weights)
     summary(net, (in_chan, img, img),

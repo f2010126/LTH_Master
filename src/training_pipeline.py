@@ -21,8 +21,8 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
     time_train = 0
     total_correct = 0
 
-    t = tqdm(loader)
-    for images, labels in t:
+    pbar = tqdm(enumerate(loader), total=len(loader))
+    for step, (images, labels) in pbar:
         images = images.to(device)
         labels = labels.to(device)
 
@@ -43,6 +43,7 @@ def train_fn(model, optimizer, criterion, loader, device, train=True):
                 # param.grad.data = torch.from_numpy(grad_tensor).to(device)
 
         optimizer.step()
+
 
         acc = accuracy(logits.detach(), labels)
         n = images.shape[0]
