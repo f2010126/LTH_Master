@@ -48,7 +48,7 @@ class LeNet(nn.Module):
         # 1 input image channel, 6 output channels, 5x5 square conv kernel
         self.conv1 = nn.Conv2d(in_channels, 6, 3)
         self.conv2 = nn.Conv2d(6, 16, 3)
-        self.fc1 = nn.Linear(16 * 6 * 6, 120)  # 5x5 image dimension
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)  # 6x6 for 32 image dimension
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
@@ -99,7 +99,7 @@ class LeNet300(nn.Module):
 
 if __name__ == '__main__':
     in_chan = 1
-    net = LeNet300(in_channels=in_chan)
+    net = LeNet(in_channels=in_chan)
     net.apply(init_weights)
     summary(net, (in_chan, 28, 28),
             device='cuda' if torch.cuda.is_available() else 'cpu')

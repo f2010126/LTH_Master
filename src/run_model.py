@@ -48,7 +48,7 @@ def run_training(model, device, args=None):
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
         val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
-        # logging.info('Validation accuracy: %f', val_score)
+        print('Validation accuracy: %f', val_score)
         score.append({"epoch": epoch,
                       "train_loss": train_loss,
                       "train_score": train_score,
@@ -72,8 +72,9 @@ def run_training(model, device, args=None):
         #         if e_stop.early_stop:
         #             stop_epoch = epoch
         #             break
-        test_score, test_loss = eval_fn(model, config["data"][2], device, config["loss"])
-        print(f"Loss {test_loss} and score {test_score}")
+
+    test_score, test_loss = eval_fn(model, config["data"][2], device, config["loss"])
+    print(f" Evaluating on Test: Loss {test_loss} and score {test_score}")
     return score[-1], stop_epoch, score
 
 
