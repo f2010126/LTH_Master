@@ -25,11 +25,10 @@ def setup_training(model, device, args):
     else:
         train_load, val_load, test_data = load_cifar10_data(args.batch_size)
 
-        # result = (on_false, on_true)[condition]
     criterion = torch.nn.CrossEntropyLoss().to(device)
     # TODO: optimiser? Scheduler?
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1.3e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     max_epochs = args.epochs if (args.epochs > math.floor(args.iterations / len(train_load))) else math.floor(
         args.iterations / len(train_load))
     return {"optim": optimizer,
@@ -73,8 +72,6 @@ def run_training(model, device, args=None):
         #         if e_stop.early_stop:
         #             stop_epoch = epoch
         #             break
-
-        # scheduler.step()
         test_score, test_loss = eval_fn(model, config["data"][2], device, config["loss"])
         print(f"Loss {test_loss} and score {test_score}")
     return score[-1], stop_epoch, score
@@ -93,10 +90,10 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=10,
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--iterations', type=int, default=50000,
-                        help='number of iterations to train (default: 1700)')
+                        help='number of iterations to train (default: 50000)')
 
-    parser.add_argument('--lr', type=float, default=0.0012,
-                        help='learning rate 0.0012')
+    parser.add_argument('--lr', type=float, default=1.2e-3,
+                        help='learning rate 1.2e-3')
 
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
                         help='Data to use for training')

@@ -4,7 +4,7 @@ import LTH_Constants
 import torch
 import copy
 from torchsummary import summary
-from linearnets import LeNet, LinearNet
+from linearnets import LeNet, LinearNet, LeNet300
 from convnets import Net2
 from run_model import run_training
 from prune_model import get_masks, update_apply_masks
@@ -99,14 +99,16 @@ if __name__ == '__main__':
     parser.add_argument('--model', default='LeNet300',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2', 'LinearNet', 'LeNet300'])
-    parser.add_argument('--batch-size', type=int, default=128,
-                        help='input batch size for training (default: 128)')
+    parser.add_argument('--batch-size', type=int, default=60,
+                        help='input batch size for training (default: 60)')
 
     parser.add_argument('--epochs', type=int, default=20,
                         help='number of epochs to train (default: 10)')
+    parser.add_argument('--iterations', type=int, default=50000,
+                        help='number of iterations to train (default: 50000)')
 
-    parser.add_argument('--lr', type=float, default=0.0012,
-                        help='learning rate 0.0012')
+    parser.add_argument('--lr', type=float, default=1.2e-3,
+                        help='learning rate 1.2e-3')
 
     parser.add_argument('--pruning-rate', type=int, default=20,
                         help='how much to prune. taken as a % (default: 20)')
@@ -114,7 +116,7 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-levels', type=int, default=3,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
-    parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
+    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
     parser.add_argument('--early-stop',
                         action='store_true', help='Does Early if enabled')
