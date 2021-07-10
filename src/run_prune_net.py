@@ -4,7 +4,7 @@ import LTH_Constants
 import torch
 import copy
 from torchsummary import summary
-from linearnets import LeNet, LinearNet, LeNet300
+from linearnets import LeNet, LeNet300
 from convnets import Net2
 from run_model import run_training
 from prune_model import get_masks, update_apply_masks
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Experiments')
     parser.add_argument('--model', default='LeNet300',
                         help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2', 'LinearNet', 'LeNet300'])
+                        type=str, choices=['LeNet', 'Net2', 'LeNet300'])
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
 

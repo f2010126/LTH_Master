@@ -27,20 +27,6 @@ def print_weights(model):
         print(param.data)
 
 
-class LinearNet(nn.Module):
-    def __init__(self, in_channels=1):
-        super().__init__()
-        if in_channels == 1:
-            features = 1024
-        elif in_channels == 3:
-            features = 3072
-        self.fc1 = nn.Linear(in_features=features, out_features=10)
-        self.sig = nn.Sigmoid()
-
-    def forward(self, x):
-        return self.sig(self.fc1(x.view(x.shape[0], -1)))
-
-
 class LeNet(nn.Module):
     # network structure
     def __init__(self, in_channels=1):

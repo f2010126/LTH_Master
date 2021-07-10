@@ -29,8 +29,8 @@ def setup_training(model, device, args):
     # TODO: optimiser? Scheduler?
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    max_epochs = args.epochs #if (args.epochs > math.floor(args.iterations / len(train_load))) else math.floor(
-        #args.iterations / len(train_load))
+    max_epochs = args.epochs  # if (args.epochs > math.floor(args.iterations / len(train_load))) else math.floor(
+    # args.iterations / len(train_load))
     return {"optim": optimizer,
             "data": (train_load, val_load, test_data),
             "loss": criterion,
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Model')
     parser.add_argument('--model', type=str, default='LeNet300',
                         help='Class name of model to train',
-                        choices=['LeNet', 'Net2', 'LinearNet', 'LeNet300'])
+                        choices=['LeNet', 'Net2', 'LeNet300'])
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 128)')
 
