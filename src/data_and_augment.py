@@ -16,8 +16,8 @@ def load_mnist_data(batch=60):
     train_transform = transforms.Compose([
         transforms.Resize((28, 28)),
         transforms.RandomCrop(28, padding=4),
-        transforms.ColorJitter(brightness=.5, hue=.3),
-        transforms.RandomAffine(degrees=(30, 70), translate=(0.1, 0.3), scale=(0.5, 0.75)),
+        # transforms.ColorJitter(brightness=.5, hue=.3),
+        # transforms.RandomAffine(degrees=(30, 70), translate=(0.1, 0.3), scale=(0.5, 0.75)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
