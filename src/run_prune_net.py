@@ -133,6 +133,7 @@ if __name__ == '__main__':
     net.apply(init_weights)
     summary(net, (in_chan, img, img),
             device=device.type)
+    print(f"Arguments: {args}")
     run_data, pruned_data = pruned(net, args)
     run_data["prune_data"] = pruned_data
     end = time.time()

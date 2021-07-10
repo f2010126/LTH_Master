@@ -106,6 +106,7 @@ if __name__ == '__main__':
     in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
+    print(f"Arguments: {args}")
     summary(net, (in_chan, img, img),
             device=device.type)
     metrics, es_epoch, _ = run_training(net, device, args)
