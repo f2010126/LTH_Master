@@ -59,7 +59,7 @@ def pruned(model, args):
     # rando_net = globals()[args.model](in_channels=in_chan)
     # rando_net.apply(init_weights)
     # set pruning configs
-    prune_amt = [0.7, 0.8, 0.85, 0.97, 0.988, 0.998]
+    prune_amt = [0.9, 0.59, 0.83 ,0.93, 0.97, 0.995]
     for amt in prune_amt:
         # Prune and get the new mask.
         with torch.no_grad():
@@ -115,7 +115,7 @@ if __name__ == '__main__':
                         help='Data to use for training')
     parser.add_argument('--early-stop',
                         action='store_true', help='Does Early if enabled')
-    parser.add_argument('--early-delta', type=float, default=0.0005,
+    parser.add_argument('--early-delta', type=float, default=0.005,
                         help='Difference b/w best and current to decide to stop early')
     parser.add_argument('--name', default='cheating_prune',
                         help='name to save data files and plots',
