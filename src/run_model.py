@@ -18,6 +18,7 @@ def setup_training(model, device, args):
     Setup optimiser, dataloaders, loss
     :param model
     :param args
+    :param device cpu or gpu
     :return: config dict to run
     """
     if args.dataset == 'mnist':

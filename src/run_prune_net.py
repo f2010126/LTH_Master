@@ -10,7 +10,7 @@ from run_model import run_training
 from prune_model import get_masks, update_apply_masks
 from prune_model import prune_random
 from utils import save_data, plot_graph
-from utils import init_weights, countRemWeights
+from utils import init_weights, count_rem_weights
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -26,7 +26,7 @@ def update_masks(masks, new_mask):
         masks[name] = torch.logical_and(mask, new_mask[name])
 
 
-def handle_OG_model(model, args):
+def handle_og_model(model, args):
     """
     Run, train, setup and save the baseline for the experiment
     :param model: baseline model, weights inited with glorot gaussian
@@ -55,7 +55,7 @@ def pruned(model, args):
     :param model: model to train
     :return: dictionary with pruning data
     """
-    original_state_dict, all_masks, baselines = handle_OG_model(model, args)
+    original_state_dict, all_masks, baselines = handle_og_model(model, args)
     prune_data = []
     # init a random model
     in_chan = 1 if args.dataset == 'mnist' else 3
@@ -76,7 +76,7 @@ def pruned(model, args):
             model = update_apply_masks(model, all_masks)
             # prune randomly inited model randomly
             prune_random(rando_net, prune_rate, prune_amts=prune_amt)
-            non_zero = countRemWeights(model)
+            non_zero = count_rem_weights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
         # rand_run, rand_es = {'val_score':0}, 0

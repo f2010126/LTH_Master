@@ -32,8 +32,8 @@ class LeNet(nn.Module):
     def __init__(self, in_channels=1):
         super(LeNet, self).__init__()
         # 1 input image channel, 6 output channels, 5x5 square conv kernel
-        self.conv1 = nn.Conv2d(in_channels, 6, 3)
-        self.conv2 = nn.Conv2d(6, 16, 3)
+        self.conv1 = nn.Conv2d(in_channels, 6, (3, 3))
+        self.conv2 = nn.Conv2d(6, 16, (3, 3))
         self.fc1 = nn.Linear(16 * 5 * 5, 120)  # 6x6 for 32 image dimension
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
@@ -72,7 +72,6 @@ class LeNet300(nn.Module):
         self.fc2 = nn.Linear(300, 100)
         self.relu_fc2 = nn.ReLU(inplace=True)
         self.fc3 = nn.Linear(100, 10)
-
 
     def forward(self, x):
         x = x.view(x.size(0), self.feat)
