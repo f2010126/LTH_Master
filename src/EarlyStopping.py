@@ -2,49 +2,15 @@ import numpy as np
 import torch
 import os
 
-class EarlyStopping:
-    def __init__(self, patience=5, min_delta=.009):
-        """
-
-        :param patience: how long to wait w/o loss improving
-        :param min_delta: difference b/w current loss and best loss
-        """
-        self.patience = patience
-        self.min_delta = min_delta
-        self.counter = 0
-        self.best_loss = None
-        self.early_stop = False
-
-    def __call__(self, val_loss):
-        if self.best_loss is None:
-            self.best_loss = val_loss
-        elif self.best_loss - val_loss < self.min_delta:
-            # no improvement found
-            self.counter += 1
-            # print(f"counter {self.counter} of {self.patience}")
-            if self.counter >= self.patience:
-                self.early_stop = True
-        else:
-            # loss is reducing
-            self.best_loss = val_loss
-            self.counter = 0
-
-
 class Py_EarlyStop:
-    """Early stops the training if validation loss doesn't improve after a given patience."""
+    """Early stopping."""
     def __init__(self, patience=7, verbose=False, delta=0, path='checkpoint.pt', trace_func=print):
         """
-        Args:
-            patience (int): How long to wait after last time validation loss improved.
-                            Default: 7
-            verbose (bool): If True, prints a message for each validation loss improvement.
-                            Default: False
-            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
-                            Default: 0
-            path (str): Path for the checkpoint to be saved to.
-                            Default: 'checkpoint.pt'
-            trace_func (function): trace print function.
-                            Default: print
+        :param patience:
+        :param verbose:
+        :param delta:
+        :param path:
+        :param trace_func:
         """
         self.patience = patience
         self.verbose = verbose
@@ -64,7 +30,7 @@ class Py_EarlyStop:
             self.save_checkpoint(val_loss, model)
         elif score < self.best_score + self.delta:
             self.counter += 1
-            self.trace_func(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            self.trace_func(f"EarlyStopping counter: {self.counter} out of {self.patience}")
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
@@ -73,7 +39,7 @@ class Py_EarlyStop:
             self.counter = 0
 
     def save_checkpoint(self, val_loss, model):
-        '''Saves model when validation loss decrease.'''
+        '''Save Model'''
         if self.verbose:
             self.trace_func(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
         json_path = os.path.join(os.getcwd(), "LTH_Results")
