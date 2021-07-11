@@ -27,28 +27,14 @@ def print_weights(model):
         print(param.data)
 
 
-class LinearNet(nn.Module):
-    def __init__(self, in_channels=1):
-        super().__init__()
-        if in_channels == 1:
-            features = 1024
-        elif in_channels == 3:
-            features = 3072
-        self.fc1 = nn.Linear(in_features=features, out_features=10)
-        self.sig = nn.Sigmoid()
-
-    def forward(self, x):
-        return self.sig(self.fc1(x.view(x.shape[0], -1)))
-
-
 class LeNet(nn.Module):
     # network structure
     def __init__(self, in_channels=1):
         super(LeNet, self).__init__()
         # 1 input image channel, 6 output channels, 5x5 square conv kernel
-        self.conv1 = nn.Conv2d(in_channels, 6, 3)
-        self.conv2 = nn.Conv2d(6, 16, 3)
-        self.fc1 = nn.Linear(16 * 6 * 6, 120)  # 5x5 image dimension
+        self.conv1 = nn.Conv2d(in_channels, 6, (3, 3))
+        self.conv2 = nn.Conv2d(6, 16, (3, 3))
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)  # 6x6 for 32 image dimension
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
@@ -69,6 +55,7 @@ class LeNet(nn.Module):
         x = self.fc3(x)
         return x
 
+
 class LeNet300(nn.Module):
     """
     2 FC layers with 300, 100 units
@@ -77,24 +64,28 @@ class LeNet300(nn.Module):
     def __init__(self, in_channels=1):
         super(LeNet300, self).__init__()
         if in_channels == 1:
-            features = 784
-        elif in_channels == 3:
-            features = 3072
-        self.fc1 = nn.Linear(in_features=features, out_features=300)
-        self.fc2 = nn.Linear(in_features=300, out_features=100)
-        self.output = nn.Linear(in_features=100, out_features=10)
+            self.feat = 28 * 28
+        else:
+            self.feat = 32 * 32
+        self.fc1 = nn.Linear(self.feat, 300)
+        self.relu_fc1 = nn.ReLU(inplace=True)
+        self.fc2 = nn.Linear(300, 100)
+        self.relu_fc2 = nn.ReLU(inplace=True)
+        self.fc3 = nn.Linear(100, 10)
 
-    def forward(self,x):
-        out = F.relu(self.fc1(x))
-        out = F.relu(self.fc2(out))
-        return self.output(out)
-
+    def forward(self, x):
+        x = x.view(x.size(0), self.feat)
+        x = self.fc1(x)
+        x = self.relu_fc1(x)
+        x = self.fc2(x)
+        x = self.relu_fc2(x)
+        x = self.fc3(x)
+        return x
 
 
 if __name__ == '__main__':
     in_chan = 1
     net = LeNet300(in_channels=in_chan)
     net.apply(init_weights)
-    summary(net, (in_chan, 32, 32),
+    summary(net, (in_chan, 28, 28),
             device='cuda' if torch.cuda.is_available() else 'cpu')
-

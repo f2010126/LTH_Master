@@ -55,7 +55,7 @@ def eval_fn(model, loader, device, criterion, train=False):
             score.update(acc.item(), n)
             losses.update(loss.item(), n)
 
-            t.set_description('(=> Test) Score: {:.4f}'.format(score.avg))
+            # t.set_description('(=> Test) Score: {:.4f}'.format(score.avg))
 
     return total_correct.item() / len(loader.dataset), losses.avg
 

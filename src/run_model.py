@@ -2,13 +2,14 @@ import logging
 import argparse
 import time
 import torch
+import math
 from torchsummary import summary
 from convnets import Net2
 from data_and_augment import load_cifar10_data, load_mnist_data
 from training_pipeline import train_fn
 from evaluation import eval_fn
-from linearnets import LeNet, LinearNet
-from EarlyStopping import EarlyStopping
+from linearnets import LeNet, LeNet300
+from EarlyStopping import Py_EarlyStop
 from utils import init_weights
 
 
@@ -17,6 +18,7 @@ def setup_training(model, device, args):
     Setup optimiser, dataloaders, loss
     :param model
     :param args
+    :param device cpu or gpu
     :return: config dict to run
     """
     if args.dataset == 'mnist':
@@ -24,17 +26,16 @@ def setup_training(model, device, args):
     else:
         train_load, val_load, test_data = load_cifar10_data(args.batch_size)
 
-        # result = (on_false, on_true)[condition]
     criterion = torch.nn.CrossEntropyLoss().to(device)
     # TODO: optimiser? Scheduler?
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.005, momentum=0.9)
-    # optimizer = torch.optim.Adam(model.parameters(), lr=0.12)
-    # t_max = int(len(train_load) / batch)
-    # scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=t_max)
-
+    # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    max_epochs = args.epochs  # if (args.epochs > math.floor(args.iterations / len(train_load))) else math.floor(
+    # args.iterations / len(train_load))
     return {"optim": optimizer,
             "data": (train_load, val_load, test_data),
-            "loss": criterion}
+            "loss": criterion,
+            "max_epochs": max_epochs}
 
 
 def run_training(model, device, args=None):
@@ -42,21 +43,27 @@ def run_training(model, device, args=None):
     config = setup_training(model, device, args)
     logging.info('Model being trained:')
     score = []
-    stop_epoch = args.epochs
-    e_stop = EarlyStopping(min_delta=args.early_delta)
-    for epoch in range(args.epochs):
+    e_stop = Py_EarlyStop(patience=10, verbose=True)
+    for epoch in range(config["max_epochs"]):
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
         val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
-        # logging.info('Validation accuracy: %f', val_score)
+        print('Validation accuracy: %f', val_score)
         score.append({"epoch": epoch,
                       "train_loss": train_loss,
                       "train_score": train_score,
                       "val_score": val_score,
                       "val_loss": val_loss})
+
+        print_msg = (f'Epoch no :{epoch+1}/{config["max_epochs"]} ' +
+                     f'train_loss: {train_loss:.5f} ' +
+                     f'valid_loss: {val_loss:.5f}')
+
+        print(print_msg)
         if args.early_stop:
-            e_stop(val_loss)
+            e_stop(val_loss, model)
             if e_stop.early_stop:
+                print("STOP")
                 stop_epoch = epoch
                 break
         # if epoch % 2 == 0 or epoch == (args.epochs - 1):
@@ -73,7 +80,9 @@ def run_training(model, device, args=None):
         #             stop_epoch = epoch
         #             break
 
-        # scheduler.step()
+    test_score, test_loss = eval_fn(model, config["data"][2], device, config["loss"])
+    stop_epoch = sorted(score, key=lambda k: k['val_loss'])[0]['epoch']
+    print(f" Evaluating on Test: Loss {test_loss} and score {test_score}")
     return score[-1], stop_epoch, score
 
 
@@ -81,21 +90,21 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Model')
-    parser.add_argument('--model', type=str, default='Net2',
-                        help='Class name of modeto train',
-                        choices=['LeNet', 'Net2', 'LinearNet'])
-    parser.add_argument('--batch-size', type=int, default=512,
+    parser.add_argument('--model', type=str, default='LeNet300',
+                        help='Class name of model to train',
+                        choices=['LeNet', 'Net2', 'LeNet300'])
+    parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=30,
+    parser.add_argument('--epochs', type=int, default=5,
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--iterations', type=int, default=1700,
-                        help='number of iterations to train (default: 1700)')
+    parser.add_argument('--iterations', type=int, default=50000,
+                        help='number of iterations to train (default: 50000)')
 
-    parser.add_argument('--lr', type=float, default=0.0012,
-                        help='learning rate 0.0012')
+    parser.add_argument('--lr', type=float, default=1.2e-3,
+                        help='learning rate 1.2e-3')
 
-    parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
+    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
     parser.add_argument('--early-stop',
                         action='store_true', help='Does Early if enabled')
@@ -103,9 +112,10 @@ if __name__ == '__main__':
                                                                         'stop early')
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     args = parser.parse_args()
-    in_chan, img = (1, 32) if args.dataset == 'mnist' else (3, 32)
+    in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
+    print(f"Arguments: {args}")
     summary(net, (in_chan, img, img),
             device=device.type)
     metrics, es_epoch, _ = run_training(net, device, args)
@@ -113,4 +123,7 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    print(f"Validation: {metrics['val_score']} and Stopping :{0 if not args.early_stop else es_epoch}")
+    print(f"Validation: {metrics['val_score']} and Stopping :{es_epoch}")
+
+# LeNet300- 50kitr/60batch Adam 1.2e-3
+# Conv2 20k itr/60 batch Adam 2e-4

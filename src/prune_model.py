@@ -1,11 +1,10 @@
 import torch.nn.utils.prune as prune
 import torch
-import torch.nn as nn
-from utils import countRemWeights
+from utils import count_rem_weights
 from linearnets import LeNet, init_weights
 
 
-def get_masks(model, prune_amts={}, p_rate=0.2, ):
+def get_masks(model, p_rate=0.2, prune_amts=None):
     """
     prune the lowest p% weights by magnitude per layer
 
@@ -14,7 +13,10 @@ def get_masks(model, prune_amts={}, p_rate=0.2, ):
     :param prune_amts: dictionary
     :return: the created mask. model has served it's purpose.
     """
-    # TODO: Adjust pruning
+    # TODO: Adjust pruning with output layer
+    if prune_amts is None:  # ie dict is empty, use the default prune rate
+        prune_amts = {"linear": p_rate, "conv": p_rate, "last": p_rate}
+
     for i, (name, module) in enumerate(model.named_children()):
         # prune 10% of connections in all 2D-conv layers
         if isinstance(module, torch.nn.Conv2d):
@@ -26,7 +28,7 @@ def get_masks(model, prune_amts={}, p_rate=0.2, ):
     return list(model.named_buffers())
 
 
-def update_apply_masks(model, masks):
+def update_apply_masks(model, masks):  # doesn't seem to be needed.
     for key, val in masks.items():
         layer = getattr(model, key.split('.')[0])
         layer.weight_mask = val
@@ -36,7 +38,9 @@ def update_apply_masks(model, masks):
     return model
 
 
-def prune_random(model, p_rate, prune_amts):
+def prune_random(model, p_rate=0.2, prune_amts=None):
+    if prune_amts is None:  # ie dict is empty, use the default prune rate
+        prune_amts = {"linear": p_rate, "conv": p_rate, "last": p_rate}
     for name, module in model.named_children():
         # prune 20% of connections in all 2D-conv layers
         if isinstance(module, torch.nn.Conv2d):
@@ -53,14 +57,12 @@ def prune_tut(net):
     print(module._forward_pre_hooks)
     prune.remove(module, "bias")
     prune.l1_unstructured(module, name="bias", amount=2)
-    prune.l1_unstructured(module, name="bias", amount=1)
-    prune.l1_unstructured(module, name="bias", amount=1)
-    prune.remove(module, "bias")
 
 
 if __name__ == '__main__':
     net = LeNet()
     net.apply(init_weights)
-
-    masks = get_masks(net, prune_amts={"linear": 0.2, "conv": 0.1, "last": 0.1})
-    print(f"Count zero : {countRemWeights(net)}")
+    prune_rate = 0.8
+    prune_custom = {"linear": 0.2, "conv": 0.1, "last": 0.1}
+    masks = get_masks(net, p_rate=prune_rate)
+    print(f"Count zero : {count_rem_weights(net)}")

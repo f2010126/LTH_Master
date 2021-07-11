@@ -20,7 +20,7 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
-def countRemWeights(model):
+def count_rem_weights(model):
     """
     Percetage of weights that remain for training
     :param model:
@@ -62,6 +62,7 @@ def plot_graph(graph_data, plot_config, file_at="pruned.png", save_figure=True):
     :param graph_data: dict of data
     :param plot_config: graph details and columns
     :param file_at: location of plot
+    :param save_figure: bool to save plot or not
     :return: location
     """
     df = pd.DataFrame.from_dict(graph_data['prune_data'])
