@@ -9,7 +9,7 @@ from data_and_augment import load_cifar10_data, load_mnist_data
 from training_pipeline import train_fn
 from evaluation import eval_fn
 from linearnets import LeNet, LeNet300
-from EarlyStopping import EarlyStopping, Py_EarlyStop
+from EarlyStopping import Py_EarlyStop
 from utils import init_weights
 
 
@@ -43,8 +43,7 @@ def run_training(model, device, args=None):
     config = setup_training(model, device, args)
     logging.info('Model being trained:')
     score = []
-    stop_epoch = config["max_epochs"]
-    e_stop = Py_EarlyStop(patience=20, verbose=True)
+    e_stop = Py_EarlyStop(patience=10, verbose=True)
     for epoch in range(config["max_epochs"]):
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
@@ -82,6 +81,7 @@ def run_training(model, device, args=None):
         #             break
 
     test_score, test_loss = eval_fn(model, config["data"][2], device, config["loss"])
+    stop_epoch = sorted(score, key=lambda k: k['val_loss'])[0]['epoch']
     print(f" Evaluating on Test: Loss {test_loss} and score {test_score}")
     return score[-1], stop_epoch, score
 
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=10,
+    parser.add_argument('--epochs', type=int, default=5,
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--iterations', type=int, default=50000,
                         help='number of iterations to train (default: 50000)')
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    print(f"Validation: {metrics['val_score']} and Stopping :{0 if not args.early_stop else es_epoch}")
+    print(f"Validation: {metrics['val_score']} and Stopping :{es_epoch}")
 
 # LeNet300- 50kitr/60batch Adam 1.2e-3
 # Conv2 20k itr/60 batch Adam 2e-4
