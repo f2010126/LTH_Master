@@ -5,7 +5,7 @@ import torch
 import copy
 from torchsummary import summary
 from linearnets import LeNet, LeNet300
-from convnets import Net2, Net4
+from convnets import Net2, Net4, Net4Drop
 from run_model import run_training
 from prune_model import get_masks, update_apply_masks
 from prune_model import prune_random
@@ -98,17 +98,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Experiments')
     parser.add_argument('--model', default='Net4',
                         help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Net4'])
+                        type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Net4', 'Net4Drop'])
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
 
-    parser.add_argument('--epochs', type=int, default=30,
-                        help='number of epochs to train (default: 10)')
-    parser.add_argument('--iterations', type=int, default=30000,
-                        help='number of iterations to train (default: 50000)')
+    parser.add_argument('--epochs', type=int, default=55,
+                        help='number of epochs to train (default: 55)')
+    parser.add_argument('--iterations', type=int, default=60000,
+                        help='number of iterations to train (default: 60000)')
 
-    parser.add_argument('--lr', type=float, default=2e-4,
-                        help='learning rate 2e-4')
+    parser.add_argument('--lr', type=float, default=4e-4,
+                        help='learning rate 4e-4')
 
     parser.add_argument('--pruning-rate', type=int, default=20,
                         help='how much to prune. taken as a % (default: 20)')

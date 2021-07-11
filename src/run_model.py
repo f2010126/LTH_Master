@@ -4,7 +4,7 @@ import time
 import torch
 import math
 from torchsummary import summary
-from convnets import Net2,Net4
+from convnets import Net2, Net4, Net4Drop
 from data_and_augment import load_cifar10_data, load_mnist_data
 from training_pipeline import train_fn
 from evaluation import eval_fn
@@ -55,7 +55,7 @@ def run_training(model, device, args=None):
                       "val_score": val_score,
                       "val_loss": val_loss})
 
-        print_msg = (f'Epoch no :{epoch+1}/{config["max_epochs"]} ' +
+        print_msg = (f'Epoch no :{epoch + 1}/{config["max_epochs"]} ' +
                      f'train_loss: {train_loss:.5f} ' +
                      f'valid_loss: {val_loss:.5f}')
 
@@ -90,19 +90,19 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Model')
-    parser.add_argument('--model', type=str, default='Net4',
+    parser.add_argument('--model', type=str, default='Net4Drop',
                         help='Class name of model to train',
-                        choices=['LeNet', 'Net2', 'LeNet300','Net4'])
+                        choices=['LeNet', 'Net2', 'LeNet300', 'Net4'])
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=30,
+    parser.add_argument('--epochs', type=int, default=100,
                         help='number of epochs to train (default: 10)')
-    parser.add_argument('--iterations', type=int, default=30000,
+    parser.add_argument('--iterations', type=int, default=75000,
                         help='number of iterations to train (default: 50000)')
 
-    parser.add_argument('--lr', type=float, default=3e-4,
-                        help='learning rate 3e-3')
+    parser.add_argument('--lr', type=float, default=4e-4,
+                        help='learning rate 4e-4')
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
