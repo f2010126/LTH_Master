@@ -40,7 +40,6 @@ def handle_og_model(model, args):
     metrics, full_es, _ = run_training(model, device, args=args)
     # Save trained model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
-
     return original_state_dict, all_masks, {"val_score": metrics['val_score'] * 100,
                                             "full_es": full_es}
 

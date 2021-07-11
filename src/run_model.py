@@ -9,7 +9,7 @@ from data_and_augment import load_cifar10_data, load_mnist_data
 from training_pipeline import train_fn
 from evaluation import eval_fn
 from linearnets import LeNet, LeNet300
-from EarlyStopping import EarlyStopping
+from EarlyStopping import EarlyStopping, Py_EarlyStop
 from utils import init_weights
 
 
@@ -44,7 +44,7 @@ def run_training(model, device, args=None):
     logging.info('Model being trained:')
     score = []
     stop_epoch = config["max_epochs"]
-    e_stop = EarlyStopping(min_delta=args.early_delta)
+    e_stop = Py_EarlyStop(patience=20, verbose=True)
     for epoch in range(config["max_epochs"]):
         # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
@@ -55,9 +55,16 @@ def run_training(model, device, args=None):
                       "train_score": train_score,
                       "val_score": val_score,
                       "val_loss": val_loss})
+
+        print_msg = (f'Epoch no :{epoch+1}/{config["max_epochs"]} ' +
+                     f'train_loss: {train_loss:.5f} ' +
+                     f'valid_loss: {val_loss:.5f}')
+
+        print(print_msg)
         if args.early_stop:
-            e_stop(val_loss)
+            e_stop(val_loss, model)
             if e_stop.early_stop:
+                print("STOP")
                 stop_epoch = epoch
                 break
         # if epoch % 2 == 0 or epoch == (args.epochs - 1):
