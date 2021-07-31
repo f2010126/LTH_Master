@@ -58,7 +58,7 @@ def pruned(model, args):
     # rando_net = globals()[args.model](in_channels=in_chan)
     # rando_net.apply(init_weights)
     # set pruning configs
-    prune_amt = [0.1, 0.5, 0.6, 0.7, 0.97, 0.995]
+    prune_amt = [0.1, 0.965, 0.990, .995, 0.997]
     for amt in prune_amt:
         # Prune and get the new mask.
         with torch.no_grad():
