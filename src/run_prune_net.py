@@ -96,7 +96,7 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Experiments')
-    parser.add_argument('--model', default='Net4',
+    parser.add_argument('--model', default='LeNet300',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Net4', 'Net4Drop'])
     parser.add_argument('--batch-size', type=int, default=60,
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     parser.add_argument('--iterations', type=int, default=60000,
                         help='number of iterations to train (default: 60000)')
 
-    parser.add_argument('--lr', type=float, default=4e-4,
+    parser.add_argument('--lr', type=float, default=1.2e-3,
                         help='learning rate 4e-4')
 
     parser.add_argument('--pruning-rate', type=int, default=20,
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-levels', type=int, default=3,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
-    parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
+    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
     parser.add_argument('--early-stop',
                         action='store_true', help='Does Early if enabled')
