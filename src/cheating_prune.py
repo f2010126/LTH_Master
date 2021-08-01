@@ -96,7 +96,7 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='Selectively Pruning to certain sparsity')
-    parser.add_argument('--model', default='LeNet300',
+    parser.add_argument('--model', default='Net2',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2', 'LeNet300'])
     parser.add_argument('--batch-size', type=int, default=60,
