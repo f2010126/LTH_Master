@@ -14,8 +14,6 @@ from utils import init_weights, count_rem_weights
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-
-# TODO: GET THIS LOGIC CHECKED
 def update_masks(masks, new_mask):
     """
     Combine the new mask
@@ -102,7 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
 
-    parser.add_argument('--epochs', type=int, default=55,
+    parser.add_argument('--epochs', type=int, default=66,
                         help='number of epochs to train (default: 55)')
     parser.add_argument('--iterations', type=int, default=60000,
                         help='number of iterations to train (default: 60000)')
@@ -113,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-rate', type=int, default=20,
                         help='how much to prune. taken as a % (default: 20)')
 
-    parser.add_argument('--pruning-levels', type=int, default=3,
+    parser.add_argument('--pruning-levels', type=int, default=26,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
