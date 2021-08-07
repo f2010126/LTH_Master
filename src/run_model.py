@@ -96,7 +96,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 128)')
 
-    parser.add_argument('--epochs', type=int, default=5,
+    parser.add_argument('--epochs', type=int, default=10,
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--iterations', type=int, default=50000,
                         help='number of iterations to train (default: 50000)')

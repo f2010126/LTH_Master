@@ -80,13 +80,14 @@ def pruned(model, args):
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
         # rand_run, rand_es = {'val_score':0}, 0
-        rand_run, rand_es, _ = run_training(rando_net, device, args)
+        rand_run, rand_es, rand_training = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
                            "rand_init": rand_run['val_score'] * 100,
                            "pruned_es": pruned_es,
                            "rand_es": rand_es,
-                           "training_data": training})
+                           "training_data": training,
+                           "random_training":rand_training})
     # metrics
     # TODO: baseline
     return baselines, prune_data
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
 
-    parser.add_argument('--epochs', type=int, default=20,
+    parser.add_argument('--epochs', type=int, default=2,
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--iterations', type=int, default=50000,
                         help='number of iterations to train (default: 50000)')
@@ -113,7 +114,7 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-rate', type=int, default=20,
                         help='how much to prune. taken as a % (default: 20)')
 
-    parser.add_argument('--pruning-levels', type=int, default=3,
+    parser.add_argument('--pruning-levels', type=int, default=1,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
     parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
