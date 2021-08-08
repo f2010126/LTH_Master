@@ -9,12 +9,15 @@ def load_mnist_data(batch=60):
     :return: loaders for train, validation and test
     """
     test_transform = transforms.Compose([
-        transforms.Resize((32, 32)),
+        transforms.Resize((28, 28)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
     train_transform = transforms.Compose([
-        transforms.Resize((32, 32)),
+        transforms.Resize((28, 28)),
+        transforms.RandomCrop(28, padding=4),
+        # transforms.ColorJitter(brightness=.5, hue=.3),
+        # transforms.RandomAffine(degrees=(30, 70), translate=(0.1, 0.3), scale=(0.5, 0.75)),
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
@@ -49,11 +52,13 @@ def load_cifar10_data(batch=60):
         transforms.Normalize((0.1307,), (0.3081,)),
     ])
     train_transform = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
         transforms.Resize((32, 32)),
         transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
     ])
-    mnsit_dataset = datasets.CIFAR10('data',
+    cifar_dataset = datasets.CIFAR10('data',
                                      download=True,
                                      train=True,
                                      transform=train_transform, )
@@ -61,7 +66,7 @@ def load_cifar10_data(batch=60):
         root='data', train=False,
         download=True, transform=test_transform,
     )
-    train_set, val_set = torch.utils.data.random_split(mnsit_dataset, [45000, 5000])
+    train_set, val_set = torch.utils.data.random_split(cifar_dataset, [45000, 5000])
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=batch,
                                                shuffle=True, num_workers=2)
     val_loader = torch.utils.data.DataLoader(val_set, batch_size=batch,
