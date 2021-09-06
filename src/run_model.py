@@ -11,6 +11,7 @@ from evaluation import eval_fn
 from linearnets import LeNet, LeNet300
 from EarlyStopping import Py_EarlyStop
 from utils import init_weights
+from resnets import Resnets
 
 
 def setup_training(model, device, args):
@@ -90,21 +91,21 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Model')
-    parser.add_argument('--model', type=str, default='LeNet300',
+    parser.add_argument('--model', type=str, default='Resnets',
                         help='Class name of model to train',
-                        choices=['LeNet', 'Net2', 'LeNet300'])
+                        choices=['LeNet', 'Net2', 'LeNet300','Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
-                        help='input batch size for training (default: 128)')
+                        help='input batch size for training (default: 60)')
 
-    parser.add_argument('--epochs', type=int, default=10,
-                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--epochs', type=int, default=1,
+                        help='number of epochs to train (default: 1)')
     parser.add_argument('--iterations', type=int, default=50000,
                         help='number of iterations to train (default: 50000)')
 
     parser.add_argument('--lr', type=float, default=1.2e-3,
                         help='learning rate 1.2e-3')
 
-    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
+    parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
     parser.add_argument('--early-stop',
                         action='store_true', help='Does Early if enabled')
@@ -127,3 +128,4 @@ if __name__ == '__main__':
 
 # LeNet300- 50kitr/60batch Adam 1.2e-3
 # Conv2 20k itr/60 batch Adam 2e-4
+# Resnet 30k/128batch SGD .1,.01,.001 momentum 09 20% conv
