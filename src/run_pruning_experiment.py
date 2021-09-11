@@ -6,6 +6,7 @@ import copy
 from torchsummary import summary
 from linearnets import LeNet, LeNet300
 from convnets import Net2
+from resnets import Resnets
 from run_model_experiment import run_training
 from prune_model import get_masks, update_apply_masks
 from prune_model import prune_random
@@ -15,7 +16,6 @@ from utils import init_weights, count_rem_weights
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
-# TODO: GET THIS LOGIC CHECKED
 def update_masks(masks, new_mask):
     """
     Combine the new mask
@@ -55,6 +55,7 @@ def pruned(model, args):
     :param model: model to train
     :return: dictionary with pruning data
     """
+    # train a model to 100% as baseline
     original_state_dict, all_masks, baselines = handle_og_model(model, args)
     prune_data = []
     # init a random model
@@ -62,11 +63,10 @@ def pruned(model, args):
     rando_net = globals()[args.model](in_channels=in_chan)
     rando_net.apply(init_weights)
     # set pruning configs
-    prune_amt = LTH_Constants.conv2_prune if args.model == 'Net2' else LTH_Constants.lenet_prune
+    prune_amt = {'linear':args.pruning_rate_fc/100,'conv':args.pruning_rate_conv/100, 'last':0.1}
     for level in range(args.pruning_levels):
         # Prune and get the new mask.
         with torch.no_grad():
-            prune_rate = args.pruning_rate / 100
             masks = get_masks(model, prune_amts=prune_amt)
             # create a dict that has the same keys as state dict w/o being linked to model.
             detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
@@ -75,7 +75,7 @@ def pruned(model, args):
             model.load_state_dict(copy.deepcopy(original_state_dict))
             model = update_apply_masks(model, all_masks)
             # prune randomly inited model randomly
-            prune_random(rando_net, prune_rate, prune_amts=prune_amt)
+            prune_random(rando_net, prune_amts=prune_amt)
             non_zero = count_rem_weights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
@@ -89,7 +89,6 @@ def pruned(model, args):
                            "training_data": training,
                            "random_training":rand_training})
     # metrics
-    # TODO: baseline
     return baselines, prune_data
 
 
@@ -97,13 +96,13 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Experiments')
-    parser.add_argument('--model', default='LeNet300',
+    parser.add_argument('--model', default='Resnets',
                         help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2', 'LeNet300'])
+                        type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
 
-    parser.add_argument('--epochs', type=int, default=2,
+    parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--iterations', type=int, default=50000,
                         help='number of iterations to train (default: 50000)')
@@ -111,13 +110,14 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=1.2e-3,
                         help='learning rate 1.2e-3')
 
-    parser.add_argument('--pruning-rate', type=int, default=20,
-                        help='how much to prune. taken as a % (default: 20)')
-
+    parser.add_argument('--pruning-rate-conv', type=int, default=20,
+                        help='how much to prune a conv layer. taken as a % (default: 20)')
+    parser.add_argument('--pruning-rate-fc', type=int, default=20,
+                        help='how much to prune a fully connected layer. taken as a % (default: 20)')
     parser.add_argument('--pruning-levels', type=int, default=1,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
-    parser.add_argument('--dataset', type=str, default='mnist', choices=['mnist', 'cifar10'],
+    parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
     parser.add_argument('--early-stop',
                         action='store_true', help='Does Early if enabled')
