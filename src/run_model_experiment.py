@@ -46,7 +46,7 @@ def run_training(model, device, args=None):
     score = []
     e_stop = Py_EarlyStop(patience=10, verbose=True)
     for epoch in range(config["max_epochs"]):
-        # logging.info('Epoch [{}/{}]'.format(epoch + 1, n_epochs))
+        logging.info('Epoch [{}/{}]'.format(epoch + 1, config["max_epochs"]))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device)
         val_score, val_loss = eval_fn(model, config["data"][1], device, config["loss"])
         print('Validation accuracy: %f', val_score)
@@ -56,11 +56,6 @@ def run_training(model, device, args=None):
                       "val_score": val_score,
                       "val_loss": val_loss})
 
-        print_msg = (f'Epoch no :{epoch+1}/{config["max_epochs"]} ' +
-                     f'train_loss: {train_loss:.5f} ' +
-                     f'valid_loss: {val_loss:.5f}')
-
-        print(print_msg)
         if args.early_stop:
             e_stop(val_loss, model)
             if e_stop.early_stop:
@@ -93,7 +88,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Model')
     parser.add_argument('--model', type=str, default='Resnets',
                         help='Class name of model to train',
-                        choices=['LeNet', 'Net2', 'LeNet300','Resnets'])
+                        choices=['LeNet', 'Net2', 'LeNet300', 'Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
 

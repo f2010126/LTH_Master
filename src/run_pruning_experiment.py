@@ -63,7 +63,7 @@ def pruned(model, args):
     rando_net = globals()[args.model](in_channels=in_chan)
     rando_net.apply(init_weights)
     # set pruning configs
-    prune_amt = {'linear':args.pruning_rate_fc/100,'conv':args.pruning_rate_conv/100, 'last':0.1}
+    prune_amt = {'linear': args.pruning_rate_fc / 100, 'conv': args.pruning_rate_conv / 100, 'last': 0.1}
     for level in range(args.pruning_levels):
         # Prune and get the new mask.
         with torch.no_grad():
@@ -87,7 +87,7 @@ def pruned(model, args):
                            "pruned_es": pruned_es,
                            "rand_es": rand_es,
                            "training_data": training,
-                           "random_training":rand_training})
+                           "random_training": rand_training})
     # metrics
     return baselines, prune_data
 
