@@ -8,6 +8,13 @@
 #MSUB -m bea
 #MSUB -M dipti.sengupta@students.uni-freiburg.de
 
+
+export MODEL=$1
+export BATCH=$2
+export LR=$3
+export NAME=$4
+export EPOCH=$5
+
 cd $(ws_find lth_ws)/LTH_Master
 module load tools/conda/latest
 conda config --prepend envs_dirs $( ws_find lth_ws )/conda/envs
@@ -21,6 +28,6 @@ conda install -y numpy matplotlib pytorch tensorboard torchvision pandas
 conda install -c conda-forge -y pytorch-model-summary
 python3 -c "import torch; print(torch.__version__)"
 
-python3 -m run_pruning_experiment --model Resnets --batch-size 128 --epochs 60 --lr 0.01 --pruning-levels 25 --dataset cifar10 --name ResNetExp
+python3 -m run_pruning_experiment --model $MODEL --batch-size $BATCH --epochs $EPOCH --lr $LR --pruning-levels 25 --dataset cifar10 --name $NAME
 
 conda deactivate
