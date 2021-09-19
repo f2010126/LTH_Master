@@ -1,10 +1,34 @@
-
 import argparse
 import time
-from torchsummary import summary
-from models import Net2
+import torch
+from models import Net2, count_rem_weights
 from data_lightning import LightningCIFAR10
 import pytorch_lightning as pl
+from pytorch_lightning.callbacks import Callback, ModelPruning
+import os
+
+
+class TrainerCallbacks(Callback):
+
+    def on_fit_end(self, trainer, pl_module):
+        print(f"Normal trainer. fit end check weights here {count_rem_weights(pl_module)}")
+
+    def on_test_end(self, trainer, pl_module):
+        print(f"Normal trainer.test end check weights here {count_rem_weights(pl_module)}")
+
+
+def run_training(args, model, dm):
+    trainer = pl.Trainer(max_epochs=args.epochs,
+                         weights_summary="full",
+                         default_root_dir='test_loggers/',
+                         log_every_n_steps=1,
+                         profiler="simple",
+                         fast_dev_run=True,
+                         callbacks=[TrainerCallbacks()])
+    trainer.fit(model, datamodule=dm)
+    print(f"TEST")
+    trainer.test(model=model, datamodule=dm)
+    pass
 
 if __name__ == '__main__':
     start = time.time()
@@ -25,16 +49,14 @@ if __name__ == '__main__':
                         help='Data to use for training')
 
     # Training settings
-    # set LR, batch size, Data,
     args = parser.parse_args()
+    loss = torch.nn.CrossEntropyLoss()
     dm = LightningCIFAR10(batch_size=args.batch_size)
-
-    model = eval(args.model)(learning_rate=args.lr) #Net2()
+    loss = torch.nn.CrossEntropyLoss()
+    model = eval(args.model)(learning_rate=args.lr)  # Net2()
     args.epochs = 2
-    trainer = pl.Trainer(max_epochs=args.epochs,
-                         weights_summary="full")
-    trainer.fit(model,datamodule=dm)
 
+    run_training(args,model,dm)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
