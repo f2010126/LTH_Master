@@ -1,34 +1,37 @@
 import argparse
 import time
 import torch
-from models import Net2, count_rem_weights
+from models import Net2
 from data_lightning import LightningCIFAR10
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import Callback, ModelPruning
+from pytorch_lightning.callbacks import Callback, EarlyStopping, StochasticWeightAveraging
 import os
 
 
 class TrainerCallbacks(Callback):
-
-    def on_fit_end(self, trainer, pl_module):
-        print(f"Normal trainer. fit end check weights here {count_rem_weights(pl_module)}")
-
-    def on_test_end(self, trainer, pl_module):
-        print(f"Normal trainer.test end check weights here {count_rem_weights(pl_module)}")
-
+    pass
 
 def run_training(args, model, dm):
+    trainer_callbacks = [TrainerCallbacks()]
+    if args.use_swa:
+        trainer_callbacks.append(StochasticWeightAveraging(annealing_epochs=2))
+    if args.early_stop:
+        trainer_callbacks.append(EarlyStopping(monitor="val_loss_epoch", min_delta=0.1, patience=2, verbose=True, mode="min"))
     trainer = pl.Trainer(max_epochs=args.epochs,
                          weights_summary="full",
                          default_root_dir='test_loggers/',
+                         check_val_every_n_epoch=2,
+                         limit_train_batches=100,
+                         limit_val_batches=100,
+                         limit_test_batches=100,
                          log_every_n_steps=1,
                          profiler="simple",
-                         fast_dev_run=True,
-                         callbacks=[TrainerCallbacks()])
+                         callbacks=trainer_callbacks)
     trainer.fit(model, datamodule=dm)
     print(f"TEST")
     trainer.test(model=model, datamodule=dm)
     pass
+
 
 if __name__ == '__main__':
     start = time.time()
@@ -44,9 +47,15 @@ if __name__ == '__main__':
                         help='learning rate 1.2e-3')
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
-
+    parser.add_argument('--use-swa',
+                        action='store_true', help='Uses SWA if enabled')
+    parser.add_argument('--early-stop',
+                        action='store_true', help='Does Early if enabled')
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
+    parser.add_argument('--name', default='Exp',
+                        help='name to save data files and plots',
+                        type=str)
 
     # Training settings
     args = parser.parse_args()
@@ -54,9 +63,11 @@ if __name__ == '__main__':
     dm = LightningCIFAR10(batch_size=args.batch_size)
     loss = torch.nn.CrossEntropyLoss()
     model = eval(args.model)(learning_rate=args.lr)  # Net2()
-    args.epochs = 2
+    args.epochs = 10
+    args.early_stop= True
+    args.use_swa = True
 
-    run_training(args,model,dm)
+    run_training(args, model, dm)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)

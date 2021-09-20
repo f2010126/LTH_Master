@@ -36,7 +36,6 @@ def get_masks(model, prune_amts=None):
     """
     if prune_amts is None:  # ie dict is empty, use the default prune rate = 0.2
         prune_amts = {"linear": 0.2, "conv": 0.2, "last": 0.2}
-    print(f"before pruning {count_rem_weights(model)}")
     for i, (name, module) in enumerate(model.named_modules()):
         # name and val
         # prune 20% of connections in all 2D-conv layers
@@ -45,7 +44,6 @@ def get_masks(model, prune_amts=None):
         # prune 20% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
             module = prune.l1_unstructured(module, name='weight', amount=prune_amts['linear'])
-    print(f"pruning should ve done {count_rem_weights(model)}")
     return list(model.named_buffers())
 
 
