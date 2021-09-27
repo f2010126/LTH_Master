@@ -1,6 +1,6 @@
 from tqdm import tqdm
 import time
-from evaluation import AverageMeter, accuracy
+from .evaluation import AverageMeter, accuracy
 
 
 def train_fn(model, optimizer, criterion, loader, device, train=True):

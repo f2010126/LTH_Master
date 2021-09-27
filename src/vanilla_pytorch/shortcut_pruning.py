@@ -1,15 +1,15 @@
 import argparse
 import time
-import LTH_Constants
+from src.vanilla_pytorch.LTH_Constants import init_mask, default_plot_acc, default_plot_es
 import torch
 import copy
 from torchsummary import summary
-from run_model_experiment import run_training
-from models.linearnets import LeNet300
-from models.convnets import Net2
-from models.resnets import Resnets
-from prune_model import get_masks, prune_random, update_apply_masks
-from utils import save_data, plot_graph,init_weights, count_rem_weights
+from src.vanilla_pytorch.run_model_experiment import run_training
+from src.vanilla_pytorch.prune_model import get_masks, prune_random, update_apply_masks
+from src.vanilla_pytorch.utils import save_data, plot_graph, init_weights, count_rem_weights
+from src.vanilla_pytorch.models.linearnets import LeNet300, LeNet
+from src.vanilla_pytorch.models.convnets import Net2
+from src.vanilla_pytorch.models.resnets import Resnets
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -33,7 +33,7 @@ def handle_og_model(model, args):
     :return: the original weights of the network, initial masks
     """
     # get hold of w0
-    all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=LTH_Constants.init_mask)}
+    all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=init_mask)}
     original_state_dict = copy.deepcopy(model.state_dict())
     # Run and train the lenet OG, done in run_model_.py
     metrics, full_es, _ = run_training(model, device, args=args)
@@ -66,7 +66,7 @@ def pruned(model, args):
         with torch.no_grad():
             # set pruning configs
             prune_config = {'linear': amt, 'conv': amt, 'last': 0.1}
-            masks = get_masks(model,prune_amts=prune_config)
+            masks = get_masks(model, prune_amts=prune_config)
             # create a dict that has the same keys as state dict w/o being linked to model.
             detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
             update_masks(all_masks, detached)
@@ -83,8 +83,8 @@ def pruned(model, args):
             non_zero = count_rem_weights(model)
             print(f"Pruning amt {amt * 100} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
-        rand_run, rand_es = {'val_score': 0}, 0
-        # rand_run, rand_es, _ = run_training(rando_net, device, args)
+        # rand_run, rand_es = {'val_score': 0}, 0
+        rand_run, rand_es, _ = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
                            "rand_init": rand_run['val_score'] * 100,
@@ -100,9 +100,9 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='Selectively Pruning to certain sparsity')
-    parser.add_argument('--model', default='Net2',
+    parser.add_argument('--model', default='Resnets',
                         help='Class name of model to train',
-                        type=str, choices=['LeNet', 'Net2', 'LeNet300'])
+                        type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
 
@@ -140,11 +140,11 @@ if __name__ == '__main__':
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
     file_name = f"{args.name}_{args.model}_{args.dataset}"
     stored_at = save_data(run_data, file_name + ".json")
-    plot = LTH_Constants.default_plot_es
+    plot = default_plot_es
     plot['title'] = file_name
     plot['y_max'] = args.epochs
     plot_graph(run_data, plot, file_at=file_name + "_es.png")
-    plot = LTH_Constants.default_plot_acc
+    plot = default_plot_acc
     plot['title'] = file_name
     plot['y_max'] = 100
     plot_graph(run_data, plot, file_at=file_name + ".png")

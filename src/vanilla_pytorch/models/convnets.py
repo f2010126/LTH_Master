@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchsummary import summary
-from utils import init_weights
+from src.vanilla_pytorch.utils import init_weights
 
 
 class Net2(nn.Module):

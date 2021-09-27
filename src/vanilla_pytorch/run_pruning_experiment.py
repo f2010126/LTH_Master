@@ -1,15 +1,14 @@
 import argparse
 import time
-import LTH_Constants
 import torch
 import copy
 from torchsummary import summary
-from run_model_experiment import run_training
-from prune_model import get_masks, update_apply_masks
-from prune_model import prune_random
-from utils import save_data, plot_graph
-from utils import init_weights, count_rem_weights
-from models.convnets import Net2
+from src.vanilla_pytorch.LTH_Constants import default_plot_es, default_plot_acc, init_mask
+from src.vanilla_pytorch.run_model_experiment import run_training
+from src.vanilla_pytorch.prune_model import get_masks, update_apply_masks
+from src.vanilla_pytorch.prune_model import prune_random
+from src.vanilla_pytorch.utils import save_data, plot_graph, init_weights, count_rem_weights
+from src.vanilla_pytorch.models.convnets import Net2
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -32,7 +31,7 @@ def handle_og_model(model, args):
     :return: the original weights of the network, initial masks
     """
     # get hold of w0
-    all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=LTH_Constants.init_mask)}
+    all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=init_mask)}
     original_state_dict = copy.deepcopy(model.state_dict())
     # # incase loading happens
     # model_checkpt = torch.load("mnist_lenet_OG.pth")
@@ -141,11 +140,11 @@ if __name__ == '__main__':
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
     file_name = f"{args.name}_{args.model}_{args.dataset}_{args.pruning_levels}"
     stored_at = save_data(run_data, file_name + ".json")
-    plot = LTH_Constants.default_plot_es
+    plot = default_plot_es
     plot['title'] = file_name
     plot['y_max'] = args.epochs
     plot_graph(run_data, plot, file_at=file_name + "_es.png")
-    plot = LTH_Constants.default_plot_acc
+    plot = default_plot_acc
     plot['title'] = file_name
     plot['y_max'] = 100
     plot_graph(run_data, plot, file_at=file_name + ".png")

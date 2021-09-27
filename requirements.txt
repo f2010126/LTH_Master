@@ -58,3 +58,4 @@ typing-extensions @ file:///home/ktietz/src/ci_mi/typing_extensions_161280820962
 urllib3==1.26.5
 Werkzeug==2.0.1
 wrapt==1.12.1
+torchsummary

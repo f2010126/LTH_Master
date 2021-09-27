@@ -16,12 +16,12 @@ conda config --prepend pkgs_dirs $( ws_find lth_ws )/conda/pkgs
 conda config --show envs_dirs
 conda config --show pkgs_dirs
 
-cd src
+cd src/vanilla_pytorch
 conda activate lth_env
 conda install -y numpy matplotlib pytorch tensorboard torchvision pandas
 conda install -c conda-forge -y pytorch-model-summary
 python3 -c "import torch; print(torch.__version__)"
 
-python3 -m run_pruning_experiment --model $MODEL --batch-size $BATCH --epochs $EPOCH --lr $LR --pruning-levels 25 --dataset cifar10 --name $NAME
+python3 -m run_pruning_experiment --model Resnets --batch-size 128 --epochs 30 --lr 0.01 --pruning-levels 10 --dataset cifar10 --name ResnetRun
 
 conda deactivate

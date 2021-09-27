@@ -1,6 +1,6 @@
 import torch.nn.utils.prune as prune
 import torch
-from utils import count_rem_weights
+from src.vanilla_pytorch.utils import count_rem_weights
 from src.vanilla_pytorch.models.linearnets import LeNet, init_weights
 
 

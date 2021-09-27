@@ -3,13 +3,13 @@ import argparse
 import time
 import torch
 from torchsummary import summary
-from data_and_augment import load_cifar10_data, load_mnist_data
-from training_pipeline import train_fn
-from evaluation import eval_fn
-from EarlyStopping import Py_EarlyStop
-from utils import init_weights
-from models.convnets import Net2
-from models.resnets import Resnets
+from src.vanilla_pytorch.data_and_augment import load_cifar10_data, load_mnist_data
+from src.vanilla_pytorch.training_pipeline import train_fn
+from src.vanilla_pytorch.evaluation import eval_fn
+from src.vanilla_pytorch.EarlyStopping import Py_EarlyStop
+from src.vanilla_pytorch.utils import init_weights
+from src.vanilla_pytorch.models.convnets import Net2
+from src.vanilla_pytorch.models.resnets import Resnets
 
 
 def setup_training(model, device, args):
