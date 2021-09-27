@@ -1,6 +1,6 @@
 #!/bin/bash -l
-#MSUB -o /work/ws/nemo/fr_ds567-lth_ws-0/nemo_logs/run_res.out # STDOUT  (the folder log has to be created prior to running or this won't work)
-#MSUB -e /work/ws/nemo/fr_ds567-lth_ws-0/nemo_logs/run_res.err # STDERR  (the folder log has to be created prior to running or this won't work)
+#MSUB -o /work/ws/nemo/fr_ds567-lth_ws-0/nemo_logs/short_res.out # STDOUT  (the folder log has to be created prior to running or this won't work)
+#MSUB -e /work/ws/nemo/fr_ds567-lth_ws-0/nemo_logs/short_res.err # STDERR  (the folder log has to be created prior to running or this won't work)
 #MSUB -q gpu
 #MSUB -l nodes=1:ppn=1:gpus=1
 #MSUB -l walltime=59:59:00
@@ -21,6 +21,6 @@ conda activate lth_env
 # conda install -c conda-forge -y pytorch-model-summary
 python3 -c "import torch; print(torch.__version__)"
 
-python3 -m src.vanilla_pytorch.run_pruning_experiment --model Resnets --batch-size 128 --epochs 30 --lr 0.01 --pruning-levels 10 --dataset cifar10 --name ResnetRun
+python3 -m src.vanilla_pytorch.shortcut_pruning --model Resnets --batch-size 128 --epochs 30 --lr 0.01 --dataset cifar10 --name short_res
 
 conda deactivate
