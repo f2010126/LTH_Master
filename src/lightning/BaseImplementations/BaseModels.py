@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import copy
 import torch
 
-from prune_model import get_masks
+from src.lightning.prune_model import get_masks
 import pytorch_lightning as pl
 
 
@@ -24,6 +24,7 @@ def count_rem_weights(model):
 
 
 # The LightningModule defines a system and not a model.
+# store model, original weights
 class BaseModel(pl.LightningModule):
 
     def __init__(self, learning_rate, loss_criterion=torch.nn.CrossEntropyLoss()):
@@ -60,19 +61,18 @@ class BaseModel(pl.LightningModule):
         train_loss = self.hparams.loss_criterion(logits, labels)
         correct = logits.argmax(dim=1).eq(labels).sum().item()
         total = len(labels)
-        self.log('train_loss_step', train_loss.detach())
-        logs = {'train_loss': train_loss.detach()}
-        return {'loss': train_loss, 'log': logs, "correct": correct, "total": total}
+        # self.log('train_loss_step', train_loss.detach())
+        # logs = {'train_loss_step': train_loss.detach()}
+
+        return {'loss': train_loss, "correct_step": correct, "total_step": total}
 
     def training_epoch_end(self, outputs):
         avg_loss = torch.stack([x['loss'] for x in outputs]).mean()
-        correct = sum([x["correct"] for x in outputs])
-        total = sum([x["total"] for x in outputs])
+        correct = sum([x["correct_step"] for x in outputs])
+        total = sum([x["total_step"] for x in outputs])
         acc = correct / total
-        tensorboard_logs = {'train_loss': avg_loss, 'train_acc': acc}
-        print(f"train Epoch end acc {tensorboard_logs}")
-        self.log("train_epoch_loss", avg_loss)
-        self.log("train_epoch_acc", acc)
+        tensorboard_logs = {'train_loss_epoch': avg_loss, 'train_acc_epoch': acc}
+
 
     def validation_step(self, val_batch, batch_idx):
         data, labels = val_batch
@@ -80,22 +80,18 @@ class BaseModel(pl.LightningModule):
         val_loss = self.hparams.loss_criterion(logits, labels)
         correct = logits.argmax(dim=1).eq(labels).sum().item()
         total = len(labels)
-        self.log('val_loss_step', val_loss.detach())
-        return {'val_loss': val_loss, "val_correct": correct, "total": total}
+
+        return {'val_loss_step': val_loss, "val_correct_step": correct, "total_step": total}
 
     def validation_epoch_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        correct = sum([x["val_correct"] for x in outputs])
-        total = sum([x["total"] for x in outputs])
+        avg_loss = torch.stack([x['val_loss_step'] for x in outputs]).mean()
+        correct = sum([x["val_correct_step"] for x in outputs])
+        total = sum([x["total_step"] for x in outputs])
         acc = correct / total
-        self.log('val_loss_epoch', avg_loss)
-        self.log('val_epoch_acc',acc)
-        tensorboard_logs = {'val_loss': avg_loss, 'val_acc': acc}
-        # self.log("validation_epoch", tensorboard_logs)
-        return {'avg_val_loss': avg_loss, 'log': tensorboard_logs}
+        print(f"Val Acc: {acc}")
+        tensorboard_logs = {'val_loss_epoch': avg_loss, 'val_acc_epoch': acc}
+        return {'avg_val_loss_epoch': avg_loss, 'log': tensorboard_logs}
 
-    def on_fit_end(self):
-        print("See logs here")
 
     def test_step(self, test_batch, batch_idx):
         data, labels = test_batch
@@ -103,20 +99,19 @@ class BaseModel(pl.LightningModule):
         test_loss = self.hparams.loss_criterion(logits, labels)
         correct = logits.argmax(dim=1).eq(labels).sum().item()
         total = len(labels)
-        return {'test_loss': test_loss, "test_correct": correct, "total": total}
+        return {'test_loss_step': test_loss, "test_correct_step": correct, "total_step": total}
 
     def test_epoch_end(self, outputs):
-        correct = sum([x["test_correct"] for x in outputs])
-        total = sum([x["total"] for x in outputs])
+        correct = sum([x["test_correct_step"] for x in outputs])
+        total = sum([x["total_step"] for x in outputs])
         acc = correct / total
-        avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean()
+        avg_loss = torch.stack([x['test_loss_step'] for x in outputs]).mean()
 
-        tensorboard_logs = {'test_loss': avg_loss, 'test_acc': acc}
-        print(f"test Epoch end acc {tensorboard_logs}")
+        tensorboard_logs = {'test_loss_epoch': avg_loss, 'test_acc_epoch': acc}
+        # not needed to log?
         self.log("test_epoch", tensorboard_logs)  # is written to logger
 
-    def on_test_end(self):
-        print("End")
+
 
 
 class Net2(BaseModel):
@@ -131,6 +126,8 @@ class Net2(BaseModel):
 
         self.all_masks = {key: mask for key, mask in get_masks(self, prune_amts={"linear": 0, "conv": 0, "last": 0})}
         self.original_state_dict = copy.deepcopy(self.state_dict())
+        print(f"INITED WEIGHTS {self.conv1.weight[0][0]}")
+
 
     def forward(self, x):
         x = self.conv1(x)
@@ -147,11 +144,10 @@ class Net2(BaseModel):
         output = F.log_softmax(x, dim=1)
         return output
 
+
 class ResNet(BaseModel):
     def __init__(self, learning_rate, loss_criterion=torch.nn.CrossEntropyLoss()):
         super().__init__(learning_rate)
-
-
 
 
 if __name__ == '__main__':

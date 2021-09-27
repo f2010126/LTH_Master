@@ -1,7 +1,7 @@
 import torch.nn.utils.prune as prune
 import torch
 from utils import count_rem_weights
-from linearnets import LeNet, init_weights
+from src.vanilla_pytorch.models.linearnets import LeNet, init_weights
 
 
 def get_masks(model, prune_amts=None):
@@ -48,6 +48,7 @@ def prune_random(model, prune_amts=None):
         # prune 20% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
             module = prune.random_unstructured(module, name='weight', amount=prune_amts['linear'])
+
 
 if __name__ == '__main__':
     net = LeNet()

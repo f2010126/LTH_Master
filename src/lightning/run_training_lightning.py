@@ -1,35 +1,32 @@
 import argparse
 import time
 import torch
-from models import Net2
-from data_lightning import LightningCIFAR10
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import Callback, EarlyStopping, StochasticWeightAveraging
-import os
+from data_lightning import LightningCIFAR10
+from src.lightning.BaseImplementations.BaseModels import Net2, count_rem_weights
+from src.lightning.BaseImplementations.BaseTrainerAndCallbacks import BaseTrainerCallbacks, BaseTrainer
+from pytorch_lightning.callbacks import EarlyStopping, StochasticWeightAveraging
 
-
-class TrainerCallbacks(Callback):
-    pass
 
 def run_training(args, model, dm):
-    trainer_callbacks = [TrainerCallbacks()]
+    trainer_callbacks = [BaseTrainerCallbacks()]
     if args.use_swa:
         trainer_callbacks.append(StochasticWeightAveraging(annealing_epochs=2))
     if args.early_stop:
-        trainer_callbacks.append(EarlyStopping(monitor="val_loss_epoch", min_delta=0.1, patience=2, verbose=True, mode="min"))
+        trainer_callbacks.append(
+            EarlyStopping(monitor="val_loss_epoch", min_delta=0.1, patience=2, verbose=True, mode="min"))
     trainer = pl.Trainer(max_epochs=args.epochs,
                          weights_summary="full",
-                         default_root_dir='test_loggers/',
-                         check_val_every_n_epoch=2,
-                         limit_train_batches=100,
-                         limit_val_batches=100,
-                         limit_test_batches=100,
+                         default_root_dir=f'{args.name}_loggers/',
+                         check_val_every_n_epoch=1,
                          log_every_n_steps=1,
-                         profiler="simple",
                          callbacks=trainer_callbacks)
     trainer.fit(model, datamodule=dm)
     print(f"TEST")
+    # trainer.logged_metrics
+    # all metrics of Last step/epoch But care about only test metrics
     trainer.test(model=model, datamodule=dm)
+    print(f"Logged {trainer.logged_metrics} with weight % {count_rem_weights(model)}")
     pass
 
 
@@ -63,9 +60,9 @@ if __name__ == '__main__':
     dm = LightningCIFAR10(batch_size=args.batch_size)
     loss = torch.nn.CrossEntropyLoss()
     model = eval(args.model)(learning_rate=args.lr)  # Net2()
-    args.epochs = 10
-    args.early_stop= True
-    args.use_swa = True
+    args.epochs = 1
+    args.early_stop = False
+    args.use_swa = False
 
     run_training(args, model, dm)
     end = time.time()

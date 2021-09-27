@@ -2,16 +2,14 @@ import logging
 import argparse
 import time
 import torch
-import math
 from torchsummary import summary
-from convnets import Net2
 from data_and_augment import load_cifar10_data, load_mnist_data
 from training_pipeline import train_fn
 from evaluation import eval_fn
-from linearnets import LeNet, LeNet300
 from EarlyStopping import Py_EarlyStop
 from utils import init_weights
-from resnets import Resnets
+from models.convnets import Net2
+from models.resnets import Resnets
 
 
 def setup_training(model, device, args):

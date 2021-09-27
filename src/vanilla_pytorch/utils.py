@@ -4,7 +4,6 @@ import os
 import matplotlib.ticker as mtick
 import math
 import torch
-import LTH_Constants
 import matplotlib.pyplot as plt
 
 
@@ -43,7 +42,7 @@ def save_data(json_dump, name_file="exp_result.json"):
     :param name_file: filename
     :return: location of file
     """
-    json_path = os.path.join(os.getcwd(), "LTH_Results")
+    json_path = os.path.join(os.getcwd(), "../LTH_Results")
     if not os.path.exists(json_path):
         os.makedirs(json_path)
     fname = os.path.join(json_path, name_file)
@@ -87,6 +86,6 @@ def plot_graph(graph_data, plot_config, file_at="pruned.png", save_figure=True):
     if not save_figure:
         return
     fig = ax.get_figure()
-    json_path = os.path.join(os.getcwd(), "LTH_Results")
+    json_path = os.path.join(os.getcwd(), "../LTH_Results")
     fig.savefig(os.path.join(json_path, file_at))
     print("")

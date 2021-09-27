@@ -4,14 +4,12 @@ import LTH_Constants
 import torch
 import copy
 from torchsummary import summary
-from linearnets import LeNet, LeNet300
-from convnets import Net2
-from resnets import Resnets
 from run_model_experiment import run_training
 from prune_model import get_masks, update_apply_masks
 from prune_model import prune_random
 from utils import save_data, plot_graph
 from utils import init_weights, count_rem_weights
+from models.convnets import Net2
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -96,7 +94,7 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Experiments')
-    parser.add_argument('--model', default='Resnets',
+    parser.add_argument('--model', default='Net2',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
@@ -114,7 +112,7 @@ if __name__ == '__main__':
                         help='how much to prune a conv layer. taken as a % (default: 20)')
     parser.add_argument('--pruning-rate-fc', type=int, default=20,
                         help='how much to prune a fully connected layer. taken as a % (default: 20)')
-    parser.add_argument('--pruning-levels', type=int, default=1,
+    parser.add_argument('--pruning-levels', type=int, default=3,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
