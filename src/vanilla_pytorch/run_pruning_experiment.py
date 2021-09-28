@@ -9,6 +9,7 @@ from src.vanilla_pytorch.prune_model import get_masks, update_apply_masks
 from src.vanilla_pytorch.prune_model import prune_random
 from src.vanilla_pytorch.utils import save_data, plot_graph, init_weights, count_rem_weights
 from src.vanilla_pytorch.models.convnets import Net2
+from src.vanilla_pytorch.models.resnets import Resnets
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
