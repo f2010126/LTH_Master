@@ -3,12 +3,19 @@ import time
 import torch
 import pytorch_lightning as pl
 from data_lightning import LightningCIFAR10
-from src.lightning.BaseImplementations.BaseModels import Net2, count_rem_weights
+from src.lightning.BaseImplementations.BaseModels import Net2, count_rem_weights, init_weights
 from src.lightning.BaseImplementations.BaseTrainerAndCallbacks import BaseTrainerCallbacks, BaseTrainer
 from pytorch_lightning.callbacks import EarlyStopping, StochasticWeightAveraging
 
 
-def run_training(args, model, dm):
+def run_training(args):
+    args.epochs = 3
+    args.early_stop = False
+    args.use_swa = False
+
+    dm = LightningCIFAR10(batch_size=args.batch_size)
+    model = eval(args.model)(learning_rate=args.lr)  # Net2()
+    model.apply(init_weights)
     trainer_callbacks = [BaseTrainerCallbacks()]
     if args.use_swa:
         trainer_callbacks.append(StochasticWeightAveraging(annealing_epochs=2))
@@ -16,7 +23,7 @@ def run_training(args, model, dm):
         trainer_callbacks.append(
             EarlyStopping(monitor="val_loss_epoch", min_delta=0.1, patience=2, verbose=True, mode="min"))
     trainer = pl.Trainer(max_epochs=args.epochs,
-                         weights_summary="full",
+                         val_check_interval=0,
                          default_root_dir=f'{args.name}_loggers/',
                          check_val_every_n_epoch=1,
                          log_every_n_steps=1,
@@ -56,15 +63,7 @@ if __name__ == '__main__':
 
     # Training settings
     args = parser.parse_args()
-    loss = torch.nn.CrossEntropyLoss()
-    dm = LightningCIFAR10(batch_size=args.batch_size)
-    loss = torch.nn.CrossEntropyLoss()
-    model = eval(args.model)(learning_rate=args.lr)  # Net2()
-    args.epochs = 1
-    args.early_stop = False
-    args.use_swa = False
-
-    run_training(args, model, dm)
+    run_training(args)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)

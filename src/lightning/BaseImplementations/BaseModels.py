@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import copy
 import torch
+import torchvision
 
 from src.lightning.prune_model import get_masks
 import pytorch_lightning as pl
@@ -23,6 +24,17 @@ def count_rem_weights(model):
     return rem_weights.item() / total_weights * 100
 
 
+def init_weights(m):
+    """
+        Initialise weights acc the Xavier initialisation and bias set to 0.01
+        :param m:
+        :return: None
+        """
+    if isinstance(m, torch.nn.Linear):
+        torch.nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.01)
+
+
 # The LightningModule defines a system and not a model.
 # store model, original weights
 class BaseModel(pl.LightningModule):
@@ -33,16 +45,6 @@ class BaseModel(pl.LightningModule):
         """
         super().__init__()
         self.save_hyperparameters()  # any args sent along with self get saved as hyper params.
-
-    def init_weights(self, m):
-        """
-        Initialise weights acc the Xavier initialisation and bias set to 0.01
-        :param m:
-        :return: None
-        """
-        if isinstance(m, torch.nn.Linear):
-            torch.nn.init.xavier_uniform_(m.weight)
-            m.bias.data.fill_(0.01)
 
     def forward(self, x):
         # WIll be done by subclass
@@ -73,7 +75,6 @@ class BaseModel(pl.LightningModule):
         acc = correct / total
         tensorboard_logs = {'train_loss_epoch': avg_loss, 'train_acc_epoch': acc}
 
-
     def validation_step(self, val_batch, batch_idx):
         data, labels = val_batch
         logits = self.forward(data)
@@ -88,10 +89,8 @@ class BaseModel(pl.LightningModule):
         correct = sum([x["val_correct_step"] for x in outputs])
         total = sum([x["total_step"] for x in outputs])
         acc = correct / total
-        print(f"Val Acc: {acc}")
         tensorboard_logs = {'val_loss_epoch': avg_loss, 'val_acc_epoch': acc}
         return {'avg_val_loss_epoch': avg_loss, 'log': tensorboard_logs}
-
 
     def test_step(self, test_batch, batch_idx):
         data, labels = test_batch
@@ -112,8 +111,6 @@ class BaseModel(pl.LightningModule):
         self.log("test_epoch", tensorboard_logs)  # is written to logger
 
 
-
-
 class Net2(BaseModel):
     def __init__(self, learning_rate, loss_criterion=torch.nn.CrossEntropyLoss(), in_channels=3):
         super().__init__(learning_rate)
@@ -122,12 +119,8 @@ class Net2(BaseModel):
         self.conv2 = nn.Conv2d(32, 64, (3, 3), (1, 1))
         self.fc1 = nn.Linear(64 * 14 * 14, 128)
         self.fc2 = nn.Linear(128, 10)
-        self.apply(self.init_weights)
 
-        self.all_masks = {key: mask for key, mask in get_masks(self, prune_amts={"linear": 0, "conv": 0, "last": 0})}
-        self.original_state_dict = copy.deepcopy(self.state_dict())
-        print(f"INITED WEIGHTS {self.conv1.weight[0][0]}")
-
+        self.all_masks = get_masks(self, prune_amts={"linear": 0, "conv": 0, "last": 0})
 
     def forward(self, x):
         x = self.conv1(x)
@@ -145,9 +138,19 @@ class Net2(BaseModel):
         return output
 
 
-class ResNet(BaseModel):
-    def __init__(self, learning_rate, loss_criterion=torch.nn.CrossEntropyLoss()):
+class ResNets(BaseModel):
+    def __init__(self, learning_rate, loss_criterion=torch.nn.CrossEntropyLoss(), in_channels=3):
         super().__init__(learning_rate)
+        num_out_class = 10
+        resnet18 = torchvision.models.resnet18(pretrained=False, progress=True)
+        resnet18.fc = nn.Linear(512, num_out_class)
+        # resnet18 = resnet18.to(device)
+        self.model = resnet18
+
+        self.all_masks = get_masks(self, prune_amts={"linear": 0, "conv": 0, "last": 0})
+
+        def forward(self, x):
+            return self.model(x)
 
 
 if __name__ == '__main__':

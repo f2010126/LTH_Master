@@ -1,9 +1,8 @@
 from pytorch_lightning import Trainer
-from src.lightning.prune_model import get_masks, update_masks, update_apply_masks
-import copy
+from src.lightning.prune_model import get_masks, update_apply_masks
+import torch
 from pytorch_lightning.callbacks import Callback
 from src.lightning.BaseImplementations.BaseModels import count_rem_weights
-
 
 
 class BaseTrainerCallbacks(Callback):
@@ -13,13 +12,12 @@ class BaseTrainerCallbacks(Callback):
 # Trainer automates the process so it should do things like freeze weights, reinit, checkpoint.
 # Let  the model just do regular training
 class TrainFullModel(Callback):
+    def on_fit_start(self, trainer, pl_module):
+        trainer.save_checkpoint("init_trainer_weights.ckpt")
 
     def on_fit_end(self, trainer, pl_module):
         # save trained model here
-        print(f"OG Weighst {pl_module.original_state_dict['conv1.weight_orig'][0][0]}")
-        print(f"END WEIGHTS {pl_module.conv1.weight[0][0]}")
         trainer.save_checkpoint("full_trained.ckpt")
-
 
 
 class Pruner(Callback):
@@ -29,33 +27,22 @@ class Pruner(Callback):
 
     def on_fit_start(self, trainer, pl_module):
         # pruning happens here.
-        print(f"PRE PRUNE module conv1 {pl_module.conv1.weight[0][0]} ")
         masks = get_masks(pl_module, prune_amts=self.prune_amt)
-        print(
-            f"POST PRUNE module conv1 {pl_module.conv1.weight[0][0]} ")
-
-        # save masks
-        detached = dict([(name, mask.clone()) for name, mask in masks])
-        update_masks(pl_module.all_masks, detached)
         # reinit old
-        # checkpoint = torch.load("init_weights.ckpt")  # works
-        pl_module.load_state_dict(copy.deepcopy(pl_module.original_state_dict))
-        print(f"OG Weighst {pl_module.original_state_dict['conv1.weight_orig'][0][0]}")
-        print(
-            f"LOADING OG STATE DICT module conv1 {pl_module.conv1.weight[0][0]} ")
-
-        pl_module = update_apply_masks(pl_module, pl_module.all_masks)
-        print(
-            f"RESETTING MASKS module conv1 {pl_module.conv1.weight[0][0]} ")
+        checkpt = torch.load("init_trainer_weights.ckpt")
+        pl_module.load_state_dict(checkpt['state_dict'])
+        pl_module = update_apply_masks(pl_module, masks)
+        print(f"Randomness end :( {pl_module.conv1.weight[0][0]} {count_rem_weights(pl_module)}")
 
     def on_after_backward(self, trainer, pl_module):
-        for module in pl_module.modules():
-            if hasattr(module, "weight_mask"):
-                weight = next(param for name, param in module.named_parameters() if "weight" in name)
-                weight.grad = weight.grad * module.weight_mask
-
-    def on_test_end(self, trainer: "pl.Trainer", pl_module: "pl.LightningModule") -> None:
-        print(f" should print whars here {trainer.logged_metrics}")
+        pass
+        # for module in pl_module.children():
+        #     mask = module.weight_mask
+        #     weight = list(module.named_parameters())[1][1]
+        # grad already reduced but not weights
+        # if hasattr(module, "weight_mask"):
+        #     weight = next(param for name, param in module.named_parameters() if "weight" in name)
+        #     weight.grad = weight.grad * module.weight_mask
 
 
 class RandomPruner(Callback):

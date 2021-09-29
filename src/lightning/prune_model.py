@@ -1,5 +1,7 @@
 import torch.nn.utils.prune as prune
+import torch.nn as nn
 import torch
+
 
 def count_rem_weights(model):
     """
@@ -16,6 +18,7 @@ def count_rem_weights(model):
     # return % of non 0 weights
     return rem_weights.item() / total_weights * 100
 
+
 def update_masks(masks, new_mask):
     """
     Combine the new mask
@@ -25,12 +28,12 @@ def update_masks(masks, new_mask):
     for name, mask in masks.items():
         masks[name] = torch.logical_and(mask, new_mask[name])
 
+
 def get_masks(model, prune_amts=None):
     """
     prune the lowest p% weights by magnitude per layer
 
     :param model: model to prune
-    :param p_rate: prune rate = 0.2 as per paper
     :param prune_amts: dictionary
     :return: the created mask. model has served it's purpose.
     """
@@ -43,17 +46,29 @@ def get_masks(model, prune_amts=None):
             module = prune.l1_unstructured(module, name='weight', amount=prune_amts['conv'])
         # prune 20% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
+
             module = prune.l1_unstructured(module, name='weight', amount=prune_amts['linear'])
-    return list(model.named_buffers())
+
+    masks = list(model.named_buffers())
+
+    return dict([(name, mask.clone()) for name, mask in masks])
 
 
-def update_apply_masks(model, masks):  # doesn't seem to be needed.
-    for key, val in masks.items():
-        layer = getattr(model, key.split('.')[0])
-        layer.weight_mask = val
-    # for name, module in model.named_children():
-    #     if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
-    #         module = prune.custom_from_mask(module, name='weight', mask=masks[name + ".weight_mask"])
+def remove_pruning(model):
+    for i, (module) in enumerate(model.children()):
+        # name and val
+        prune.remove(module, 'weight')
+
+
+def update_apply_masks(model, masks):
+    # doesn't seem to be needed.
+    # for key, val in masks:
+    #     layer = getattr(model, key.split('.')[0])
+    #     layer.weight_mask = val
+    for name, module in model.named_children():
+        if any([isinstance(module, cl) for cl in [nn.Conv2d, nn.Linear]]):
+            module = prune.custom_from_mask(module, name='weight', mask=masks[name + ".weight_mask"])
+    model.all_masks = masks
     return model
 
 
@@ -67,4 +82,3 @@ def prune_random(model, prune_amts=None):
         # prune 20% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
             module = prune.random_unstructured(module, name='weight', amount=prune_amts['linear'])
-
