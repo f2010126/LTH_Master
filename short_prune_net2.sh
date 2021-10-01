@@ -2,8 +2,7 @@
 #MSUB -o /work/ws/nemo/fr_ds567-lth_ws-0/nemo_logs/short_net2.out # STDOUT  (the folder log has to be created prior to running or this won't work)
 #MSUB -e /work/ws/nemo/fr_ds567-lth_ws-0/nemo_logs/short_net2.err # STDERR  (the folder log has to be created prior to running or this won't work)
 #MSUB -l nodes=1:ppn=1
-#MSUB -l walltime=59:59:00
-#MSUB -l naccesspolicy=singlejob
+#MSUB -l walltime=49:59:00
 #MSUB -m bea
 #MSUB -M dipti.sengupta@students.uni-freiburg.de
 
