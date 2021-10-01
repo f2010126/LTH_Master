@@ -18,6 +18,6 @@ conda activate lth_env
 # conda install -c conda-forge -y pytorch-model-summary
 python3 -c "import torch; print(torch.__version__)"
 
-python3 -m src.vanilla_pytorch.shortcut_pruning --model Resnets --batch-size 128 --epochs 30 --lr 0.01 --dataset cifar10 --name short_res
+python3 -m src.vanilla_pytorch.shortcut_pruning --model Resnets --batch-size 512 --epochs 30 --lr 0.01 --dataset cifar10 --name short_res
 
 conda deactivate
