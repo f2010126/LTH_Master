@@ -16,9 +16,9 @@ conda config --show pkgs_dirs
 
 conda activate lth_env
 # conda install -y numpy matplotlib pytorch tensorboard torchvision pandas
-# conda install -c conda-forge -y pytorch-model-summary
+# conda install -c conda-forge -y pytorch-model-summary pytorch-lightning
 python3 -c "import torch; print(torch.__version__)"
 
-python3 -m src.vanilla_pytorch.run_pruning_experiment --model Net2 --batch-size 60 --epochs 30 --lr 2e-4 --pruning-levels 10 --dataset cifar10 --name Net2Run
+python3 -m src.vanilla_pytorch.run_pruning_experiment --model Net2 --batch-size 60 --epochs 30 --lr 2e-4 --pruning-levels 15 --dataset cifar10 --name Net2Run
 
 conda deactivate
