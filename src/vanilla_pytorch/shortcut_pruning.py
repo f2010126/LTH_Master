@@ -74,16 +74,16 @@ def pruned(model, args):
             model.load_state_dict(copy.deepcopy(original_state_dict))
             # no need to apply masks i think?
             # model = update_apply_masks(model, all_masks)
-            # prune randomly inited model randomly
-            # init a random model
+
+            # init a random model to prune
             in_chan = 1 if args.dataset == 'mnist' else 3
             rando_net = globals()[args.model](in_channels=in_chan)
             rando_net.apply(init_weights)
             prune_random(rando_net, prune_config)
             non_zero = count_rem_weights(model)
             print(f"Pruning amt {amt * 100} Weights remaining {non_zero} and 0% is {100 - non_zero}")
-        last_run, pruned_es, training = run_training(model, device, args=args)
         # rand_run, rand_es = {'val_score': 0}, 0
+        last_run, pruned_es, training = run_training(model, device, args=args)
         rand_run, rand_es, _ = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
@@ -92,7 +92,6 @@ def pruned(model, args):
                            "rand_es": rand_es,
                            "training_data": training})
     # metrics
-    # TODO: baseline
     return baselines, prune_data
 
 

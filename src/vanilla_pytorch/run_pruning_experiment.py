@@ -40,7 +40,8 @@ def handle_og_model(model, args):
     # Run and train the lenet OG, done in run_model_experiment.py
     metrics, full_es, _ = run_training(model, device, args=args)
     # Save OG model
-    torch.save(model.state_dict(), "mnist_lenet_OG.pth")
+
+    torch.save(model.state_dict(), f"{args.model}_OG.pth")
 
     return original_state_dict, all_masks, {"val_score": metrics['val_score'] * 100,
                                             "full_es": full_es}
@@ -62,6 +63,7 @@ def pruned(model, args):
     rando_net.apply(init_weights)
     # set pruning configs
     prune_amt = {'linear': args.pruning_rate_fc / 100, 'conv': args.pruning_rate_conv / 100, 'last': 0.1}
+    print(f"START PRUNING")
     for level in range(args.pruning_levels):
         # Prune and get the new mask.
         with torch.no_grad():
@@ -70,6 +72,7 @@ def pruned(model, args):
             detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
             update_masks(all_masks, detached)
             # Load the OG weights and mask it
+
             model.load_state_dict(copy.deepcopy(original_state_dict))
             model = update_apply_masks(model, all_masks)
             # prune randomly inited model randomly
@@ -77,7 +80,8 @@ def pruned(model, args):
             non_zero = count_rem_weights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         last_run, pruned_es, training = run_training(model, device, args=args)
-        # rand_run, rand_es = {'val_score':0}, 0
+        # last_run, pruned_es, training = {'val_score': 0}, 0, 0
+        # rand_run, rand_es, rand_training = {'val_score':0}, 0, 0
         rand_run, rand_es, rand_training = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
@@ -94,7 +98,7 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Experiments')
-    parser.add_argument('--model', default='Net2',
+    parser.add_argument('--model', default='Resnets',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
@@ -112,7 +116,7 @@ if __name__ == '__main__':
                         help='how much to prune a conv layer. taken as a % (default: 20)')
     parser.add_argument('--pruning-rate-fc', type=int, default=20,
                         help='how much to prune a fully connected layer. taken as a % (default: 20)')
-    parser.add_argument('--pruning-levels', type=int, default=3,
+    parser.add_argument('--pruning-levels', type=int, default=0,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
@@ -121,6 +125,8 @@ if __name__ == '__main__':
                         action='store_true', help='Does Early if enabled')
     parser.add_argument('--early-delta', type=float, default=0.0005,
                         help='Difference b/w best and current to decide to stop early')
+    parser.add_argument('--use-swa',
+                        action='store_true', help='Uses SWA if enabled')
     parser.add_argument('--name', default='prune',
                         help='name to save data files and plots',
                         type=str)
