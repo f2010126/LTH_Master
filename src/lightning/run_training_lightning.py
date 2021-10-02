@@ -9,6 +9,10 @@ from pytorch_lightning.callbacks import EarlyStopping, StochasticWeightAveraging
 
 
 def run_training(args):
+    if torch.cuda.is_available():
+        args.gpu = 1
+    else:
+        args.gpu = 0
     args.epochs = 3
     args.early_stop = False
     args.use_swa = False
@@ -16,14 +20,15 @@ def run_training(args):
     dm = LightningCIFAR10(batch_size=args.batch_size)
     model = eval(args.model)(learning_rate=args.lr)  # Net2()
     model.apply(init_weights)
+    logger_name = f"{args.name}_{args.model}_{args.use_swa}/"
     trainer_callbacks = [BaseTrainerCallbacks()]
-    if args.use_swa:
-        trainer_callbacks.append(StochasticWeightAveraging(annealing_epochs=2))
     if args.early_stop:
         trainer_callbacks.append(
             EarlyStopping(monitor="val_loss_epoch", min_delta=0.1, patience=2, verbose=True, mode="min"))
-    trainer = pl.Trainer(max_epochs=args.epochs,
-                         val_check_interval=0,
+    trainer = pl.Trainer(gpus=args.gpu,
+                         max_epochs=args.epochs,
+                         stochastic_weight_avg=args.use_swa,
+                         val_check_interval=1,
                          default_root_dir=f'{args.name}_loggers/',
                          check_val_every_n_epoch=1,
                          log_every_n_steps=1,

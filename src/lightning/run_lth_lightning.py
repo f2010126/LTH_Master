@@ -32,19 +32,21 @@ def run_lth_exp(args):
     # module = module.load_from_checkpoint(checkpoint_path="full_trained.ckpt")
     logger_name = f"{args.name}_{args.model}_{args.pruning_levels}/"
 
-    full_trainer = pl.Trainer(max_epochs=args.epochs,
+    full_trainer = pl.Trainer(gpus=args.gpu,
+                              max_epochs=args.epochs,
                               default_root_dir=logger_name,
                               log_every_n_steps=5,
                               val_check_interval=1,
                               check_val_every_n_epoch=2,
-                              callbacks=[TrainFullModel()], )
+                              callbacks=[TrainFullModel()],)
     full_trainer.fit(module, datamodule=dm)
     full_trainer.test(module, datamodule=dm)
 
     # # Do i need to reinit my trainer at each time?? reinit new models??
     prune_amt = {'linear': args.pruning_rate_fc / 100, 'conv': args.pruning_rate_conv / 100, 'last': 0.1}
 
-    prune_trainer = pl.Trainer(max_epochs=args.epochs,
+    prune_trainer = pl.Trainer(gpus=args.gpu,
+                               max_epochs=args.epochs,
                                num_sanity_val_steps=1,
                                log_every_n_steps=5,
                                check_val_every_n_epoch=2,
@@ -92,6 +94,10 @@ if __name__ == '__main__':
                         type=str)
 
     args = parser.parse_args()
+    if torch.cuda.is_available():
+        args.gpu = 1
+    else:
+        args.gpu = 0
     run_lth_exp(args)
 
     end = time.time()
