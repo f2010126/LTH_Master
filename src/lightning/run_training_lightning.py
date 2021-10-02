@@ -62,7 +62,7 @@ if __name__ == '__main__':
                         action='store_true', help='Does Early if enabled')
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
                         help='Data to use for training')
-    parser.add_argument('--name', default='Exp',
+    parser.add_argument('--name', default='Exp_swa_yes',
                         help='name to save data files and plots',
                         type=str)
 

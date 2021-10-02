@@ -89,5 +89,5 @@ def plot_graph(graph_data, plot_config, file_at="pruned.png", save_figure=True):
         return
     fig = ax.get_figure()
     json_path = os.path.join(os.getcwd(), "LTH_Results")
-    fig.savef1ig(os.path.join(json_path, file_at))
+    fig.savefig(os.path.join(json_path, file_at))
 
