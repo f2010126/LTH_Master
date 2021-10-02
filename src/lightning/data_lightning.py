@@ -39,13 +39,13 @@ class LightningCIFAR10(pl.LightningDataModule):
         self.train_set, self.val_set = torch.utils.data.random_split(cifar_dataset, [45000, 5000])
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True,num_workers=4)
+        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True,num_workers=2)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size,num_workers=4)
+        return DataLoader(self.val_set, batch_size=self.batch_size,num_workers=2)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.batch_size,num_workers=4)
+        return DataLoader(self.test_dataset, batch_size=self.batch_size,num_workers=2)
 
 
 def load_mnist_data(batch=60):
