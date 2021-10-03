@@ -5,7 +5,7 @@ import torch
 import copy
 from torchsummary import summary
 from src.vanilla_pytorch.run_model_experiment import run_training
-from src.vanilla_pytorch.prune_model import get_masks, prune_random, update_apply_masks
+from src.vanilla_pytorch.prune_model import get_masks, prune_random, update_apply_masks, remove_pruning
 from src.vanilla_pytorch.utils import save_data, plot_graph, init_weights, count_rem_weights
 from src.vanilla_pytorch.models.linearnets import LeNet300, LeNet
 from src.vanilla_pytorch.models.convnets import Net2
@@ -34,15 +34,15 @@ def handle_og_model(model, args):
     """
     # get hold of w0
     all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=init_mask)}
-    original_state_dict = copy.deepcopy(model.state_dict())
+
     # Run and train the lenet OG, done in run_model_.py
     # TODO: Kept here for testing. Remove after completion
     # metrics, full_es, _ = {'val_score': 0}, 0, 0
-    metrics, full_es, _ = run_training(model, device, args=args)
+    metrics, full_es, _, swa_model = run_training(model, device, args=args)
     # Save trained model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
-    return original_state_dict, all_masks, {"val_score": metrics['val_score'] * 100,
-                                            "full_es": full_es}
+    return swa_model, all_masks, {"val_score": metrics['val_score'] * 100,
+                                  "full_es": full_es}
 
 
 def pruned(model, args):
@@ -52,7 +52,7 @@ def pruned(model, args):
     :param model: model to train
     :return: dictionary with pruning data
     """
-    original_state_dict, all_masks, baselines = handle_og_model(model, args)
+    swa_model, all_masks, baselines = handle_og_model(model, args)
     prune_data = []
     # set pruning configs
 
@@ -71,21 +71,23 @@ def pruned(model, args):
             # Not updating masks since each is different. Don't want additive effect
             # update_masks(all_masks, detached)
             # TODO: Load SWA model weights
-            model.load_state_dict(copy.deepcopy(original_state_dict))
+            model.load_state_dict(copy.deepcopy(swa_model.module.state_dict()))
             model = update_apply_masks(model, detached)
 
-            # init a random model to prune
-            in_chan = 1 if args.dataset == 'mnist' else 3
-            random_config = {'linear': 1-weights, 'conv': 1-weights, 'last': 0.1}
-            rando_net = globals()[args.model](in_channels=in_chan)
+            # init a random model to prune with same weight % as model
+            random_config = {'linear': 1 - weights, 'conv': 1 - weights, 'last': 0.1}
+            rando_net = globals()[args.model](in_channels=3)
             rando_net.apply(init_weights)
             prune_random(rando_net, random_config)
         non_zero = count_rem_weights(model)
         print(f" Pruning {(1 - weights) * 100}.  Weights remaining {non_zero} and 0% is {100 - non_zero}")
         # TODO: Kept here for testing. Remove after completion
-        # rand_run, rand_es = {'val_score': 0}, 0
+
+        #  rand_run, rand_es = {'val_score': 0}, 0
         # last_run, pruned_es, training ={'val_score': 0}, 0, 0
-        last_run, pruned_es, training = run_training(model, device, args=args)
+        # get new model
+        last_run, pruned_es, training, swa_model = run_training(model, device, args=args)
+        remove_pruning(swa_model)  # remove the extra leaf tensors to allow SWA model to be created.
         rand_run, rand_es, _ = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
@@ -101,12 +103,11 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='IMP with SWA as init')
-    parser.add_argument('--model', default='Net2',
+    parser.add_argument('--model', default='Resnets',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
-
     parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--iterations', type=int, default=50000,

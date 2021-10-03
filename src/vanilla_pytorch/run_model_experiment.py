@@ -82,7 +82,7 @@ def run_training(model, device, args=None):
     test_score, test_loss = eval_fn(swa_model, config["data"][2], device, config["loss"])
     stop_epoch = sorted(score, key=lambda k: k['val_loss'])[0]['epoch']
     print(f" Evaluating on Test: Loss {test_loss} and score {test_score}")
-    return score[-1], stop_epoch, score
+    return score[-1], stop_epoch, score, swa_model
 
 
 if __name__ == '__main__':
