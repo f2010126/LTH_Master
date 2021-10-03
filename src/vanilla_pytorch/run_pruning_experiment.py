@@ -144,7 +144,7 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    file_name = f"{args.name}_{args.model}_{args.dataset}_{args.pruning_levels}"
+    file_name = f"{args.name}_{args.model}_Epochs{args.epochs}_Pruned{args.pruning_levels}"
     stored_at = save_data(run_data, file_name + ".json")
     plot = default_plot_es
     plot['title'] = file_name

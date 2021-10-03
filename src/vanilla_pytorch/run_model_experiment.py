@@ -63,7 +63,7 @@ def run_training(model, device, args=None):
                                            epoch=epoch, use_swa=args.use_swa, swa_start=swa_start, swa_model=swa_model,
                                            scheduler=scheduler, swa_scheduler=swa_scheduler)
         test_model = swa_model if args.use_swa else model
-        torch.optim.swa_utils.update_bn(config["data"][0], test_model)
+        torch.optim.swa_utils.update_bn(config["data"][0], test_model,device=device)
         val_score, val_loss = eval_fn(test_model, config["data"][1], device, config["loss"])
         print('Validation accuracy: %f', val_score)
         score.append({"epoch": epoch,
