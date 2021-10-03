@@ -5,6 +5,13 @@ from src.vanilla_pytorch.models.linearnets import LeNet, init_weights
 from src.vanilla_pytorch.models.resnets import Resnets
 
 
+def remove_pruning(model):
+    for i, (name, module) in enumerate(model.named_modules()):
+        # name and val
+        if any([isinstance(module, cl) for cl in [torch.nn.Conv2d, torch.nn.Linear]]):
+            prune.remove(module, 'weight')
+
+
 def get_masks(model, prune_amts=None):
     """
     prune the lowest p% weights by magnitude per layer
@@ -26,7 +33,9 @@ def get_masks(model, prune_amts=None):
         elif isinstance(module, torch.nn.Linear):
             module = prune.l1_unstructured(module, name='weight', amount=prune_amts['linear'])
 
-    return list(model.named_buffers())
+    masks = list(model.named_buffers())
+    remove_pruning(model)
+    return masks
 
 
 def update_apply_masks(model, masks):
@@ -51,6 +60,8 @@ def prune_random(model, prune_amts=None):
         # prune 20% of connections in all linear layers
         elif isinstance(module, torch.nn.Linear):
             module = prune.random_unstructured(module, name='weight', amount=prune_amts['linear'])
+
+    remove_pruning(model)
 
 
 if __name__ == '__main__':
