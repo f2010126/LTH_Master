@@ -39,10 +39,10 @@ def handle_og_model(model, args):
 
     # Run and train the lenet OG, done in run_model_experiment.py
     metrics, full_es, _ = run_training(model, device, args=args)
+    # TODO: Kept here for testing. Remove after completion
     # metrics, full_es, _ = {'val_score': 0}, 0, 0
     # Save OG model
     torch.save(model.state_dict(), f"{args.model}_OG.pth")
-
     return original_state_dict, all_masks, {"val_score": metrics['val_score'] * 100,
                                             "full_es": full_es}
 
@@ -78,6 +78,7 @@ def pruned(model, args):
             prune_random(rando_net, prune_amts=prune_amt)
             non_zero = count_rem_weights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
+        # TODO: Kept here for testing. Remove after completion
         # last_run, pruned_es, training = {'val_score': 0}, 0, 0
         # rand_run, rand_es, rand_training = {'val_score': 0}, 0, 0
         last_run, pruned_es, training = run_training(model, device, args=args)
@@ -144,7 +145,7 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    file_name = f"{args.name}_{args.model}_Epochs{args.epochs}_Pruned{args.pruning_levels}"
+    file_name = f"{args.name}_{args.model}_SWA{args.use_swa}_Epochs{args.epochs}_Pruned{args.pruning_levels}"
     stored_at = save_data(run_data, file_name + ".json")
     plot = default_plot_es
     plot['title'] = file_name

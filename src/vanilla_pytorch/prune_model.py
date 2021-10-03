@@ -47,7 +47,9 @@ def update_apply_masks(model, masks):
     for name, module in model.named_modules():
         if any([isinstance(module, cl) for cl in [torch.nn.Conv2d, torch.nn.Linear]]):
             module = prune.custom_from_mask(module, name='weight', mask=masks[name + ".weight_mask"])
+    # remove_pruning(model)
     return model
+
 
 
 def prune_random(model, prune_amts=None):

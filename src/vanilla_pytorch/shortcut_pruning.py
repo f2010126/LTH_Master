@@ -36,6 +36,8 @@ def handle_og_model(model, args):
     all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=init_mask)}
     original_state_dict = copy.deepcopy(model.state_dict())
     # Run and train the lenet OG, done in run_model_.py
+    # TODO: Kept here for testing. Remove after completion
+    # metrics, full_es, _ = {'val_score': 0}, 0, 0
     metrics, full_es, _ = run_training(model, device, args=args)
     # Save trained model
     torch.save(model.state_dict(), "mnist_lenet_OG.pth")
@@ -52,37 +54,37 @@ def pruned(model, args):
     """
     original_state_dict, all_masks, baselines = handle_og_model(model, args)
     prune_data = []
-    # init a random model
-    # in_chan = 1 if args.dataset == 'mnist' else 3
-    # rando_net = globals()[args.model](in_channels=in_chan)
-    # rando_net.apply(init_weights)
     # set pruning configs
 
-    prune_amt = [0.1, 0.5, 0.6, 0.7, 0.97, 0.995]
+    prune_amt = [0.1, 0.2, 0.5, 0.6, 0.9, 0.995]
     # set pruning configs
-
+    weights = 1
     for amt in prune_amt:
         # Prune and get the new mask.
+        weights *= 1 - amt
         with torch.no_grad():
             # set pruning configs
             prune_config = {'linear': amt, 'conv': amt, 'last': 0.1}
             masks = get_masks(model, prune_amts=prune_config)
             # create a dict that has the same keys as state dict w/o being linked to model.
             detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
-            update_masks(all_masks, detached)
+            # Not updating masks since each is different. Don't want additive effect
+            # update_masks(all_masks, detached)
             # Load the OG weights and mask it
             model.load_state_dict(copy.deepcopy(original_state_dict))
-            # no need to apply masks i think?
-            # model = update_apply_masks(model, all_masks)
+            model = update_apply_masks(model, detached)
 
             # init a random model to prune
             in_chan = 1 if args.dataset == 'mnist' else 3
+            random_config = {'linear': 1-weights, 'conv': 1-weights, 'last': 0.1}
             rando_net = globals()[args.model](in_channels=in_chan)
             rando_net.apply(init_weights)
-            prune_random(rando_net, prune_config)
-            non_zero = count_rem_weights(model)
-            print(f"Pruning amt {amt * 100} Weights remaining {non_zero} and 0% is {100 - non_zero}")
+            prune_random(rando_net, random_config)
+        non_zero = count_rem_weights(model)
+        print(f" Pruning {(1 - weights) * 100}.  Weights remaining {non_zero} and 0% is {100 - non_zero}")
+        # TODO: Kept here for testing. Remove after completion
         # rand_run, rand_es = {'val_score': 0}, 0
+        # last_run, pruned_es, training ={'val_score': 0}, 0, 0
         last_run, pruned_es, training = run_training(model, device, args=args)
         rand_run, rand_es, _ = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
@@ -99,7 +101,7 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='Selectively Pruning to certain sparsity')
-    parser.add_argument('--model', default='Resnets',
+    parser.add_argument('--model', default='Net2',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
@@ -119,6 +121,8 @@ if __name__ == '__main__':
                         action='store_true', help='Does Early if enabled')
     parser.add_argument('--early-delta', type=float, default=0.005,
                         help='Difference b/w best and current to decide to stop early')
+    parser.add_argument('--use-swa',
+                        action='store_true', help='Uses SWA if enabled')
     parser.add_argument('--name', default='Shortcut_prune',
                         help='name to save data files and plots',
                         type=str)
@@ -137,7 +141,7 @@ if __name__ == '__main__':
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
     print("{:0>2}:{:0>2}:{:05.2f}".format(int(hours), int(minutes), seconds))
-    file_name = f"{args.name}_{args.model}_{args.dataset}"
+    file_name = f"{args.name}_{args.model}_SWA{args.use_swa}_Epochs{args.epochs}"
     stored_at = save_data(run_data, file_name + ".json")
     plot = default_plot_es
     plot['title'] = file_name

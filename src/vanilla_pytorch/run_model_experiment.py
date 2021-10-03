@@ -57,6 +57,7 @@ def run_training(model, device, args=None):
 
     score = []
     e_stop = Py_EarlyStop(patience=10, verbose=True)
+    test_model = swa_model if args.use_swa else model
     for epoch in range(config["max_epochs"]):
         logging.info('Epoch [{}/{}]'.format(epoch + 1, config["max_epochs"]))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device,
@@ -80,7 +81,7 @@ def run_training(model, device, args=None):
                 break
 
 
-    test_score, test_loss = eval_fn(model, config["data"][2], device, config["loss"])
+    test_score, test_loss = eval_fn(test_model, config["data"][2], device, config["loss"])
     stop_epoch = sorted(score, key=lambda k: k['val_loss'])[0]['epoch']
     print(f" Evaluating on Test: Loss {test_loss} and score {test_score}")
     return score[-1], stop_epoch, score
