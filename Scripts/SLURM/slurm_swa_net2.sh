@@ -10,7 +10,6 @@
 cd $(ws_find lth_ws)
 # python3 -m venv lth_env
 source lth_env/bin/activate
-pip list
 cd LTH_Master
 
 #pip install numpy matplotlib torch tensorboard torchvision pandas
