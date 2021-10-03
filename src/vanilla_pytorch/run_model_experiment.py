@@ -46,26 +46,24 @@ def run_training(model, device, args=None):
     model = model.to(device)
     config = setup_training(model, device, args)
     logging.info('Model being trained:')
-    if args.use_swa:
-        swa_model = AveragedModel(model)
-        scheduler = CosineAnnealingLR(config["optim"], T_max=100)
-        swa_start = 5
-        swa_scheduler = SWALR( config["optim"], swa_lr=0.05)
-    else:
-        swa_model,scheduler,swa_scheduler = None, None, None
-        swa_start =0
+    # init an SWA Model?
+    swa_model = AveragedModel(model)
+    scheduler = CosineAnnealingLR(config["optim"], T_max=100)
+    swa_start = 5
+    swa_scheduler = SWALR(config["optim"], swa_lr=0.05)
+
 
     score = []
     e_stop = Py_EarlyStop(patience=10, verbose=True)
-    test_model = swa_model if args.use_swa else model
+
     for epoch in range(config["max_epochs"]):
         logging.info('Epoch [{}/{}]'.format(epoch + 1, config["max_epochs"]))
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device,
-                                           epoch=epoch, use_swa=args.use_swa, swa_start=swa_start, swa_model=swa_model,
+                                           epoch=epoch, swa_start=swa_start, swa_model=swa_model,
                                            scheduler=scheduler, swa_scheduler=swa_scheduler)
-        test_model = swa_model if args.use_swa else model
-        torch.optim.swa_utils.update_bn(config["data"][0], test_model,device=device)
-        val_score, val_loss = eval_fn(test_model, config["data"][1], device, config["loss"])
+
+        torch.optim.swa_utils.update_bn(config["data"][0], swa_model,device=device)
+        val_score, val_loss = eval_fn(swa_model, config["data"][1], device, config["loss"])
         print('Validation accuracy: %f', val_score)
         score.append({"epoch": epoch,
                       "train_loss": train_loss,
@@ -81,7 +79,7 @@ def run_training(model, device, args=None):
                 break
 
 
-    test_score, test_loss = eval_fn(test_model, config["data"][2], device, config["loss"])
+    test_score, test_loss = eval_fn(swa_model, config["data"][2], device, config["loss"])
     stop_epoch = sorted(score, key=lambda k: k['val_loss'])[0]['epoch']
     print(f" Evaluating on Test: Loss {test_loss} and score {test_score}")
     return score[-1], stop_epoch, score
@@ -116,7 +114,7 @@ if __name__ == '__main__':
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     args = parser.parse_args()
-    args.use_swa = True
+
     in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)

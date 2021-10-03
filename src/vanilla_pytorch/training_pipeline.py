@@ -4,7 +4,7 @@ from .evaluation import AverageMeter, accuracy
 
 
 def train_fn(model, optimizer, criterion, loader, device, epoch,
-             use_swa=False, swa_start=0, swa_model=None, scheduler=None, swa_scheduler=None):
+             swa_start=0, swa_model=None, scheduler=None, swa_scheduler=None):
     """
   Training method
   :param model: model to train
@@ -47,17 +47,17 @@ def train_fn(model, optimizer, criterion, loader, device, epoch,
                 # param.grad.data = torch.from_numpy(grad_tensor).to(device)
 
         optimizer.step()
-        if use_swa:
-            if epoch > swa_start:
-                swa_model.update_parameters(model)
-                swa_scheduler.step()
-            else:
-                scheduler.step()
 
         acc = accuracy(logits.detach(), labels)
         n = images.shape[0]
         losses.update(loss.item(), n)
         score.update(acc.item(), n)
+
+    if epoch > swa_start:
+        swa_model.update_parameters(model)
+        swa_scheduler.step()
+    else:
+        scheduler.step()
 
     time_train += time.time() - time_begin
     return total_correct / len(loader.dataset), losses.avg
