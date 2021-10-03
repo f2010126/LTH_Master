@@ -8,6 +8,7 @@ from src.vanilla_pytorch.run_model_experiment import run_training
 from src.vanilla_pytorch.prune_model import get_masks, update_apply_masks
 from src.vanilla_pytorch.prune_model import prune_random
 from src.vanilla_pytorch.utils import save_data, plot_graph, init_weights, count_rem_weights
+from torch.optim.swa_utils import AveragedModel
 from src.vanilla_pytorch.models.convnets import Net2
 from src.vanilla_pytorch.models.resnets import Resnets
 
@@ -33,14 +34,13 @@ def handle_og_model(model, args):
     """
     # get hold of w0
     all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=init_mask)}
+
     original_state_dict = copy.deepcopy(model.state_dict())
-    # # incase loading happens
-    # model_checkpt = torch.load("mnist_lenet_OG.pth")
-    # model.load_state_dict(original_state_dict)
+
     # Run and train the lenet OG, done in run_model_experiment.py
     metrics, full_es, _ = run_training(model, device, args=args)
+    # metrics, full_es, _ = {'val_score': 0}, 0, 0
     # Save OG model
-
     torch.save(model.state_dict(), f"{args.model}_OG.pth")
 
     return original_state_dict, all_masks, {"val_score": metrics['val_score'] * 100,
@@ -72,16 +72,15 @@ def pruned(model, args):
             detached = dict([(name, mask.clone().to(device)) for name, mask in masks])
             update_masks(all_masks, detached)
             # Load the OG weights and mask it
-
             model.load_state_dict(copy.deepcopy(original_state_dict))
             model = update_apply_masks(model, all_masks)
             # prune randomly inited model randomly
             prune_random(rando_net, prune_amts=prune_amt)
             non_zero = count_rem_weights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
-        last_run, pruned_es, training = run_training(model, device, args=args)
         # last_run, pruned_es, training = {'val_score': 0}, 0, 0
-        # rand_run, rand_es, rand_training = {'val_score':0}, 0, 0
+        # rand_run, rand_es, rand_training = {'val_score': 0}, 0, 0
+        last_run, pruned_es, training = run_training(model, device, args=args)
         rand_run, rand_es, rand_training = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
@@ -116,7 +115,7 @@ if __name__ == '__main__':
                         help='how much to prune a conv layer. taken as a % (default: 20)')
     parser.add_argument('--pruning-rate-fc', type=int, default=20,
                         help='how much to prune a fully connected layer. taken as a % (default: 20)')
-    parser.add_argument('--pruning-levels', type=int, default=0,
+    parser.add_argument('--pruning-levels', type=int, default=3,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
