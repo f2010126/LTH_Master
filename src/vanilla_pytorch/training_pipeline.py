@@ -39,7 +39,6 @@ def train_fn(model, optimizer, criterion, loader, device, epoch,
         for module in model.modules():
             if hasattr(module, "weight_mask"):
                 weight = next(param for name, param in module.named_parameters() if "weight" in name)
-                print(f"freeze")
                 weight.grad = weight.grad * module.weight_mask
                 # tensor = param.data.cpu().numpy()
                 # grad_tensor = param.grad.data.cpu().numpy()
