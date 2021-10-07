@@ -88,7 +88,7 @@ def pruned(model, args):
         # get new model
         last_run, pruned_es, training, swa_model = run_training(model, device, args=args)
         remove_pruning(swa_model)  # remove the extra leaf tensors to allow SWA model to be created.
-        rand_run, rand_es, _ = run_training(rando_net, device, args)
+        rand_run, rand_es, _, _ = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
                            "rand_init": rand_run['val_score'] * 100,
