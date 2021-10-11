@@ -35,10 +35,10 @@ def handle_og_model(model, args):
     # get hold of w0
     all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=init_mask)}
 
-    original_state_dict = copy.deepcopy(model.state_dict())
-
-    # Run and train the lenet OG, done in run_model_experiment.py
-    metrics, full_es, _ = run_training(model, device, args=args)
+    # Run and train the lenet OG, done in run_model_experiment.py.
+    # if rewinding is done, return weight dict of 3rd epoch else, w0
+    metrics, full_es, _, original_state_dict = run_training(model, device, args=args)
+    # original_state_dict
     # TODO: Kept here for testing. Remove after completion
     # metrics, full_es, _ = {'val_score': 0}, 0, 0
     # Save OG model
@@ -79,10 +79,10 @@ def pruned(model, args):
             non_zero = count_rem_weights(model)
             print(f"Pruning round {level + 1} Weights remaining {non_zero} and 0% is {100 - non_zero}")
         # TODO: Kept here for testing. Remove after completion
-        # last_run, pruned_es, training = {'val_score': 0}, 0, 0
-        # rand_run, rand_es, rand_training = {'val_score': 0}, 0, 0
-        last_run, pruned_es, training = run_training(model, device, args=args)
-        rand_run, rand_es, rand_training = run_training(rando_net, device, args)
+        # last_run, pruned_es, training, _ = {'val_score': 0}, 0, 0
+        # rand_run, rand_es, rand_training, _ = {'val_score': 0}, 0, 0
+        last_run, pruned_es, training, _ = run_training(model, device, args=args)
+        rand_run, rand_es, rand_training, _ = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
                            "rand_init": rand_run['val_score'] * 100,
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     start = time.time()
     # Training settings
     parser = argparse.ArgumentParser(description='LTH Experiments')
-    parser.add_argument('--model', default='Resnets',
+    parser.add_argument('--model', default='Net2',
                         help='Class name of model to train',
                         type=str, choices=['LeNet', 'Net2', 'LeNet300', 'Resnets'])
     parser.add_argument('--batch-size', type=int, default=60,
@@ -116,7 +116,7 @@ if __name__ == '__main__':
                         help='how much to prune a conv layer. taken as a % (default: 20)')
     parser.add_argument('--pruning-rate-fc', type=int, default=20,
                         help='how much to prune a fully connected layer. taken as a % (default: 20)')
-    parser.add_argument('--pruning-levels', type=int, default=3,
+    parser.add_argument('--pruning-levels', type=int, default=1,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
 
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
@@ -127,6 +127,9 @@ if __name__ == '__main__':
                         help='Difference b/w best and current to decide to stop early')
     parser.add_argument('--use-swa',
                         action='store_true', help='Uses SWA if enabled')
+    parser.add_argument('--rewind',
+                        action='store_true', help='Uses rewining weights to a certain epoch. 1/3')
+
     parser.add_argument('--name', default='prune',
                         help='name to save data files and plots',
                         type=str)

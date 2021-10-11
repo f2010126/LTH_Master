@@ -13,10 +13,12 @@ from torch.optim.swa_utils import AveragedModel, SWALR
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from src.vanilla_pytorch.models.convnets import Net2
 from src.vanilla_pytorch.models.resnets import Resnets
+import copy
 
 
 def setup_training(model, device, args):
     """
+    Using args, prep the optimiser, dataset, loss
     Setup optimiser, dataloaders, loss
     :param model
     :param args
@@ -30,6 +32,7 @@ def setup_training(model, device, args):
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
     # TODO: optimiser? Scheduler?
+    # TODO: Change to SGD for Resnet
     # optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -43,28 +46,40 @@ def setup_training(model, device, args):
 
 
 def run_training(model, device, args=None):
+    '''
+    Train and test the model on data
+    :param model: model to train
+    :param device: cpu or gpu
+    :param args: args to use for running
+    :return: validation score, stopping epoch, run, state_dict of model(rewinded or init)
+    '''
     model = model.to(device)
     config = setup_training(model, device, args)
+    rewind_state_dict = copy.deepcopy(model.state_dict())
+
     logging.info('Model being trained:')
     if args.use_swa:
         swa_model = AveragedModel(model)
         scheduler = CosineAnnealingLR(config["optim"], T_max=100)
         swa_start = 5
-        swa_scheduler = SWALR( config["optim"], swa_lr=0.05)
+        swa_scheduler = SWALR(config["optim"], swa_lr=0.05)
     else:
-        swa_model,scheduler,swa_scheduler = None, None, None
-        swa_start =0
+        swa_model, scheduler, swa_scheduler = None, None, None
+        swa_start = 0
 
     score = []
     e_stop = Py_EarlyStop(patience=10, verbose=True)
     test_model = swa_model if args.use_swa else model
     for epoch in range(config["max_epochs"]):
         logging.info('Epoch [{}/{}]'.format(epoch + 1, config["max_epochs"]))
+        if args.rewind and epoch == 3:
+            rewind_state_dict = copy.deepcopy(model.state_dict())
+
         train_score, train_loss = train_fn(model, config["optim"], config["loss"], config["data"][0], device,
                                            epoch=epoch, use_swa=args.use_swa, swa_start=swa_start, swa_model=swa_model,
                                            scheduler=scheduler, swa_scheduler=swa_scheduler)
         test_model = swa_model if args.use_swa else model
-        torch.optim.swa_utils.update_bn(config["data"][0], test_model,device=device)
+        torch.optim.swa_utils.update_bn(config["data"][0], test_model, device=device)
         val_score, val_loss = eval_fn(test_model, config["data"][1], device, config["loss"])
         print('Validation accuracy: %f', val_score)
         score.append({"epoch": epoch,
@@ -80,11 +95,10 @@ def run_training(model, device, args=None):
                 stop_epoch = epoch
                 break
 
-
     test_score, test_loss = eval_fn(test_model, config["data"][2], device, config["loss"])
     stop_epoch = sorted(score, key=lambda k: k['val_loss'])[0]['epoch']
     print(f" Evaluating on Test: Loss {test_loss} and score {test_score}")
-    return score[-1], stop_epoch, score
+    return score[-1], stop_epoch, score, rewind_state_dict
 
 
 if __name__ == '__main__':
@@ -97,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
 
-    parser.add_argument('--epochs', type=int, default=2,
+    parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs to train (default: 1)')
     parser.add_argument('--iterations', type=int, default=50000,
                         help='number of iterations to train (default: 50000)')
@@ -113,17 +127,19 @@ if __name__ == '__main__':
                                                                         'stop early')
     parser.add_argument('--use-swa',
                         action='store_true', help='Uses SWA if enabled')
-
+    parser.add_argument('--rewind',
+                        action='store_true', help='Uses rewining weights to a certain epoch. 1/3')
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     args = parser.parse_args()
-    args.use_swa = True
+    args.rewind = True
+    args.epochs = 4
     in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
     net = eval(args.model)(in_channels=in_chan)
     net.apply(init_weights)
     print(f"Arguments: {args}")
     summary(net, (in_chan, img, img),
             device=device.type)
-    metrics, es_epoch, _ = run_training(net, device, args)
+    metrics, es_epoch, _, _ = run_training(net, device, args)
     end = time.time()
     hours, rem = divmod(end - start, 3600)
     minutes, seconds = divmod(rem, 60)
