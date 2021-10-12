@@ -1,9 +1,9 @@
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from torchsummary import summary
-import numpy as np
-import torch
-from utils import init_weights
+
+from src.vanilla_pytorch.utils import *
 
 
 def num_flat_features(x):
