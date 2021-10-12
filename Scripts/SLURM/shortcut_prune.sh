@@ -1,7 +1,7 @@
 #!/bin/bash -l
-#SBATCH -o /work/dlclarge1/dsengupt-lth_ws/nemo_logs/shortIMP_res1.out # STDOUT  (the folder log has to be created prior to running or this won't work)
-#SBATCH -e /work/dlclarge1/dsengupt-lth_ws/nemo_logs/shortIMP_res1.err # STDERR  (the folder log has to be created prior to running or this won't work)
-#SBATCH -J ResNet_ShortPrune1
+#SBATCH -o /work/dlclarge1/dsengupt-lth_ws/nemo_logs/resnet_rewind_short.out # STDOUT  (the folder log has to be created prior to running or this won't work)
+#SBATCH -e /work/dlclarge1/dsengupt-lth_ws/nemo_logs/resnet_rewind_short.err # STDERR  (the folder log has to be created prior to running or this won't work)
+#SBATCH -J ResNet_Short_Rewind
 #SBATCH -N 1
 #SBATCH -t 19:59:00
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -19,6 +19,11 @@ cd LTH_Master
 python3 -c "import torch; print(torch.__version__)"
 python3 -c "import torch; print(torch.cuda.is_available())"
 
-python3 -m src.vanilla_pytorch.shortcut_pruning --model Resnets --batch-size 512 --epochs 30 --lr 0.01 --dataset cifar10 --name ResNet_IMP1
+echo "Start for rewind  Resnet"
+python3 -m src.vanilla_pytorch.shortcut_pruning --model Resnets --batch-size 512 --epochs 30 --lr 0.01 --dataset cifar10 --rewind --name Res_Short_Rewind1
+echo "Start for rewind  Resnet2"
+python3 -m src.vanilla_pytorch.shortcut_pruning --model Resnets --batch-size 512 --epochs 30 --lr 0.01 --dataset cifar10 --rewind --name Res_Short_Rewind2
+echo "Start for rewind  Resnet3"
+python3 -m src.vanilla_pytorch.shortcut_pruning --model Resnets --batch-size 512 --epochs 30 --lr 0.01 --dataset cifar10 --rewind --name Res_Short_Rewind3
 
 deactivate

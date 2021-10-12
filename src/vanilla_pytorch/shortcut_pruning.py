@@ -34,13 +34,13 @@ def handle_og_model(model, args):
     """
     # get hold of w0
     all_masks = {key: mask.to(device) for key, mask in get_masks(model, prune_amts=init_mask)}
-    original_state_dict = copy.deepcopy(model.state_dict())
+    # original_state_dict = copy.deepcopy(model.state_dict())
     # Run and train the lenet OG, done in run_model_.py
     # TODO: Kept here for testing. Remove after completion
     # metrics, full_es, _ = {'val_score': 0}, 0, 0
-    metrics, full_es, _ = run_training(model, device, args=args)
+    metrics, full_es, _, original_state_dict = run_training(model, device, args=args)
     # Save trained model
-    torch.save(model.state_dict(), "mnist_lenet_OG.pth")
+    torch.save(model.state_dict(), f"{args.model}_OG.pth")
     return original_state_dict, all_masks, {"val_score": metrics['val_score'] * 100,
                                             "full_es": full_es}
 
@@ -85,8 +85,8 @@ def pruned(model, args):
         # TODO: Kept here for testing. Remove after completion
         # rand_run, rand_es = {'val_score': 0}, 0
         # last_run, pruned_es, training ={'val_score': 0}, 0, 0
-        last_run, pruned_es, training = run_training(model, device, args=args)
-        rand_run, rand_es, _ = run_training(rando_net, device, args)
+        last_run, pruned_es, training, _ = run_training(model, device, args=args)
+        rand_run, rand_es, _, _ = run_training(rando_net, device, args)
         prune_data.append({"rem_weight": non_zero,
                            "val_score": last_run['val_score'] * 100,
                            "rand_init": rand_run['val_score'] * 100,
@@ -123,6 +123,9 @@ if __name__ == '__main__':
                         help='Difference b/w best and current to decide to stop early')
     parser.add_argument('--use-swa',
                         action='store_true', help='Uses SWA if enabled')
+    parser.add_argument('--rewind',
+                        action='store_true', help='Uses rewining weights to a certain epoch. 1/3')
+
     parser.add_argument('--name', default='Shortcut_prune',
                         help='name to save data files and plots',
                         type=str)
