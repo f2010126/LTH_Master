@@ -2,10 +2,11 @@ import argparse
 import time
 from src.lightning.data_lightning import LightningCIFAR10
 import pytorch_lightning as pl
-from src.lightning.BaseImplementations.BaseModels import count_rem_weights, Net2, init_weights, ResNets
+from src.lightning.BaseImplementations.BaseModels import count_rem_weights, Net2, init_weights
 from src.lightning.BaseImplementations.BaseTrainerAndCallbacks import Pruner, TrainFullModel, RandomPruner
 import torch
-
+from os import path, makedirs
+from torch.utils.tensorboard import SummaryWriter
 
 # Randomly Init
 # Repeat
@@ -19,8 +20,15 @@ import torch
 # Trainer stores the numbers.
 
 def run_lth_exp(args):
-    args.epochs = 15
-    args.pruning_levels = 15
+    if not path.exists(args.exp_dir):
+        makedirs(args.exp_dir)
+
+    trial_dir = path.join(args.exp_dir, args.trial)
+    # logger = SummaryWriter(trial_dir)
+    # print(f"Tensorboard logs kept in {logger.log_dir}")
+
+    args.epochs = 2
+    args.pruning_levels = 5
     dm = LightningCIFAR10(batch_size=args.batch_size)
 
     module = eval(args.model)(learning_rate=args.lr)
@@ -30,7 +38,7 @@ def run_lth_exp(args):
     # load from old checkpoint for faster
     # old model that was trained. using it's init weights.
     # module = module.load_from_checkpoint(checkpoint_path="full_trained.ckpt")
-    logger_name = f"{args.name}_{args.model}_{args.pruning_levels}/"
+    logger_name = f"{args.trial}_{args.model}_{args.pruning_levels}/"
 
     full_trainer = pl.Trainer(gpus=args.gpu,
                               max_epochs=args.epochs,
@@ -38,10 +46,15 @@ def run_lth_exp(args):
                               log_every_n_steps=5,
                               val_check_interval=1,
                               check_val_every_n_epoch=2,
+
+                              limit_train_batches=2,
+                              limit_test_batches=2,
+                              limit_val_batches=2,
+
                               callbacks=[TrainFullModel()],)
     full_trainer.fit(module, datamodule=dm)
     full_trainer.test(module, datamodule=dm)
-
+    print(f"Training Done {full_trainer.logged_metrics['test_epoch']['test_acc_epoch']}")
     # # Do i need to reinit my trainer at each time?? reinit new models??
     prune_amt = {'linear': args.pruning_rate_fc / 100, 'conv': args.pruning_rate_conv / 100, 'last': 0.1}
 
@@ -50,6 +63,11 @@ def run_lth_exp(args):
                                num_sanity_val_steps=1,
                                log_every_n_steps=5,
                                check_val_every_n_epoch=2,
+
+                               limit_train_batches=2,
+                               limit_test_batches=2,
+                               limit_val_batches=2,
+
                                callbacks=[Pruner(prune_amt)],
                                default_root_dir=logger_name)
     # random training. init a model with orig weights, prune random
@@ -89,9 +107,10 @@ if __name__ == '__main__':
                         help='how much to prune a fully connected layer. taken as a % (default: 20)')
     parser.add_argument('--pruning-levels', type=int, default=1,
                         help='No. of times to prune (default: 3), referred to as levels in paper')
-    parser.add_argument('--name', default='Prune',
+    parser.add_argument('--trial', default='Prune',
                         help='name to save data files and plots',
                         type=str)
+    parser.add_argument('--exp_dir', type=str, default='experiments', help='path to experiment directory')
 
     args = parser.parse_args()
     if torch.cuda.is_available():
