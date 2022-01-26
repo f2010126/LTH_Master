@@ -9,8 +9,8 @@ class BaseTrainerCallbacks(Callback):
     pass
 
 
-# Trainer automates the process so it should do things like freeze weights, reinit, checkpoint.
-# Let  the model just do regular training
+# Trainer automates the process, so it should do things like freeze weights, reinit, checkpoint.
+# Let  the model do regular training
 class TrainFullModel(Callback):
     def on_fit_start(self, trainer, pl_module):
         trainer.save_checkpoint("init_trainer_weights.ckpt")
@@ -32,7 +32,7 @@ class Pruner(Callback):
         checkpt = torch.load("init_trainer_weights.ckpt")
         pl_module.load_state_dict(checkpt['state_dict'])
         pl_module = update_apply_masks(pl_module, masks)
-        print(f"Randomness end :( {pl_module.conv1.weight[0][0]} {count_rem_weights(pl_module)}")
+        print(f"Masks updated? :( {pl_module.conv1.weight[0][0]} {count_rem_weights(pl_module)}")
 
     def on_after_backward(self, trainer, pl_module):
         pass

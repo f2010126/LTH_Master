@@ -2,7 +2,7 @@ import argparse
 import time
 import torch
 import copy
-from torchsummary import summary
+# from torchsummary import summary
 from src.vanilla_pytorch.LTH_Constants import default_plot_es, default_plot_acc, init_mask
 from src.vanilla_pytorch.run_model_experiment import run_training
 from src.vanilla_pytorch.prune_model import get_masks, update_apply_masks

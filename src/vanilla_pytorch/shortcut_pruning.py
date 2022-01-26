@@ -3,7 +3,7 @@ import time
 from src.vanilla_pytorch.LTH_Constants import init_mask, default_plot_acc, default_plot_es
 import torch
 import copy
-from torchsummary import summary
+# from torchsummary import summary
 from src.vanilla_pytorch.run_model_experiment import run_training
 from src.vanilla_pytorch.prune_model import get_masks, prune_random, update_apply_masks
 from src.vanilla_pytorch.utils import save_data, plot_graph, init_weights, count_rem_weights
@@ -135,8 +135,8 @@ if __name__ == '__main__':
     in_chan, img = (1, 28) if args.dataset == 'mnist' else (3, 32)
     net = globals()[args.model](in_channels=in_chan).to(device)
     net.apply(init_weights)
-    summary(net, (in_chan, img, img),
-            device=device.type)
+    # summary(net, (in_chan, img, img),
+    #         device=device.type)
     print(f"Arguments: {args}")
     run_data, pruned_data = pruned(net, args)
     run_data["prune_data"] = pruned_data

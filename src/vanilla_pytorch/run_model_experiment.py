@@ -2,7 +2,7 @@ import logging
 import argparse
 import time
 import torch
-from torchsummary import summary
+# from torchsummary import summary
 from torch.optim.swa_utils import AveragedModel
 from src.vanilla_pytorch.data_and_augment import load_cifar10_data, load_mnist_data
 from src.vanilla_pytorch.training_pipeline import train_fn
@@ -46,13 +46,13 @@ def setup_training(model, device, args):
 
 
 def run_training(model, device, args=None):
-    '''
+    """
     Train and test the model on data
     :param model: model to train
     :param device: cpu or gpu
     :param args: args to use for running
     :return: validation score, stopping epoch, run, state_dict of model(rewinded or init)
-    '''
+    """
     model = model.to(device)
     config = setup_training(model, device, args)
     rewind_state_dict = copy.deepcopy(model.state_dict())
