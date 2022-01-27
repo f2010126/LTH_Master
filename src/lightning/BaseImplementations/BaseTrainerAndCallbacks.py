@@ -29,7 +29,7 @@ class Pruner(Callback):
         # pruning happens here.
         masks = get_masks(pl_module, prune_amts=self.prune_amt)
         # reinit old
-        checkpt = torch.load(f"{pl_module.exp_folder}/init_trainer_weights.ckpt")
+        checkpt = torch.load(f"{pl_module.exp}/init_trainer_weights.ckpt")
         pl_module.load_state_dict(checkpt['state_dict'])
         pl_module = update_apply_masks(pl_module, masks)
         print(f"Masks updated? :( {pl_module.conv1.weight[0][0]} {count_rem_weights(pl_module)}")
