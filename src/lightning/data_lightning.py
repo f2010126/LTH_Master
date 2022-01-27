@@ -8,14 +8,14 @@ import multiprocessing
 
 
 class LightningCIFAR10(pl.LightningDataModule):
-    def __init__(self, batch_size, data_dir='data'):
+    def __init__(self, batch_size, workers, data_dir='data'):
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = batch_size
 
         self.dims = (3, 32, 32)
         self.num_classes = 10
-        self.num_workers = multiprocessing.cpu_count()
+        self.num_workers = workers
 
     def setup(self, stage=None):
         test_transform = transforms.Compose([
@@ -41,13 +41,13 @@ class LightningCIFAR10(pl.LightningDataModule):
         self.train_set, self.val_set = torch.utils.data.random_split(cifar_dataset, [45000, 5000])
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True,num_workers=self.num_workers)
+        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size,num_workers=self.num_workers)
+        return DataLoader(self.val_set, batch_size=self.batch_size, num_workers=self.num_workers)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.batch_size,num_workers=self.num_workers)
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers=self.num_workers)
 
 
 def load_mnist_data(batch=60):

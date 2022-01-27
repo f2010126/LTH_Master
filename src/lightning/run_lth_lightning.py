@@ -30,7 +30,7 @@ def run_lth_exp(args):
     logger = SummaryWriter(f"{trial_dir}/tensorboard")
     print(f"Tensorboard logs kept in {logger.log_dir}")
 
-    dm = LightningCIFAR10(batch_size=args.batch_size)
+    dm = LightningCIFAR10(batch_size=args.batch_size, workers=args.workers)
     module = eval(args.model)(learning_rate=args.lr, exp_folder=trial_dir)
     # module = ResNets(learning_rate=args.lr)
     module.apply(init_weights)
@@ -106,12 +106,15 @@ if __name__ == '__main__':
                         help='name to save data files and plots',
                         type=str)
     parser.add_argument('--exp_dir', type=str, default='experiments', help='path to experiment directory')
+    parser.add_argument('--workers', type=int, default=2, help='workers used by DataLoader')
 
     args = parser.parse_args()
     if torch.cuda.is_available():
         args.gpu = 1
     else:
         args.gpu = 0
+
+    print(args)
     run_lth_exp(args)
 
     end = time.time()
