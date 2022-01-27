@@ -39,13 +39,14 @@ def init_weights(m):
 # store model, original weights
 class BaseModel(pl.LightningModule):
 
-    def __init__(self, learning_rate, loss_criterion=torch.nn.CrossEntropyLoss()):
+    def __init__(self, learning_rate, exp_folder, loss_criterion=torch.nn.CrossEntropyLoss()):
         """
         Set up System.
         """
         super().__init__()
         # metrics
         self.accuracy = torchmetrics.Accuracy()
+        self.exp = exp_folder
         self.save_hyperparameters()  # any args sent along with self get saved as hyper params.
 
     def forward(self, x):
@@ -120,21 +121,21 @@ class BaseModel(pl.LightningModule):
         avg_loss = torch.stack([x['test_loss_step'] for x in outputs]).mean()
 
         tensorboard_logs = {'test_loss': avg_loss, 'test_acc_epoch': acc}
-        self.log("test_epoch", tensorboard_logs,on_step=False, on_epoch=True, prog_bar=True, logger=True)  # is written to logger
+        self.log("test_epoch", tensorboard_logs, on_step=False, on_epoch=True, prog_bar=True,
+                 logger=True)  # is written to logger
 
     def on_validation_end(self, *args, **kwargs) -> None:
         print("val  here")
 
 
 class Net2(BaseModel):
-    def __init__(self, learning_rate, loss_criterion=torch.nn.CrossEntropyLoss(), in_channels=3):
-        super().__init__(learning_rate)
+    def __init__(self, learning_rate, exp_folder, loss_criterion=torch.nn.CrossEntropyLoss(), in_channels=3):
+        super().__init__(learning_rate, exp_folder)
 
         self.conv1 = nn.Conv2d(in_channels, 32, (3, 3), (1, 1))
         self.conv2 = nn.Conv2d(32, 64, (3, 3), (1, 1))
         self.fc1 = nn.Linear(64 * 14 * 14, 128)
         self.fc2 = nn.Linear(128, 10)
-
         self.all_masks = get_masks(self, prune_amts={"linear": 0, "conv": 0, "last": 0})
 
     def forward(self, x):
@@ -154,14 +155,13 @@ class Net2(BaseModel):
 
 
 class Resnets(BaseModel):
-    def __init__(self, learning_rate, loss_criterion=torch.nn.CrossEntropyLoss(), in_channels=3):
+    def __init__(self, learning_rate, exp_folder, loss_criterion=torch.nn.CrossEntropyLoss(), in_channels=3):
         super().__init__(learning_rate)
         num_out_class = 10
         resnet18 = torchvision.models.resnet18(pretrained=False, progress=True)
         resnet18.fc = nn.Linear(512, num_out_class)
         # resnet18 = resnet18.to(device)
         self.model = resnet18
-
         self.all_masks = get_masks(self, prune_amts={"linear": 0, "conv": 0, "last": 0})
 
     def forward(self, x):
@@ -171,6 +171,6 @@ class Resnets(BaseModel):
 if __name__ == '__main__':
     in_chan = 3
     loss = torch.nn.CrossEntropyLoss()
-    net = Net2(learning_rate=1.2e-3, loss_criterion=loss, in_channels=in_chan)
+    net = Net2(learning_rate=1.2e-3, exp_folder='', loss_criterion=loss, in_channels=in_chan)
 
 # params in self.named_parameters()

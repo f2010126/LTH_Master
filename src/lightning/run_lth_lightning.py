@@ -10,7 +10,6 @@ from torch.utils.tensorboard import SummaryWriter
 from pytorch_lightning.loggers import TensorBoardLogger
 
 
-
 # Randomly Init
 # Repeat
 # Train for j
@@ -24,19 +23,17 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 def run_lth_exp(args):
     args.epochs = 1
-    args.pruning_levels = 2
+    args.pruning_levels = 1
 
     if not path.exists(args.exp_dir):
         makedirs(args.exp_dir)
     # directory for own summary writer to log test acc vs sparsity.
-    trial_dir = path.join(args.exp_dir, f"{args.trial}_{args.model}_{args.pruning_levels}/tensorboard")
-    logger = SummaryWriter(trial_dir)
+    trial_dir = path.join(args.exp_dir, f"{args.trial}_{args.model}_{args.pruning_levels}")
+    logger = SummaryWriter(f"{trial_dir}/tensorboard")
     print(f"Tensorboard logs kept in {logger.log_dir}")
 
-
-
     dm = LightningCIFAR10(batch_size=args.batch_size)
-    module = eval(args.model)(learning_rate=args.lr)
+    module = eval(args.model)(learning_rate=args.lr, exp_folder=trial_dir)
     # module = ResNets(learning_rate=args.lr)
     module.apply(init_weights)
 
@@ -44,7 +41,7 @@ def run_lth_exp(args):
     # old model that was trained. using it's init weights.
     # module = module.load_from_checkpoint(checkpoint_path="full_trained.ckpt")
     # Logger to track each run.
-    logger_path = path.join(args.exp_dir, f"{args.trial}_{args.model}_{args.pruning_levels}/lightning_tensorboard")
+    logger_path = path.join(trial_dir, f"lightning_tensorboard")
     full_logger = TensorBoardLogger(logger_path, name="full_model_run", version='full_model')
     full_trainer = pl.Trainer(gpus=args.gpu,
                               max_epochs=args.epochs,
@@ -73,13 +70,13 @@ def run_lth_exp(args):
                                limit_test_batches=10,
                                limit_val_batches=10,
 
-                               callbacks=[Pruner(prune_amt)],)
+                               callbacks=[Pruner(prune_amt)], )
     # random training. init a model with orig weights, prune random
     # random_module = eval(args.model)(learning_rate=args.lr)
     # random_trainer = pl.Trainer(max_epochs=args.epochs, callbacks=[RandomPruner()])  # random one for comparisons
     print(f"PRUNE LOOP")
     for level in range(args.pruning_levels):
-        full_logger = TensorBoardLogger(logger_path, name="pruning_runs", version=f"prune_{level+1}")
+        full_logger = TensorBoardLogger(logger_path, name="pruning_runs", version=f"prune_{level + 1}")
         prune_trainer.logger = full_logger
         prune_trainer.fit(module, datamodule=dm)
         prune_trainer.test(module, datamodule=dm)
