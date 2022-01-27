@@ -22,8 +22,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 # Trainer stores the numbers.
 
 def run_lth_exp(args):
-    args.epochs = 1
-    args.pruning_levels = 1
 
     if not path.exists(args.exp_dir):
         makedirs(args.exp_dir)
@@ -50,10 +48,6 @@ def run_lth_exp(args):
                               val_check_interval=1,
                               check_val_every_n_epoch=1,
 
-                              limit_train_batches=10,
-                              limit_test_batches=10,
-                              limit_val_batches=10,
-
                               callbacks=[TrainFullModel()], )
     full_trainer.fit(module, datamodule=dm)
     full_trainer.test(module, datamodule=dm)
@@ -65,10 +59,6 @@ def run_lth_exp(args):
                                num_sanity_val_steps=1,
                                log_every_n_steps=1,
                                check_val_every_n_epoch=1,
-
-                               limit_train_batches=10,
-                               limit_test_batches=10,
-                               limit_val_batches=10,
 
                                callbacks=[Pruner(prune_amt)], )
     # random training. init a model with orig weights, prune random
