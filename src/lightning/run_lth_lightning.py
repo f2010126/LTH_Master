@@ -2,10 +2,15 @@ import argparse
 import time
 from src.lightning.data_lightning import LightningCIFAR10
 import pytorch_lightning as pl
+from pytorch_lightning import LightningModule, Trainer, seed_everything
 from src.lightning.BaseImplementations.BaseModels import count_rem_weights, Net2, init_weights
 from src.lightning.BaseImplementations.BaseTrainerAndCallbacks import Pruner, TrainFullModel, RandomPruner
 import torch
+import os
 from os import path, makedirs
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pl_bolts.datamodules import CIFAR10DataModule
+from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 from torch.utils.tensorboard import SummaryWriter
 from pytorch_lightning.loggers import TensorBoardLogger
 
@@ -22,6 +27,13 @@ from pytorch_lightning.loggers import TensorBoardLogger
 # Trainer stores the numbers.
 
 def run_lth_exp(args):
+    seed_everything(7)
+
+    PATH_DATASETS = os.environ.get("PATH_DATASETS", ".")
+    AVAIL_GPUS = min(1, torch.cuda.device_count())
+    BATCH_SIZE = 256 if AVAIL_GPUS else 64
+    NUM_WORKERS = int(os.cpu_count() / 2)
+    print(NUM_WORKERS)
 
     if not path.exists(args.exp_dir):
         makedirs(args.exp_dir)
@@ -30,10 +42,18 @@ def run_lth_exp(args):
     logger = SummaryWriter(f"{trial_dir}/tensorboard")
     print(f"Tensorboard logs kept in {logger.log_dir}")
 
-    dm = LightningCIFAR10(batch_size=args.batch_size, workers=args.workers)
+    # dm = LightningCIFAR10(batch_size=args.batch_size, workers=args.workers)
+    cifar10_dm = CIFAR10DataModule(
+        data_dir=PATH_DATASETS,
+        batch_size=BATCH_SIZE,
+        num_workers=NUM_WORKERS,
+        shuffle=True,
+        normalize=True
+    )
     module = eval(args.model)(learning_rate=args.lr, exp_folder=trial_dir)
     # module = ResNets(learning_rate=args.lr)
     module.apply(init_weights)
+    module.datamodule = cifar10_dm
 
     # load from old checkpoint for faster
     # old model that was trained. using it's init weights.
@@ -48,9 +68,9 @@ def run_lth_exp(args):
                               val_check_interval=1,
                               check_val_every_n_epoch=1,
 
-                              callbacks=[TrainFullModel()], )
-    full_trainer.fit(module, datamodule=dm)
-    full_trainer.test(module, datamodule=dm)
+                              callbacks=[TrainFullModel(), LearningRateMonitor(logging_interval="step")], )
+    full_trainer.fit(module, datamodule=cifar10_dm)
+    full_trainer.test(module, datamodule=cifar10_dm)
     # print(f"Training Done {full_trainer.logged_metrics['test_epoch']['test_acc_epoch']}")
     # # Do i need to reinit my trainer at each time?? reinit new models??
     prune_amt = {'linear': args.pruning_rate_fc / 100, 'conv': args.pruning_rate_conv / 100, 'last': 0.1}
@@ -68,8 +88,8 @@ def run_lth_exp(args):
     for level in range(args.pruning_levels):
         full_logger = TensorBoardLogger(logger_path, name="pruning_runs", version=f"prune_{level + 1}")
         prune_trainer.logger = full_logger
-        prune_trainer.fit(module, datamodule=dm)
-        prune_trainer.test(module, datamodule=dm)
+        prune_trainer.fit(module, datamodule=cifar10_dm)
+        prune_trainer.test(module, datamodule=cifar10_dm)
         test_acc = prune_trainer.logged_metrics['test_epoch']['test_acc_epoch'] * 100
         weight_percent = count_rem_weights(module)
         logger.add_scalar("Sparsity/TestAcc", level * level, weight_percent)
@@ -101,7 +121,7 @@ if __name__ == '__main__':
     parser.add_argument('--pruning-rate-fc', type=int, default=20,
                         help='how much to prune a fully connected layer. taken as a % (default: 20)')
     parser.add_argument('--pruning-levels', type=int, default=1,
-                        help='No. of times to prune (default: 3), referred to as levels in paper')
+                        help='No. of times to prune (default: 1), referred to as levels in paper')
     parser.add_argument('--trial', default='Prune',
                         help='name to save data files and plots',
                         type=str)

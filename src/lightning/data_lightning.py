@@ -44,6 +44,7 @@ class LightningCIFAR10(pl.LightningDataModule):
         return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers)
 
     def val_dataloader(self):
+        print(f"The # workers {self.num_workers}")
         return DataLoader(self.val_set, batch_size=self.batch_size, num_workers=self.num_workers)
 
     def test_dataloader(self):

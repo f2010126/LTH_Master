@@ -3,16 +3,23 @@ import time
 import torch
 import pytorch_lightning as pl
 from data_lightning import LightningCIFAR10
+from pl_bolts.datamodules import CIFAR10DataModule
 from src.lightning.BaseImplementations.BaseModels import Net2, count_rem_weights, init_weights, Resnets
 from src.lightning.BaseImplementations.BaseTrainerAndCallbacks import BaseTrainerCallbacks, BaseTrainer
-from pytorch_lightning.callbacks import EarlyStopping, StochasticWeightAveraging
+from pytorch_lightning.callbacks import EarlyStopping, StochasticWeightAveraging, LearningRateMonitor
 from pytorch_lightning.loggers import CSVLogger
 from src.lightning.BaseImplementations.BaseLTHLogger import LTHLogger
 from torch.utils.tensorboard import SummaryWriter
 from os import path, makedirs
+import os
 
 
 def run_training(args):
+    AVAIL_GPUS = min(1, torch.cuda.device_count())
+    BATCH_SIZE = 256 if AVAIL_GPUS else 64
+    NUM_WORKERS = int(os.cpu_count() / 2)
+    print(NUM_WORKERS)
+
     if torch.cuda.is_available():
         args.gpu = 1
     else:
@@ -29,16 +36,24 @@ def run_training(args):
     print(f"Tensorboard logs kept in {logger.log_dir}")
     print(vars(args))
 
-    dm = LightningCIFAR10(batch_size=args.batch_size)
-    model = eval(args.model)(learning_rate=args.lr)  # Net2()
+    # dm = LightningCIFAR10(batch_size=args.batch_size,workers=args.workers)
+    cifar10_dm = CIFAR10DataModule(
+        data_dir='data',
+        batch_size=BATCH_SIZE,
+        num_workers=NUM_WORKERS,
+        shuffle=True,
+        normalize=True
+    )
+    model = eval(args.model)(learning_rate=args.lr, exp_folder=trial_dir)  # Net2()
+    model.datamodule = cifar10_dm
     model.apply(init_weights)
     logger_name = f"{args.name}_{args.model}_{args.use_swa}/"
     logger = LTHLogger(save_dir=f"{trial_dir}/lightning_log", name=logger_name, version="LTH_Exp")
-    trainer_callbacks = [BaseTrainerCallbacks()]
+    trainer_callbacks = [BaseTrainerCallbacks(), LearningRateMonitor(logging_interval="step")]
     if args.early_stop:
         trainer_callbacks.append(
             EarlyStopping(monitor="val_loss_epoch", min_delta=0.1, patience=2, verbose=True, mode="min"))
-    trainer = pl.Trainer(gpus=args.gpu,
+    trainer = pl.Trainer(gpus=AVAIL_GPUS,
                          log_every_n_steps=1,
                          max_epochs=args.epochs,
                          stochastic_weight_avg=args.use_swa,
@@ -46,11 +61,11 @@ def run_training(args):
                          logger=logger,
                          callbacks=trainer_callbacks)
     for ctr in range(2):
-        trainer.fit(model, datamodule=dm)
+        trainer.fit(model, datamodule=cifar10_dm)
         print(f"TEST")
         # trainer.logged_metrics
         # all metrics of Last step/epoch But care about only test metrics
-        trainer.test(model=model, datamodule=dm)
+        trainer.test(model=model, datamodule=cifar10_dm)
         print(f"Logged {trainer.logged_metrics} with weight % {count_rem_weights(model)}")
 
 
@@ -76,6 +91,7 @@ if __name__ == '__main__':
                         help='Data to use for training')
     parser.add_argument('--exp_dir', type=str, default='experiments', help='path to experiment directory')
     parser.add_argument('--trial', type=str, default='1', help='trial id')
+    parser.add_argument('--workers', type=int, default=2, help='workers used by DataLoader')
 
     parser.add_argument('--name', default='Lightning_train',
                         help='name to save data files and plots',
