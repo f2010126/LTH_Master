@@ -82,10 +82,11 @@ def execute_trainer(args=None):
     model = LitSystem(batch_size=BATCH_SIZE, arch="resnet18", lr=0.05)
     model.datamodule = cifar10_module
 
-    if not path.exists(args.exp_dir):
-        makedirs(args.exp_dir)
+    exp_dir = os.path.join(os.getcwd(), args.exp_dir)
+    if not path.exists(exp_dir):
+        makedirs(exp_dir)
 
-    trial_dir = path.join(args.exp_dir, args.trial)
+    trial_dir = path.join(exp_dir, args.trial)
     print(f"Saved logs at {trial_dir}")
     wandb_logger = WandbLogger(project='wandb-lightning_Single', job_type='train', save_dir=f"{trial_dir}/wandb_logs")
     logger = TensorBoardLogger("lightning_logs/", name="resnet")
