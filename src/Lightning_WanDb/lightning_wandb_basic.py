@@ -86,6 +86,7 @@ def execute_trainer(args=None):
         makedirs(args.exp_dir)
 
     trial_dir = path.join(args.exp_dir, args.trial)
+    print(f"Saved logs at {trial_dir}")
     wandb_logger = WandbLogger(project='wandb-lightning_Single', job_type='train', save_dir=f"{trial_dir}/wandb_logs")
     logger = TensorBoardLogger("lightning_logs/", name="resnet")
     early_stop_callback = EarlyStopping('val_loss')
@@ -96,7 +97,7 @@ def execute_trainer(args=None):
 
     trainer = Trainer(
         progress_bar_refresh_rate=10,
-        max_epochs=1,
+        max_epochs=args.epochs,
         gpus=AVAIL_GPUS,
         logger=wandb_logger,
         callbacks=[early_stop_callback,
@@ -115,6 +116,10 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='resnet18',
                         help='Class name of model to train',
                         choices=['resnet18', 'Net2', 'LeNet300', 'Resnets'])
+    parser.add_argument('--epochs', type=int, default=1,
+                        help='number of epochs to train (default: 1)')
+    parser.add_argument('--iterations', type=int, default=50000,
+                        help='number of iterations to train (default: 50000)')
     parser.add_argument('--lr', type=float, default=1.2e-3,
                         help='learning rate 1.2e-3')
     parser.add_argument('--batch-size', type=int, default=60,
