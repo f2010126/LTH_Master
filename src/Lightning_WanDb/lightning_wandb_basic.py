@@ -100,8 +100,9 @@ def execute_trainer(args=None):
         gpus=AVAIL_GPUS,
         logger=wandb_logger,
         callbacks=[early_stop_callback,
-                   LearningRateMonitor(logging_interval="step")],
-        checkpoint_callback=checkpoint_callback
+                   LearningRateMonitor(logging_interval="step"),
+                   checkpoint_callback],
+        checkpoint_callback=True
     )
 
     trainer.fit(model, cifar10_module)

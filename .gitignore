@@ -7,3 +7,8 @@ src/lightning/__pycache__/*
 src/vanilla_pytorch/__pycache__/*
 src/vanilla_pytorch/models/__pycache__/*
 src/lightning/experiments/*
+*/data/*
+experiments/*
+src/*/*/__pycache__/*
+src/*/data/*
+src/*/experiments/*
