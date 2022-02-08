@@ -27,6 +27,8 @@ class CIFAR10DataModule(pl.LightningDataModule):
         )
         self.dims = (3, 32, 32)
         self.num_classes = 10
+        self.save_hyperparameters()
+
 
     def prepare_data(self):
         CIFAR10(self.data_dir, train=True, download=True)

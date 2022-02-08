@@ -1,5 +1,6 @@
 try:
     import os
+    import wandb
     from os import path, makedirs
     import torch
     import argparse
@@ -10,14 +11,15 @@ try:
     from pl_bolts.datamodules import CIFAR10DataModule
     import torchvision
     from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
-    from BaseLightningModule.base_module import LitSystem
+    from BaseLightningModule.base_module import LitSystem94Base
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
     from utils import checkdir
 
 except ImportError:
-    from BaseLightningModule.base_module import LitSystem
+    import wandb
+    from BaseLightningModule.base_module import LitSystem94Base
     import os
     from os import path, makedirs
     import torch
@@ -29,7 +31,7 @@ except ImportError:
     from pl_bolts.datamodules import CIFAR10DataModule
     import torchvision
     from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
-    from BaseLightningModule.base_module import LitSystem
+    from BaseLightningModule.base_module import LitSystem94Base
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
@@ -81,7 +83,7 @@ def execute_trainer(args=None):
     NUM_WORKERS = int(os.cpu_count() / 2)
 
     cifar10_module = get_data_module(PATH_DATASETS, BATCH_SIZE, NUM_WORKERS)
-    model = LitSystem(batch_size=BATCH_SIZE, arch="resnet18", lr=0.05)
+    model = LitSystem94Base(batch_size=BATCH_SIZE, arch="resnet18", lr=0.05)
     model.datamodule = cifar10_module
 
     exp_dir = os.path.join(os.getcwd(), args.exp_dir)
@@ -91,7 +93,8 @@ def execute_trainer(args=None):
     checkdir(exp_dir)
     print(f"All Saved logs at {trial_dir}")
     checkdir(f"{trial_dir}/wandb_logs")
-    wandb_logger = WandbLogger(project='wandb-lightning_Single', job_type='train', save_dir=f"{trial_dir}/wandb_logs")
+    wandb_logger = WandbLogger(project=args.wand_exp_name, job_type='train', save_dir=f"{trial_dir}/wandb_logs")
+    # wandb.config.update({"lr": 0.1, "batchsize": BATCH_SIZE})
     logger = TensorBoardLogger("lightning_logs/", name="resnet")
     early_stop_callback = EarlyStopping('val_loss')
     checkpoint_callback = ModelCheckpoint(
@@ -133,6 +136,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', default=123, type=int, metavar='N', help='random seed of numpy and torch')
     parser.add_argument('--data_root', type=str, default='data', help='path to dataset directory')
     parser.add_argument('--exp_dir', type=str, default='experiments', help='path to experiment directory')
+    parser.add_argument('--wand_exp_name', type=str, default='wandb-lightning_Single', help='Name the project for wandb')
     parser.add_argument('--trial', type=str, default='1', help='trial id')
 
     args = parser.parse_args()

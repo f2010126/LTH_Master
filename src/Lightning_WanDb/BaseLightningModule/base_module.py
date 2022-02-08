@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from pytorch_lightning import LightningModule
 from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics.functional import accuracy
+from torchsummary import summary
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
@@ -18,13 +19,16 @@ def create_model(arch_type):
             'resnet152': ResNet152(low_dim=10)}[arch_type]
 
 
-class LitSystem(LightningModule):
+class LitSystem94Base(LightningModule):
     def __init__(self, batch_size, arch, lr=0.05, ):
         super().__init__()
 
         self.save_hyperparameters()
         self.model = create_model(arch)
 
+    def show_model_summary(self):
+        # for Cifar10 now.
+        summary(self.model, (3,32,32))
     def forward(self, x):
         out = self.model(x)
         return F.log_softmax(out, dim=1)
