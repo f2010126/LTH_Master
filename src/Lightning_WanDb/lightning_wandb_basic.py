@@ -14,6 +14,7 @@ try:
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+    from utils import checkdir
 
 except ImportError:
     from BaseLightningModule.base_module import LitSystem
@@ -32,6 +33,7 @@ except ImportError:
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+    from utils import checkdir
 
 
 def get_data_module(path, batch, workers=0):
@@ -83,11 +85,12 @@ def execute_trainer(args=None):
     model.datamodule = cifar10_module
 
     exp_dir = os.path.join(os.getcwd(), args.exp_dir)
-    if not path.exists(exp_dir):
-        makedirs(exp_dir)
+    checkdir(exp_dir)
 
     trial_dir = path.join(exp_dir, args.trial)
-    print(f"Saved logs at {trial_dir}")
+    checkdir(exp_dir)
+    print(f"All Saved logs at {trial_dir}")
+    checkdir(f"{trial_dir}/wandb_logs")
     wandb_logger = WandbLogger(project='wandb-lightning_Single', job_type='train', save_dir=f"{trial_dir}/wandb_logs")
     logger = TensorBoardLogger("lightning_logs/", name="resnet")
     early_stop_callback = EarlyStopping('val_loss')
