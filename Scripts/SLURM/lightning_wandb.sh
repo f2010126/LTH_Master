@@ -1,6 +1,6 @@
 #!/bin/bash -l
-#SBATCH -o /work/dlclarge1/dsengupt-lth_ws/nemo_logs/lightning_wandb.out # STDOUT  (the folder log has to be created prior to running or this won't work)
-#SBATCH -e /work/dlclarge1/dsengupt-lth_ws/nemo_logs/lightning_wandb.err # STDERR  (the folder log has to be created prior to running or this won't work)
+#SBATCH -o /work/dlclarge1/dsengupt-lth_ws/slurm_logs/lightning_wandb.out # STDOUT  (the folder log has to be created prior to running or this won't work)
+#SBATCH -e /work/dlclarge1/dsengupt-lth_ws/slurm_logs/lightning_wandb.err # STDERR  (the folder log has to be created prior to running or this won't work)
 #SBATCH -J Lightning_WandB
 #SBATCH -N 1
 #SBATCH -t 9:59:00
