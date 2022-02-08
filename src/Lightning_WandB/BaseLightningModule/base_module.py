@@ -1,4 +1,6 @@
 import torch
+import torchvision
+from torch import nn
 import torch.nn.functional as F
 from pytorch_lightning import LightningModule
 from torch.optim.lr_scheduler import OneCycleLR
@@ -16,7 +18,15 @@ def create_model(arch_type):
             'resnet34': ResNet34(low_dim=10),
             'resnet50': ResNet50(low_dim=10),
             'resnet101': ResNet101(low_dim=10),
-            'resnet152': ResNet152(low_dim=10)}[arch_type]
+            'resnet152': ResNet152(low_dim=10),
+            'torch_resnet': torchvision_renet()}[arch_type]
+
+
+def torchvision_renet():
+    model = torchvision.models.resnet18(pretrained=False, num_classes=10)
+    model.conv1 = nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+    model.maxpool = nn.Identity()
+    return model
 
 
 class LitSystem94Base(LightningModule):
@@ -28,7 +38,8 @@ class LitSystem94Base(LightningModule):
 
     def show_model_summary(self):
         # for Cifar10 now.
-        summary(self.model, (3,32,32))
+        summary(self.model, (3, 32, 32))
+
     def forward(self, x):
         out = self.model(x)
         return F.log_softmax(out, dim=1)

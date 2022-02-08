@@ -83,7 +83,7 @@ def execute_trainer(args=None):
     NUM_WORKERS = int(os.cpu_count() / 2)
 
     cifar10_module = get_data_module(PATH_DATASETS, BATCH_SIZE, NUM_WORKERS)
-    model = LitSystem94Base(batch_size=BATCH_SIZE, arch="resnet18", lr=0.05)
+    model = LitSystem94Base(batch_size=BATCH_SIZE, arch=args.model, lr=0.05)
     model.datamodule = cifar10_module
 
     exp_dir = os.path.join(os.getcwd(), args.exp_dir)
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Model')
     parser.add_argument('--model', type=str, default='resnet18',
                         help='Class name of model to train',
-                        choices=['resnet18', 'Net2', 'LeNet300', 'Resnets'])
+                        choices=['resnet18', 'torch_resnet', 'LeNet300', 'Resnets'])
     parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs to train (default: 1)')
     parser.add_argument('--iterations', type=int, default=50000,
