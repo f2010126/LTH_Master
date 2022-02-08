@@ -11,8 +11,8 @@ cd $(ws_find lth_ws)
 # python3 -m venv lth_env
 source lth_env/bin/activate
 pip list
-cd LTH_Master/src/Lightning_WanDb
+cd LTH_Master
 
-python3 -m lightning_wandb_basic.py --wand_exp_name 94BaseLine --trial Baseline123 -epochs 30 --seed 123
+python3 -m src.Lightning_WandB.lightning_wandb_basic.py --wand_exp_name 94BaseLine --trial Baseline123 -epochs 30 --seed 123
 
 deactivate

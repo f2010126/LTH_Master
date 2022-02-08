@@ -8,7 +8,7 @@ from torchsummary import summary
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 except ImportError:
-    from src.Lightning_WanDb.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+    from src.Lightning_WandB.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 
 
 def create_model(arch_type):
