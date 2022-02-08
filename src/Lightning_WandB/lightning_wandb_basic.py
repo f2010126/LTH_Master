@@ -96,11 +96,12 @@ def execute_trainer(args=None):
     wandb_logger = WandbLogger(project=args.wand_exp_name, job_type='train', save_dir=f"{trial_dir}/wandb_logs")
     # wandb.config.update({"lr": 0.1, "batchsize": BATCH_SIZE})
     logger = TensorBoardLogger("lightning_logs/", name="resnet")
-    early_stop_callback = EarlyStopping('val_loss')
+    early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_loss',
         dirpath=f"{trial_dir}/models",
-        filename='sample-cifar10-{epoch:02d}-{val_loss:.2f}')
+        filename='sample-cifar10-{epoch:02d}-{val_loss:.2f}',
+        verbose=True)
 
     trainer = Trainer(
         progress_bar_refresh_rate=10,
