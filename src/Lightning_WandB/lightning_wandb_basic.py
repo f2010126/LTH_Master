@@ -19,7 +19,6 @@ try:
 
 except ImportError:
     import wandb
-    from BaseLightningModule.base_module import LitSystem94Base
     import os
     from os import path, makedirs
     import torch
@@ -36,6 +35,7 @@ except ImportError:
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
     from utils import checkdir
+    from .BaseLightningModule.base_module import LitSystem94Base
 
 
 def get_data_module(path, batch, workers=0):

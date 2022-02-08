@@ -12,3 +12,4 @@ experiments/*
 src/*/*/__pycache__/*
 src/*/data/*
 src/*/experiments/*
+src/*/__pycache__/*
