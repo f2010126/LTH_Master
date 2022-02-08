@@ -99,7 +99,7 @@ def execute_trainer(args=None):
     #early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
-        mode=max,
+        mode="max",
         dirpath=f"{trial_dir}/models",
         filename='sample-cifar10-{epoch:02d}-{val_loss:.2f}',
         verbose=True)
