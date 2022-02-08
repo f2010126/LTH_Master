@@ -30,11 +30,11 @@ except ImportError:
     from pl_bolts.datamodules import CIFAR10DataModule
     import torchvision
     from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
-    from BaseLightningModule.base_module import LitSystem94Base
+    from .BaseLightningModule.base_module import LitSystem94Base
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-    from utils import checkdir
+    from .utils import checkdir
     from .BaseLightningModule.base_module import LitSystem94Base
 
 
