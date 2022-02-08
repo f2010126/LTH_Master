@@ -96,7 +96,7 @@ def execute_trainer(args=None):
     wandb_logger = WandbLogger(project=args.wand_exp_name, job_type='train', save_dir=f"{trial_dir}/wandb_logs")
     # wandb.config.update({"lr": 0.1, "batchsize": BATCH_SIZE})
     logger = TensorBoardLogger("lightning_logs/", name="resnet")
-    early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
+    #early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_loss',
         dirpath=f"{trial_dir}/models",
@@ -108,7 +108,7 @@ def execute_trainer(args=None):
         max_epochs=args.epochs,
         gpus=AVAIL_GPUS,
         logger=wandb_logger,
-        callbacks=[early_stop_callback,
+        callbacks=[
                    LearningRateMonitor(logging_interval="step"),
                    checkpoint_callback],
         checkpoint_callback=True
