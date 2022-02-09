@@ -88,7 +88,7 @@ def execute_trainer(args):
         checkpoint_callback=True
     )
 
-    for i in range(args.epochs):
+    for i in range(args.levels):
         # log Test Acc vs weight %
         run = wandb.init(config=args, project=args.wand_exp_name,
                    job_type='train', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=f"run_#_{i}")
@@ -130,6 +130,8 @@ if __name__ == '__main__':
     parser.add_argument('--wand_exp_name', type=str, default='Looper',
                         help='Name the project for wandb')
     parser.add_argument('--trial', type=str, default='1', help='trial id')
+    parser.add_argument('--levels', type=int, default=1,
+                        help='Prune Levels (default: 1)')
 
     args = parser.parse_args()
 
