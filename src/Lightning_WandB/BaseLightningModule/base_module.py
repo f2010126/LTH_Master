@@ -6,6 +6,7 @@ from pytorch_lightning import LightningModule
 from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics.functional import accuracy
 from torchsummary import summary
+import wandb
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
@@ -20,6 +21,17 @@ def create_model(arch_type):
             'resnet101': ResNet101(low_dim=10),
             'resnet152': ResNet152(low_dim=10),
             'torch_resnet': torchvision_renet()}[arch_type]
+
+
+def init_weights(m):
+    """
+        Initialise weights acc the Xavier initialisation and bias set to 0.01
+        :param m:
+        :return: None
+        """
+    if isinstance(m, torch.nn.Linear):
+        torch.nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.01)
 
 
 def torchvision_renet():
@@ -93,3 +105,55 @@ class LitSystem94Base(LightningModule):
             "interval": "step",
         }
         return {"optimizer": optimizer, "lr_scheduler": scheduler_dict}
+
+
+class LitSystemPrune(LightningModule):
+    def __init__(self, batch_size, arch, lr=0.05, ):
+        super().__init__()
+
+        self.save_hyperparameters()
+        self.model = create_model(arch)
+
+    def forward(self, x):
+        out = self.model(x)
+        return F.log_softmax(out, dim=1)
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        logits = self(x)
+        loss = F.nll_loss(logits, y)
+
+        # training metrics
+        preds = torch.argmax(logits, dim=1)
+        acc = accuracy(preds, y)
+        # self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
+        # self.log('train_acc', acc, on_step=True, on_epoch=True, logger=True)
+        wandb.log({'train_loss': loss})
+        wandb.log({'train_acc': acc})
+        return loss
+
+    def evaluate(self, batch, stage=None):
+        x, y = batch
+        logits = self(x)
+        loss = F.nll_loss(logits, y)
+        preds = torch.argmax(logits, dim=1)
+        acc = accuracy(preds, y)
+
+        if stage:
+            # self.log(f"{stage}_loss", loss, prog_bar=True)
+            # self.log(f"{stage}_acc", acc, prog_bar=True)
+            wandb.log({f"{stage}_loss": loss})
+            wandb.log({f"{stage}_acc": acc})
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        return self.evaluate(batch, "val")
+
+    def test_step(self, batch, batch_idx):
+        return self.evaluate(batch, "test")
+
+    def configure_optimizers(self):
+        # return the SGD used
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
+        return optimizer

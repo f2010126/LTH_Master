@@ -15,7 +15,7 @@ try:
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-    from utils import checkdir
+    from utils import checkdir, get_data_module
 
 except ImportError:
     import wandb
@@ -34,35 +34,8 @@ except ImportError:
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-    from .utils import checkdir
+    from .utils import checkdir, get_data_module
     from .BaseLightningModule.base_module import LitSystem94Base
-
-
-def get_data_module(path, batch, workers=0):
-    train_transforms = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.RandomCrop(32, padding=4),
-            torchvision.transforms.RandomHorizontalFlip(),
-            torchvision.transforms.ToTensor(),
-            cifar10_normalization(),
-        ])
-    test_transforms = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            cifar10_normalization(),
-        ]
-    )
-
-    cifar10_dm = CIFAR10DataModule(
-        data_dir=path,
-        batch_size=batch,
-        num_workers=workers,
-        train_transforms=train_transforms,
-        test_transforms=test_transforms,
-        val_transforms=test_transforms,
-    )
-
-    return cifar10_dm
 
 
 def execute_trainer(args=None):
@@ -95,13 +68,12 @@ def execute_trainer(args=None):
     checkdir(f"{trial_dir}/wandb_logs")
     wandb_logger = WandbLogger(project=args.wand_exp_name, job_type='train', save_dir=f"{trial_dir}/wandb_logs")
     # wandb.config.update({"lr": 0.1, "batchsize": BATCH_SIZE})
-    logger = TensorBoardLogger("lightning_logs/", name="resnet")
-    #early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
+    # early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
         mode="max",
         dirpath=f"{trial_dir}/models",
-        filename='sample-cifar10-{epoch:02d}-{val_loss:.2f}',
+        filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}',
         verbose=True)
 
     trainer = Trainer(
@@ -110,8 +82,8 @@ def execute_trainer(args=None):
         gpus=AVAIL_GPUS,
         logger=wandb_logger,
         callbacks=[
-                   LearningRateMonitor(logging_interval="step"),
-                   checkpoint_callback],
+            LearningRateMonitor(logging_interval="step"),
+            checkpoint_callback],
         checkpoint_callback=True
     )
 
@@ -138,7 +110,8 @@ if __name__ == '__main__':
     parser.add_argument('--seed', default=123, type=int, metavar='N', help='random seed of numpy and torch')
     parser.add_argument('--data_root', type=str, default='data', help='path to dataset directory')
     parser.add_argument('--exp_dir', type=str, default='experiments', help='path to experiment directory')
-    parser.add_argument('--wand_exp_name', type=str, default='wandb-lightning_Single', help='Name the project for wandb')
+    parser.add_argument('--wand_exp_name', type=str, default='wandb-lightning_Single',
+                        help='Name the project for wandb')
     parser.add_argument('--trial', type=str, default='1', help='trial id')
 
     args = parser.parse_args()
