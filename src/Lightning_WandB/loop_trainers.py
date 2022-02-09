@@ -68,7 +68,7 @@ def execute_trainer(args):
     print(f"All Saved logs at {trial_dir}")
     checkdir(f"{trial_dir}/wandb_logs")
     wandb.init(config=args, project=args.wand_exp_name,
-               job_type='train', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name="10Shot")
+               job_type='train', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=args.run_name)
 
     # do wandb.define_metric() after wandb.init()
     # Define the custom x axis metric
@@ -93,7 +93,7 @@ def execute_trainer(args):
         callbacks=[
             LearningRateMonitor(logging_interval="step"),
             checkpoint_callback],
-        enable_checkpointing=True
+        checkpoint_callback=True
     )
 
     for i in range(1):
@@ -128,6 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('--wand_exp_name', type=str, default='Looper',
                         help='Name the project for wandb')
     parser.add_argument('--trial', type=str, default='1', help='trial id')
+    parser.add_argument('--run_name', type=str, default='1Shot', help='run name for the wandb log')
 
     args = parser.parse_args()
 
