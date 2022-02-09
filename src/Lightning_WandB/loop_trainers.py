@@ -78,9 +78,6 @@ def execute_trainer(args):
     trainer = Trainer(
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
-        limit_train_batches=20,
-        limit_val_batches=20,
-        limit_test_batches=20,
         gpus=AVAIL_GPUS,
         callbacks=[
             LearningRateMonitor(logging_interval="step"),
@@ -92,17 +89,18 @@ def execute_trainer(args):
         # log Test Acc vs weight %
         run = wandb.init(config=args, project=args.wand_exp_name,
                    job_type='pruning', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_{i}")
+        trainer.fit(model, cifar10_module)
+        trainer.test(model, datamodule=cifar10_module)
+        run.finish()
+
+        run = wandb.init(config=args, project=args.wand_exp_name,
+                         job_type='test-pruning', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=f"run_#_{i}")
         # do wandb.define_metric() after wandb.init()
         # Define the custom x axis metric
         wandb.define_metric("weight_pruned")
         # Define which metrics to plot against that x-axis
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
 
-        trainer.fit(model, cifar10_module)
-        trainer.test(model, datamodule=cifar10_module)
-        run.finish()
-        run = wandb.init(config=args, project=args.wand_exp_name,
-                         job_type='test-pruning', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=f"run_#_{i}")
         test_acc = i * i
         weight_prune = 100 - i
         print(f"Weight % here {weight_prune}")
