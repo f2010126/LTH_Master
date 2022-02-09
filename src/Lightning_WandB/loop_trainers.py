@@ -85,6 +85,14 @@ def execute_trainer(args):
         checkpoint_callback=True
     )
 
+    # BASELINE RUN
+    run = wandb.init(config=args, project=args.wand_exp_name,
+                     job_type='initial-baseline', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_0")
+    trainer.fit(model, cifar10_module)
+    trainer.test(model, datamodule=cifar10_module)
+    run.finish()
+
+    # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
         run = wandb.init(config=args, project=args.wand_exp_name,
@@ -94,7 +102,7 @@ def execute_trainer(args):
         run.finish()
 
         run = wandb.init(config=args, project=args.wand_exp_name,
-                         job_type='test-pruning', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=f"run_#_{i}")
+                         job_type='test-pruning', dir=f"{trial_dir}/wandb_logs", group='args.trial', name=f"run_#_{i}")
         # do wandb.define_metric() after wandb.init()
         # Define the custom x axis metric
         wandb.define_metric("weight_pruned")
