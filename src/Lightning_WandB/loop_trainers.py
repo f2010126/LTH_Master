@@ -75,6 +75,12 @@ def execute_trainer(args):
         filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}',
         verbose=True)
 
+    # BASELINE RUN
+    wandb_logger = WandbLogger(project=args.wand_exp_name,save_dir=f"{trial_dir}/wandb_logs",
+                               reinit=True,config=args,job_type='initial-baseline',
+                               group=args.trial, name=f"run_#_0")
+    # run = wandb.init(config=args, project=args.wand_exp_name,
+    #                  job_type='initial-baseline', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_0")
     trainer = Trainer(
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
@@ -82,15 +88,14 @@ def execute_trainer(args):
         callbacks=[
             LearningRateMonitor(logging_interval="step"),
             checkpoint_callback],
-        checkpoint_callback=True
+        checkpoint_callback=True,
+        logger=wandb_logger
     )
 
-    # BASELINE RUN
-    run = wandb.init(config=args, project=args.wand_exp_name,
-                     job_type='initial-baseline', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_0")
     trainer.fit(model, cifar10_module)
     trainer.test(model, datamodule=cifar10_module)
-    run.finish()
+    wandb.finish()
+    # run.finish()
 
     # PRUNING LOOP
     for i in range(args.levels):

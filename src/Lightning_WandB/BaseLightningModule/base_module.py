@@ -126,10 +126,10 @@ class LitSystemPrune(LightningModule):
         # training metrics
         preds = torch.argmax(logits, dim=1)
         acc = accuracy(preds, y)
-        # self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
-        # self.log('train_acc', acc, on_step=True, on_epoch=True, logger=True)
-        wandb.log({'train_loss': loss})
-        wandb.log({'train_acc': acc})
+        self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
+        self.log('train_acc', acc, on_step=True, on_epoch=True, logger=True)
+        # wandb.log({'train_loss': loss})
+        # wandb.log({'train_acc': acc})
         return loss
 
     def evaluate(self, batch, stage=None):
@@ -140,10 +140,10 @@ class LitSystemPrune(LightningModule):
         acc = accuracy(preds, y)
 
         if stage:
-            # self.log(f"{stage}_loss", loss, prog_bar=True)
-            # self.log(f"{stage}_acc", acc, prog_bar=True)
-            wandb.log({f"{stage}_loss": loss})
-            wandb.log({f"{stage}_acc": acc})
+            self.log(f"{stage}_loss", loss, prog_bar=True)
+            self.log(f"{stage}_acc", acc, prog_bar=True)
+            # wandb.log({f"{stage}_loss": loss})
+            # wandb.log({f"{stage}_acc": acc})
 
         return loss
 
