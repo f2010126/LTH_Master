@@ -76,8 +76,8 @@ def execute_trainer(args):
         verbose=True)
 
     # BASELINE RUN
-    wandb_logger = WandbLogger(project=args.wand_exp_name,save_dir=f"{trial_dir}/wandb_logs",
-                               reinit=True,config=args,job_type='initial-baseline',
+    wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
+                               reinit=True, config=args, job_type='initial-baseline',
                                group=args.trial, name=f"run_#_0")
     # run = wandb.init(config=args, project=args.wand_exp_name,
     #                  job_type='initial-baseline', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_0")
@@ -100,11 +100,13 @@ def execute_trainer(args):
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
-        run = wandb.init(config=args, project=args.wand_exp_name,
-                   job_type='pruning', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_{i}")
+        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
+                                   reinit=True, config=args, job_type='pruning',
+                                   group=args.trial, name=f"run_#_{i}")
+        trainer.logger = wandb_logger
         trainer.fit(model, cifar10_module)
         trainer.test(model, datamodule=cifar10_module)
-        run.finish()
+        wandb.finish()
 
         run = wandb.init(config=args, project=args.wand_exp_name,
                          job_type='test-pruning', dir=f"{trial_dir}/wandb_logs", group='args.trial', name=f"run_#_{i}")
@@ -119,7 +121,6 @@ def execute_trainer(args):
         print(f"Weight % here {weight_prune}")
         wandb.log({"pruned-test-acc": test_acc, "weight_pruned": weight_prune})
         run.finish()
-
 
 
 if __name__ == '__main__':
