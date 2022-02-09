@@ -67,14 +67,6 @@ def execute_trainer(args):
     checkdir(exp_dir)
     print(f"All Saved logs at {trial_dir}")
     checkdir(f"{trial_dir}/wandb_logs")
-    wandb.init(config=args, project=args.wand_exp_name,
-               job_type='train', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=args.run_name)
-
-    # do wandb.define_metric() after wandb.init()
-    # Define the custom x axis metric
-    wandb.define_metric("weight_pruned")
-    # Define which metrics to plot against that x-axis
-    wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
 
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
@@ -96,14 +88,24 @@ def execute_trainer(args):
         checkpoint_callback=True
     )
 
-    for i in range(1):
+    for i in range(args.epochs):
         # log Test Acc vs weight %
+        run = wandb.init(config=args, project=args.wand_exp_name,
+                   job_type='train', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=f"run_#_{i}")
+        # do wandb.define_metric() after wandb.init()
+        # Define the custom x axis metric
+        wandb.define_metric("weight_pruned")
+        # Define which metrics to plot against that x-axis
+        wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
+
         trainer.fit(model, cifar10_module)
         trainer.test(model, datamodule=cifar10_module)
         test_acc = i * i
         weight_prune = 100 - i
         print(f"Weight % here {weight_prune}")
         wandb.log({"pruned-test-acc": test_acc, "weight_pruned": weight_prune})
+        run.finish()
+
 
 
 if __name__ == '__main__':
@@ -128,7 +130,6 @@ if __name__ == '__main__':
     parser.add_argument('--wand_exp_name', type=str, default='Looper',
                         help='Name the project for wandb')
     parser.add_argument('--trial', type=str, default='1', help='trial id')
-    parser.add_argument('--run_name', type=str, default='1Shot', help='run name for the wandb log')
 
     args = parser.parse_args()
 
