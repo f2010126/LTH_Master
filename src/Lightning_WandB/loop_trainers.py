@@ -91,7 +91,7 @@ def execute_trainer(args):
     for i in range(args.levels):
         # log Test Acc vs weight %
         run = wandb.init(config=args, project=args.wand_exp_name,
-                   job_type='train', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=f"run_#_{i}")
+                   job_type='pruning', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_{i}")
         # do wandb.define_metric() after wandb.init()
         # Define the custom x axis metric
         wandb.define_metric("weight_pruned")
@@ -100,6 +100,9 @@ def execute_trainer(args):
 
         trainer.fit(model, cifar10_module)
         trainer.test(model, datamodule=cifar10_module)
+        run.finish()
+        run = wandb.init(config=args, project=args.wand_exp_name,
+                         job_type='test-pruning', dir=f"{trial_dir}/wandb_logs", group='MultipleRuns', name=f"run_#_{i}")
         test_acc = i * i
         weight_prune = 100 - i
         print(f"Weight % here {weight_prune}")
