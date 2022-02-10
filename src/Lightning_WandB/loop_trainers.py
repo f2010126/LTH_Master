@@ -37,6 +37,7 @@ except ImportError:
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
     from .utils import checkdir, get_data_module
     from .BaseLightningModule.base_module import LitSystemPrune
+    from .BaseLightningModule.callbacks import FullTrainer
 
 
 def execute_trainer(args):
