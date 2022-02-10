@@ -106,6 +106,9 @@ def execute_trainer(args):
         # Reinit the Trainer.
         trainer = Trainer(
             progress_bar_refresh_rate=10,
+            limit_test_batches=50,
+            limit_val_batches=50,
+            limit_train_batches=50,
             max_epochs=args.epochs,
             gpus=AVAIL_GPUS,
             callbacks=[
@@ -116,6 +119,7 @@ def execute_trainer(args):
         )
         trainer.fit(model, cifar10_module)
         trainer.test(model, datamodule=cifar10_module)
+        test_acc= trainer.logged_metrics['test_acc'] * 100
         wandb.finish()
 
         run = wandb.init(config=args, project=args.wand_exp_name,
@@ -125,8 +129,6 @@ def execute_trainer(args):
         wandb.define_metric("weight_pruned")
         # Define which metrics to plot against that x-axis
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
-
-        test_acc = i * i
         weight_prune = 100 - i
         print(f"Weight % here {weight_prune}")
         wandb.log({"pruned-test-acc": test_acc, "weight_pruned": weight_prune})
