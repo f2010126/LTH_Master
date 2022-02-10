@@ -6,7 +6,6 @@ from pytorch_lightning import LightningModule
 from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics.functional import accuracy
 from torchsummary import summary
-import wandb
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
@@ -109,7 +108,7 @@ class LitSystem94Base(LightningModule):
 
 
 class LitSystemPrune(LightningModule):
-    def __init__(self, batch_size, arch, lr=0.05, ):
+    def __init__(self, experiment_dir, batch_size, arch, lr=0.05, ):
         super().__init__()
 
         self.save_hyperparameters()
@@ -130,8 +129,7 @@ class LitSystemPrune(LightningModule):
         acc = accuracy(preds, y)
         self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
         self.log('train_acc', acc, on_step=True, on_epoch=True, logger=True)
-        # wandb.log({'train_loss': loss})
-        # wandb.log({'train_acc': acc})
+
         return loss
 
     def evaluate(self, batch, stage=None):
@@ -144,8 +142,6 @@ class LitSystemPrune(LightningModule):
         if stage:
             self.log(f"{stage}_loss", loss, prog_bar=True)
             self.log(f"{stage}_acc", acc, prog_bar=True)
-            # wandb.log({f"{stage}_loss": loss})
-            # wandb.log({f"{stage}_acc": acc})
 
         return loss
 

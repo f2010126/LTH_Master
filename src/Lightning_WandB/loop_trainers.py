@@ -16,6 +16,7 @@ try:
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
     from utils import checkdir, get_data_module
+    from BaseLightningModule.callbacks import FullTrainer
 
 except ImportError:
     import wandb
@@ -51,14 +52,9 @@ def execute_trainer(args):
             'from checkpoints.'
         )
 
-    PATH_DATASETS = args.data_root
     AVAIL_GPUS = min(1, torch.cuda.device_count())
     BATCH_SIZE = 256 if AVAIL_GPUS else 64
     NUM_WORKERS = int(os.cpu_count() / 2)
-
-    cifar10_module = get_data_module(PATH_DATASETS, BATCH_SIZE, NUM_WORKERS)
-    model = LitSystemPrune(batch_size=args.batch_size, arch=args.model, lr=args.lr)
-    model.datamodule = cifar10_module
 
     exp_dir = os.path.join(os.getcwd(), args.exp_dir)
     checkdir(exp_dir)
@@ -68,11 +64,17 @@ def execute_trainer(args):
     print(f"All Saved logs at {trial_dir}")
     checkdir(f"{trial_dir}/wandb_logs")
 
+    cifar10_module = get_data_module(args.data_root, args.batch_size, NUM_WORKERS)
+    model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
+                           lr=args.lr)
+    model.datamodule = cifar10_module
+
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
         mode="max",
         dirpath=f"{trial_dir}/models",
         filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}',
+        save_last=True,
         verbose=True)
 
     # BASELINE RUN
@@ -83,9 +85,9 @@ def execute_trainer(args):
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
         gpus=AVAIL_GPUS,
-        callbacks=[
-            LearningRateMonitor(logging_interval="step"),
-            checkpoint_callback],
+        callbacks=[FullTrainer(),
+                   LearningRateMonitor(logging_interval="step"),
+                   checkpoint_callback],
         checkpoint_callback=True,
         logger=wandb_logger
     )
@@ -94,12 +96,11 @@ def execute_trainer(args):
     full_trainer.test(model, datamodule=cifar10_module)
     wandb.finish()
 
-
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
-                                   reinit=True, config=args, job_type=f'pruning_level_{i+1}',
+                                   reinit=True, config=args, job_type=f'pruning_level_{i + 1}',
                                    group=args.trial, name=f"run_#_{i}")
         # Reinit the Trainer.
         prune_trainer = Trainer(
@@ -114,7 +115,7 @@ def execute_trainer(args):
         )
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module)
-        test_acc= prune_trainer.logged_metrics['test_acc'] * 100
+        test_acc = prune_trainer.logged_metrics['test_acc'] * 100
         print(f"Test Acc {test_acc}")
         # do wandb.define_metric() after wandb.init()
         # Define the custom x axis metric
@@ -125,6 +126,7 @@ def execute_trainer(args):
         print(f"Weight % here {weight_prune}")
         wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
         wandb.finish()
+
 
 if __name__ == '__main__':
     start = time.time()
