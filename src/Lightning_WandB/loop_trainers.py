@@ -78,7 +78,7 @@ def execute_trainer(args):
     # BASELINE RUN
     wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
                                reinit=True, config=args, job_type='initial-baseline',
-                               group=args.trial, name=f"run_#_0")
+                               group=args.trial, name=f"baseline_run")
     # run = wandb.init(config=args, project=args.wand_exp_name,
     #                  job_type='initial-baseline', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_0")
     trainer = Trainer(
@@ -101,9 +101,19 @@ def execute_trainer(args):
     for i in range(args.levels):
         # log Test Acc vs weight %
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
-                                   reinit=True, config=args, job_type='pruning',
+                                   reinit=True, config=args, job_type=f'pruning_level_{i+1}',
                                    group=args.trial, name=f"run_#_{i}")
-        trainer.logger = wandb_logger
+        # Reinit the Trainer.
+        trainer = Trainer(
+            progress_bar_refresh_rate=10,
+            max_epochs=args.epochs,
+            gpus=AVAIL_GPUS,
+            callbacks=[
+                LearningRateMonitor(logging_interval="step"),
+                checkpoint_callback],
+            checkpoint_callback=True,
+            logger=wandb_logger
+        )
         trainer.fit(model, cifar10_module)
         trainer.test(model, datamodule=cifar10_module)
         wandb.finish()
