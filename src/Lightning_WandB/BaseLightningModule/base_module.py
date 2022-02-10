@@ -47,6 +47,7 @@ class LitSystem94Base(LightningModule):
 
         self.save_hyperparameters()
         self.model = create_model(arch)
+        self.model.apply(init_weights)
 
     def show_model_summary(self):
         # for Cifar10 now.
@@ -113,6 +114,7 @@ class LitSystemPrune(LightningModule):
 
         self.save_hyperparameters()
         self.model = create_model(arch)
+        self.model.apply(init_weights)
 
     def forward(self, x):
         out = self.model(x)

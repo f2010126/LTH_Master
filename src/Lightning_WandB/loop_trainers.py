@@ -79,9 +79,7 @@ def execute_trainer(args):
     wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
                                reinit=True, config=args, job_type='initial-baseline',
                                group=args.trial, name=f"baseline_run")
-    # run = wandb.init(config=args, project=args.wand_exp_name,
-    #                  job_type='initial-baseline', dir=f"{trial_dir}/wandb_logs", group=args.trial, name=f"run_#_0")
-    trainer = Trainer(
+    full_trainer = Trainer(
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
         gpus=AVAIL_GPUS,
@@ -92,10 +90,10 @@ def execute_trainer(args):
         logger=wandb_logger
     )
 
-    trainer.fit(model, cifar10_module)
-    trainer.test(model, datamodule=cifar10_module)
+    full_trainer.fit(model, cifar10_module)
+    full_trainer.test(model, datamodule=cifar10_module)
     wandb.finish()
-    # run.finish()
+
 
     # PRUNING LOOP
     for i in range(args.levels):
@@ -104,7 +102,7 @@ def execute_trainer(args):
                                    reinit=True, config=args, job_type=f'pruning_level_{i+1}',
                                    group=args.trial, name=f"run_#_{i}")
         # Reinit the Trainer.
-        trainer = Trainer(
+        prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
             max_epochs=args.epochs,
             gpus=AVAIL_GPUS,
@@ -114,9 +112,9 @@ def execute_trainer(args):
             checkpoint_callback=True,
             logger=wandb_logger
         )
-        trainer.fit(model, cifar10_module)
-        trainer.test(model, datamodule=cifar10_module)
-        test_acc= trainer.logged_metrics['test_acc'] * 100
+        prune_trainer.fit(model, cifar10_module)
+        prune_trainer.test(model, datamodule=cifar10_module)
+        test_acc= prune_trainer.logged_metrics['test_acc'] * 100
         print(f"Test Acc {test_acc}")
         # do wandb.define_metric() after wandb.init()
         # Define the custom x axis metric
