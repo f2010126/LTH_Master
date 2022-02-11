@@ -11,8 +11,10 @@ from torch.nn.utils.prune import is_pruned
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+    from src.Lightning_WandB.utils import apply_pruning
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+    from src.Lightning_WandB.utils import apply_pruning
 
 
 def create_model(arch_type):
@@ -117,6 +119,7 @@ class LitSystemPrune(LightningModule):
         self.model = create_model(arch)
         self.model.apply(init_weights)
         self.final_wgts = None
+        apply_pruning(self, 0.0)
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
 
     def forward(self, x):
