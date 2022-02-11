@@ -154,6 +154,9 @@ if __name__ == '__main__':
     parser.add_argument('--levels', type=int, default=1,
                         help='Prune Levels (default: 1)')
 
+    config_path = ""
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
     args = parser.parse_args()
 
     execute_trainer(args)

@@ -1,0 +1,13 @@
+trial: 'lth_params'
+model: 'resnet18'
+wand_exp_name: 'Looper'
+seed: 123
+learning_rate: 0.01
+epochs: 30
+levels: 2
+batch_size: 60
+optimiser: 'sgd'
+reset_epoch: 3
+momentum:  0.9
+
+
