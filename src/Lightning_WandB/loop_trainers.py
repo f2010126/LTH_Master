@@ -1,43 +1,28 @@
+import yaml
+import os
+import wandb
+from os import path, makedirs
+import torch
+import argparse
+import time
+import warnings
+import torch.backends.cudnn as cudnn
+from pytorch_lightning import seed_everything, Trainer
+from pl_bolts.datamodules import CIFAR10DataModule
+import torchvision
+from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+import copy
+
 try:
-    import os
-    import wandb
-    from os import path, makedirs
-    import torch
-    import argparse
-    import time
-    import warnings
-    import torch.backends.cudnn as cudnn
-    from pytorch_lightning import seed_everything, Trainer
-    from pl_bolts.datamodules import CIFAR10DataModule
-    import torchvision
-    from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
     from BaseLightningModule.base_module import LitSystemPrune
-    from pytorch_lightning.callbacks import LearningRateMonitor
-    from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-    from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
     from utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, count_rem_weights, \
         check_model_change
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
-    import copy
-
 except ImportError:
-    import wandb
-    import os
-    from os import path, makedirs
-    import torch
-    import argparse
-    import time
-    import warnings
-    import copy
-    import torch.backends.cudnn as cudnn
-    from pytorch_lightning import seed_everything, Trainer
-    from pl_bolts.datamodules import CIFAR10DataModule
-    import torchvision
-    from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
     from .BaseLightningModule.base_module import LitSystem94Base
-    from pytorch_lightning.callbacks import LearningRateMonitor
-    from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-    from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
     from .utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, count_rem_weights, \
         check_model_change
     from .BaseLightningModule.base_module import LitSystemPrune
