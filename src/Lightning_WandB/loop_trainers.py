@@ -128,8 +128,8 @@ def execute_trainer(args):
         print(f"Part of the new weight \n{full_cap['model.conv1.weight_orig'][0][0]}")
         print(f"Part of the orig weight \n{model.original_wgts['model.conv1.weight_orig'][0][0]}")
         print(f"Part of the model weight \n{model.model.conv1.weight_orig[0][0]}")
+        print(f"Part of the model mask \n{model.model.conv1.weight_mask[0][0]}")
 
-        check_model_change(full_cap, model)
 
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module)
