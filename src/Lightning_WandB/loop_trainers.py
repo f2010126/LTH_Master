@@ -15,8 +15,9 @@ try:
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-    from utils import checkdir, get_data_module
-    from BaseLightningModule.callbacks import FullTrainer
+    from utils import checkdir, get_data_module, layer_looper
+    from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
+    import copy
 
 except ImportError:
     import wandb
@@ -26,6 +27,7 @@ except ImportError:
     import argparse
     import time
     import warnings
+    import copy
     import torch.backends.cudnn as cudnn
     from pytorch_lightning import seed_everything, Trainer
     from pl_bolts.datamodules import CIFAR10DataModule
@@ -35,9 +37,9 @@ except ImportError:
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-    from .utils import checkdir, get_data_module
+    from .utils import checkdir, get_data_module, layer_looper
     from .BaseLightningModule.base_module import LitSystemPrune
-    from .BaseLightningModule.callbacks import FullTrainer
+    from .BaseLightningModule.callbacks import FullTrainer, PruneTrainer
 
 
 def execute_trainer(args):
@@ -69,7 +71,7 @@ def execute_trainer(args):
     model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
                            lr=args.lr)
     model.datamodule = cifar10_module
-
+    layer_looper(model.model)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
         mode="max",
@@ -97,6 +99,9 @@ def execute_trainer(args):
     full_trainer.test(model, datamodule=cifar10_module)
     wandb.finish()
 
+    full_cap = copy.deepcopy(model.state_dict())
+    print(f"Keys OG \n {full_cap.keys()}")
+
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
@@ -108,9 +113,9 @@ def execute_trainer(args):
             progress_bar_refresh_rate=10,
             max_epochs=args.epochs,
             gpus=AVAIL_GPUS,
-            callbacks=[
-                LearningRateMonitor(logging_interval="step"),
-                checkpoint_callback],
+            callbacks=[PruneTrainer(),
+                       LearningRateMonitor(logging_interval="step"),
+                       checkpoint_callback],
             checkpoint_callback=True,
             logger=wandb_logger
         )
@@ -134,7 +139,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LTH Model')
     parser.add_argument('--model', type=str, default='resnet18',
                         help='Class name of model to train',
-                        choices=['resnet18', 'torch_resnet', 'LeNet300', 'Resnets'])
+                        choices=['resnet18', 'torch_resnet'])
     parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs to train (default: 1)')
     parser.add_argument('--iterations', type=int, default=50000,

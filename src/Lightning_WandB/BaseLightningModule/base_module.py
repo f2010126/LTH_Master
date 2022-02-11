@@ -6,6 +6,8 @@ from pytorch_lightning import LightningModule
 from torch.optim.lr_scheduler import OneCycleLR
 from torchmetrics.functional import accuracy
 from torchsummary import summary
+import copy
+from torch.nn.utils.prune import is_pruned
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
@@ -41,7 +43,7 @@ def torchvision_renet():
 
 
 class LitSystem94Base(LightningModule):
-    def __init__(self, batch_size, arch, lr=0.05, ):
+    def __init__(self, experiment_dir, batch_size, arch, prune_amount=0.2, lr=0.05, ):
         super().__init__()
 
         self.save_hyperparameters()
@@ -108,12 +110,13 @@ class LitSystem94Base(LightningModule):
 
 
 class LitSystemPrune(LightningModule):
-    def __init__(self, experiment_dir, batch_size, arch, lr=0.05, ):
+    def __init__(self, experiment_dir, batch_size, arch, reset_epoch=0, prune_amount=0.2, lr=0.05, ):
         super().__init__()
 
         self.save_hyperparameters()
         self.model = create_model(arch)
         self.model.apply(init_weights)
+        self.original_wgts = copy.deepcopy(self.state_dict()) # maintain the weights
 
     def forward(self, x):
         out = self.model(x)
@@ -155,3 +158,25 @@ class LitSystemPrune(LightningModule):
         # return the SGD used
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
         return optimizer
+
+    ## PRUNING FUNCTIONS ##
+    def reset_weights(self):
+        for name, module in self.model.named_modules():
+            if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)) and (
+                    f"{name}.weight_orig" in self.original_wgts.keys()):
+                # do nothing for unpruned weights?
+                if is_pruned(module) == False:
+                    continue
+                with torch.no_grad():
+                    module.weight_orig.copy_(self.original_wgts[f'{name}.weight_orig'])
+                    module.bias.copy_(self.original_wgts[f'{name}.bias'])
+
+    def test_model_change(self):
+        for name, param in self.named_parameters():
+            prev_param = self.final_wgts[name]
+            assert not torch.allclose(prev_param, param), 'model not updating'
+
+    #
+    def on_fit_end(self):
+        # just store the final weights
+        self.final_wgts = copy.deepcopy(self.state_dict())
