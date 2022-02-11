@@ -124,6 +124,9 @@ class LitSystemPrune(LightningModule):
 
     def forward(self, x):
         out = self.model(x)
+        print(f"Weight check in forward {self.model.conv1.weight[0][0]} ")
+        print(f"Weight check in forward {self.model.conv1.weight_orig[0][0]} ")
+        print(f"Weight check in forward {self.original_wgts['model.conv1.weight_orig'][0][0]} ")
         return F.log_softmax(out, dim=1)
 
     def training_step(self, batch, batch_idx):
