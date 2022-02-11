@@ -88,7 +88,7 @@ def count_rem_weights(model):
 
 
 # PRUNING FUNCTIONS #
-## For the forward pass to work without modification,
+# For the forward pass to work without modification,
 # the weight attribute needs to exist. weight= mask*weight_orig in forward hook
 # So weight_orig needs to be changed.
 def reset_weights(model, original_wgts):
@@ -99,11 +99,12 @@ def reset_weights(model, original_wgts):
             if is_pruned(module) is False:
                 continue
             with torch.no_grad():
-                module.weight_orig.copy_(original_wgts[f'{name}.weight_orig'])
-                module.bias.copy_(original_wgts[f'{name}.bias'])
+                # copy the named params. no masks
+                for param_name, param_val in module.named_parameters():
+                    param_val.param.data.copy_(original_wgts[f"{name}.{param_name}"])
 
 
 def check_model_change(prev_iter_dict, model):
-  for name, param in model.named_parameters():
-    prev_param = prev_iter_dict[name]
-    assert not torch.allclose(prev_param,param), 'model not updating'
+    for name, param in model.named_parameters():
+        prev_param = prev_iter_dict[name]
+        assert not torch.allclose(prev_param, param), 'model not updating'
