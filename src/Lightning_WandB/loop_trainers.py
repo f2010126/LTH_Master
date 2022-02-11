@@ -140,7 +140,7 @@ def execute_trainer(args):
         wandb.define_metric("weight_pruned")
         # Define which metrics to plot against that x-axis
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
-        weight_prune = 100 - i
+        weight_prune = count_rem_weights(model)
         print(f"Weight % here {weight_prune}")
         wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
         wandb.finish()
