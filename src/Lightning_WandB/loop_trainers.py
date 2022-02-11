@@ -99,17 +99,27 @@ def execute_trainer(args):
 
     full_trainer.fit(model, cifar10_module)
     full_trainer.test(model, datamodule=cifar10_module)
+    test_acc = full_trainer.logged_metrics['test_acc'] * 100
+    print(f"Test Acc {test_acc}")
+    weight_prune = count_rem_weights(model)
+    print(f"BaseLine Weight % here {weight_prune}")
+    wandb.define_metric("weight_pruned")
+    wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
+    wandb.log({"pruned-test-acc": test_acc *100, 'weight_pruned': weight_prune})
     wandb.finish()
 
     full_cap = copy.deepcopy(model.state_dict())
-    print(f"Keys OG {full_cap.keys()}")
-    print(f"Part of the new weight \n{full_cap['model.conv1.weight_orig'][0][0]}")
 
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
+        apply_pruning(model, 0.2)
+        reset_weights(model, model.original_wgts)
+        weight_prune = count_rem_weights(model)
+        print(f"Weight % here {weight_prune}")
+
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
-                                   reinit=True, config=args, job_type=f'pruning_level_{i + 1}',
+                                   reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
                                    group=args.trial, name=f"run_#_{i}")
         # Reinit the Trainer.
         prune_trainer = Trainer(
@@ -117,32 +127,19 @@ def execute_trainer(args):
             max_epochs=args.epochs,
             gpus=AVAIL_GPUS,
             callbacks=[
-                LearningRateMonitor(logging_interval="step"),
                 checkpoint_callback],
             checkpoint_callback=True,
             logger=wandb_logger
         )
-
-        apply_pruning(model, 0.5)
-        reset_weights(model, model.original_wgts)
-        print(f"Part of the new weight \n{full_cap['model.conv1.weight_orig'][0][0]}")
-        print(f"Part of the orig weight \n{model.original_wgts['model.conv1.weight_orig'][0][0]}")
-        print(f"Part of the model weight \n{model.model.conv1.weight_orig[0][0]}")
-        print(f"Part of the model mask \n{model.model.conv1.weight_mask[0][0]}")
-
-
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module)
         test_acc = prune_trainer.logged_metrics['test_acc'] * 100
         print(f"Test Acc {test_acc}")
         # do wandb.define_metric() after wandb.init()
-        # Define the custom x axis metric
+        # Define the custom x axis metric, and define which metrics to plot against that x-axis
         wandb.define_metric("weight_pruned")
-        # Define which metrics to plot against that x-axis
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
-        weight_prune = count_rem_weights(model)
-        print(f"Weight % here {weight_prune}")
-        wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
+        wandb.log({"pruned-test-acc": test_acc *100, 'weight_pruned': weight_prune})
         wandb.finish()
         full_cap = copy.deepcopy(model.state_dict())
 
