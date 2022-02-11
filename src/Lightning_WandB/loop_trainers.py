@@ -92,7 +92,6 @@ def execute_trainer(args):
         max_epochs=args.epochs,
         gpus=AVAIL_GPUS,
         callbacks=[FullTrainer(),
-                   LearningRateMonitor(logging_interval="step"),
                    checkpoint_callback],
         checkpoint_callback=True,
         logger=wandb_logger

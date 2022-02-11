@@ -101,7 +101,7 @@ def reset_weights(model, original_wgts):
             with torch.no_grad():
                 # copy the named params. no masks
                 for param_name, param_val in module.named_parameters():
-                    param_val.param.data.copy_(original_wgts[f"{name}.{param_name}"])
+                    param_val.data.copy_(original_wgts[f"{name}.{param_name}"])
 
 
 def check_model_change(prev_iter_dict, model):
