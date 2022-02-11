@@ -15,7 +15,8 @@ try:
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-    from utils import checkdir, get_data_module, layer_looper
+    from utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, count_rem_weights, \
+        check_model_change
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     import copy
 
@@ -37,7 +38,8 @@ except ImportError:
     from pytorch_lightning.callbacks import LearningRateMonitor
     from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
     from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-    from .utils import checkdir, get_data_module, layer_looper
+    from .utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, count_rem_weights, \
+        check_model_change
     from .BaseLightningModule.base_module import LitSystemPrune
     from .BaseLightningModule.callbacks import FullTrainer, PruneTrainer
 
@@ -71,7 +73,8 @@ def execute_trainer(args):
     model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
                            lr=args.lr)
     model.datamodule = cifar10_module
-    layer_looper(model.model)
+    print(f"Keys OG \n {model.original_wgts.keys()}")
+
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
         mode="max",
@@ -100,7 +103,8 @@ def execute_trainer(args):
     wandb.finish()
 
     full_cap = copy.deepcopy(model.state_dict())
-    print(f"Keys OG \n {full_cap.keys()}")
+    print(f"Keys OG {full_cap.keys()}")
+    print(f"Part of the new weight \n{full_cap['model.conv1.weight_orig'][0][0]}")
 
     # PRUNING LOOP
     for i in range(args.levels):
@@ -113,12 +117,21 @@ def execute_trainer(args):
             progress_bar_refresh_rate=10,
             max_epochs=args.epochs,
             gpus=AVAIL_GPUS,
-            callbacks=[PruneTrainer(),
-                       LearningRateMonitor(logging_interval="step"),
-                       checkpoint_callback],
+            callbacks=[
+                LearningRateMonitor(logging_interval="step"),
+                checkpoint_callback],
             checkpoint_callback=True,
             logger=wandb_logger
         )
+
+        apply_pruning(model, 0.5)
+        reset_weights(model, model.original_wgts)
+        print(f"Part of the new weight \n{full_cap['model.conv1.weight_orig'][0][0]}")
+        print(f"Part of the orig weight \n{model.original_wgts['model.conv1.weight_orig'][0][0]}")
+        print(f"Part of the model weight \n{model.model.conv1.weight_orig[0][0]}")
+
+        check_model_change(full_cap, model)
+
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module)
         test_acc = prune_trainer.logged_metrics['test_acc'] * 100
@@ -132,6 +145,7 @@ def execute_trainer(args):
         print(f"Weight % here {weight_prune}")
         wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
         wandb.finish()
+        full_cap = copy.deepcopy(model.state_dict())
 
 
 if __name__ == '__main__':

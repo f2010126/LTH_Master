@@ -4,6 +4,7 @@ from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 from pl_bolts.datamodules import CIFAR10DataModule
 from torch.nn.utils.prune import L1Unstructured
 import torch
+from torch.nn.utils.prune import is_pruned
 
 
 def get_data_module(path, batch, workers=0):
@@ -84,3 +85,25 @@ def count_rem_weights(model):
             total_weights += sum([param.numel() for param in module.parameters()])
     # return % of non 0 weights
     return rem_weights.item() / total_weights * 100
+
+
+# PRUNING FUNCTIONS #
+## For the forward pass to work without modification,
+# the weight attribute needs to exist. weight= mask*weight_orig in forward hook
+# So weight_orig needs to be changed.
+def reset_weights(model, original_wgts):
+    for name, module in model.named_modules():
+        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)) and (
+                f"{name}.weight_orig" in original_wgts.keys()):
+            # do nothing for unpruned weights?
+            if is_pruned(module) is False:
+                continue
+            with torch.no_grad():
+                module.weight_orig.copy_(original_wgts[f'{name}.weight_orig'])
+                module.bias.copy_(original_wgts[f'{name}.bias'])
+
+
+def check_model_change(prev_iter_dict, model):
+  for name, param in model.named_parameters():
+    prev_param = prev_iter_dict[name]
+    assert not torch.allclose(prev_param,param), 'model not updating'
