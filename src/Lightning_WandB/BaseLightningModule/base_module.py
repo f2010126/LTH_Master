@@ -116,7 +116,8 @@ class LitSystemPrune(LightningModule):
         self.save_hyperparameters()
         self.model = create_model(arch)
         self.model.apply(init_weights)
-        self.original_wgts = copy.deepcopy(self.state_dict()) # maintain the weights
+        self.final_wgts = None
+        self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
 
     def forward(self, x):
         out = self.model(x)
@@ -159,13 +160,13 @@ class LitSystemPrune(LightningModule):
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
         return optimizer
 
-    ## PRUNING FUNCTIONS ##
+    # PRUNING FUNCTIONS #
     def reset_weights(self):
         for name, module in self.model.named_modules():
             if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)) and (
                     f"{name}.weight_orig" in self.original_wgts.keys()):
                 # do nothing for unpruned weights?
-                if is_pruned(module) == False:
+                if is_pruned(module) is False:
                     continue
                 with torch.no_grad():
                     module.weight_orig.copy_(self.original_wgts[f'{name}.weight_orig'])
