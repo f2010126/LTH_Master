@@ -103,14 +103,14 @@ def execute_trainer(args):
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
+        # PRUNE
         apply_pruning(model, 0.2)
+        # RESET
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
         print(f"Weight % here {weight_prune}")
 
-        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
-                                   reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
-                                   group=args.trial, name=f"run_#_{i}")
+        # RETRAIN
         # Reinit the Trainer.
         prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
@@ -121,6 +121,9 @@ def execute_trainer(args):
             checkpoint_callback=True,
             logger=wandb_logger
         )
+        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
+                                   reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
+                                   group=args.trial, name=f"run_#_{i}")
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module)
         test_acc = prune_trainer.logged_metrics['test_acc'] * 100
@@ -164,7 +167,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # Load config path then args
     config_path = os.path.join(os.getcwd(), "/src/configs")
-    
+
     # "/Users/diptisengupa/Desktop/CODEWORK/GitHub/SS2021/LTH_Project/ReproducingResults/LTH_Master/src" \
     #               "/configs"
     with open(f"{config_path}/{args.config_file_name}", "r") as f:
