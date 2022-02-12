@@ -10,7 +10,7 @@ except ImportError:
 # Full model to be trained. And final and Initial weights stored
 class FullTrainer(Callback):
 
-    def on_epoch_start(self, trainer, pl_module):
+    def on_train_start(self, trainer, pl_module):
         # If module has reset epoch is same as current epoch, update the weights dict
         if trainer.current_epoch == pl_module.hparams.reset_epoch:
             pl_module.original_wgts = copy.deepcopy(pl_module.state_dict())
@@ -19,7 +19,7 @@ class FullTrainer(Callback):
 
 # prune model before training.
 class PruneTrainer(Callback):
-    def on_fit_start(self, trainer, pl_module):
+    def on_train_start(self, trainer, pl_module):
         # before the new training run happens, prune the model and reset the weights
         apply_pruning(pl_module, 0.1)
         pl_module.reset_weights()
