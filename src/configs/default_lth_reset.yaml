@@ -1,0 +1,19 @@
+#######################################
+###       Logging Configuration     ###
+#######################################
+trial: 'lth_params'
+model: 'resnet18'
+exp_dir: 'experiments'
+wand_exp_name: 'Looper'
+data_root: 'data'
+seed: 123
+learning_rate: 0.01
+epochs: 30
+levels: 2
+batch_size: 60
+optimiser: 'sgd'
+reset_epoch: 3
+momentum:  0.9
+config_file_name: "default_lth_reset.yaml"
+
+

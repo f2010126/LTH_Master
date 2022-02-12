@@ -1,18 +1,15 @@
 import yaml
 import os
 import wandb
-from os import path, makedirs
+from os import path
 import torch
 import argparse
 import time
 import warnings
 import torch.backends.cudnn as cudnn
 from pytorch_lightning import seed_everything, Trainer
-from pl_bolts.datamodules import CIFAR10DataModule
-import torchvision
-from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 from pytorch_lightning.callbacks import LearningRateMonitor
-from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
+from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import copy
 
@@ -20,13 +17,25 @@ try:
     from BaseLightningModule.base_module import LitSystemPrune
     from utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, count_rem_weights, \
         check_model_change
+    from config import AttrDict
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
 except ImportError:
-    from .BaseLightningModule.base_module import LitSystem94Base
-    from .utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, count_rem_weights, \
+    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
+    from src.Lightning_WandB.utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, \
+        count_rem_weights, \
         check_model_change
-    from .BaseLightningModule.base_module import LitSystemPrune
-    from .BaseLightningModule.callbacks import FullTrainer, PruneTrainer
+    from src.Lightning_WandB.config import AttrDict
+    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune
+    from src.Lightning_WandB.BaseLightningModule.callbacks import FullTrainer, PruneTrainer
+
+
+def set_experiment_run(args):
+    exp_dir = os.path.join(os.getcwd(), args.exp_dir)
+    checkdir(exp_dir)
+
+    trial_dir = path.join(exp_dir, args.trial)
+    checkdir(exp_dir)
+    return trial_dir
 
 
 def execute_trainer(args):
@@ -46,17 +55,13 @@ def execute_trainer(args):
     BATCH_SIZE = 256 if AVAIL_GPUS else 64
     NUM_WORKERS = int(os.cpu_count() / 2)
 
-    exp_dir = os.path.join(os.getcwd(), args.exp_dir)
-    checkdir(exp_dir)
-
-    trial_dir = path.join(exp_dir, args.trial)
-    checkdir(exp_dir)
+    trial_dir = set_experiment_run(args)
     print(f"All Saved logs at {trial_dir}")
     checkdir(f"{trial_dir}/wandb_logs")
 
     cifar10_module = get_data_module(args.data_root, args.batch_size, NUM_WORKERS)
     model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
-                           lr=args.lr)
+                           lr=args.learning_rate)
     model.datamodule = cifar10_module
     print(f"Keys OG \n {model.original_wgts.keys()}")
 
@@ -64,7 +69,7 @@ def execute_trainer(args):
         monitor='val_acc',
         mode="max",
         dirpath=f"{trial_dir}/models",
-        filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}',
+        filename='{args.trial}-cifar10-{epoch:02d}-{val_acc:.2f}',
         save_last=True,
         verbose=True)
 
@@ -90,7 +95,7 @@ def execute_trainer(args):
     print(f"BaseLine Weight % here {weight_prune}")
     wandb.define_metric("weight_pruned")
     wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
-    wandb.log({"pruned-test-acc": test_acc *100, 'weight_pruned': weight_prune})
+    wandb.log({"pruned-test-acc": test_acc * 100, 'weight_pruned': weight_prune})
     wandb.finish()
 
     full_cap = copy.deepcopy(model.state_dict())
@@ -124,7 +129,7 @@ def execute_trainer(args):
         # Define the custom x axis metric, and define which metrics to plot against that x-axis
         wandb.define_metric("weight_pruned")
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
-        wandb.log({"pruned-test-acc": test_acc *100, 'weight_pruned': weight_prune})
+        wandb.log({"pruned-test-acc": test_acc * 100, 'weight_pruned': weight_prune})
         wandb.finish()
         full_cap = copy.deepcopy(model.state_dict())
 
@@ -139,7 +144,7 @@ if __name__ == '__main__':
                         help='number of epochs to train (default: 1)')
     parser.add_argument('--iterations', type=int, default=50000,
                         help='number of iterations to train (default: 50000)')
-    parser.add_argument('--lr', type=float, default=1.2e-3,
+    parser.add_argument('--learning_rate', type=float, default=1.2e-3,
                         help='learning rate 1.2e-3')
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
@@ -153,13 +158,21 @@ if __name__ == '__main__':
     parser.add_argument('--trial', type=str, default='1', help='trial id')
     parser.add_argument('--levels', type=int, default=1,
                         help='Prune Levels (default: 1)')
-
-    config_path = ""
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
+    parser.add_argument('--early-stop',
+                        action='store_true', help='Uses Early Stop if enabled')
+    parser.add_argument('--config_file_name', type=str, default='default_lth_reset.yaml', help='Name of config file')
     args = parser.parse_args()
+    # Load config path then args
+    config_path = os.path.join(os.getcwd(), "/src/configs")
+    
+    # "/Users/diptisengupa/Desktop/CODEWORK/GitHub/SS2021/LTH_Project/ReproducingResults/LTH_Master/src" \
+    #               "/configs"
+    with open(f"{config_path}/{args.config_file_name}", "r") as f:
+        config = yaml.safe_load(f)
 
-    execute_trainer(args)
+    config = AttrDict(config)
+    # override config values
+    execute_trainer(config)
 
     end = time.time()
     hours, rem = divmod(end - start, 3600)
