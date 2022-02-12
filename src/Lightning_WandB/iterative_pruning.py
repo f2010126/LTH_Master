@@ -61,7 +61,6 @@ def execute_trainer(args):
     model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
                            lr=args.learning_rate)
     model.datamodule = cifar10_module
-    print(f"Keys OG \n {model.original_wgts.keys()}")
 
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
