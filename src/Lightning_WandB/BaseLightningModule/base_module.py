@@ -45,7 +45,7 @@ def torchvision_renet():
 
 
 class LitSystem94Base(LightningModule):
-    def __init__(self, experiment_dir, batch_size, arch, exp_dir="experiments", prune_amount=0.2, lr=0.05, ):
+    def __init__(self, experiment_dir, batch_size, arch, reset_epoch=0, exp_dir="experiments", prune_amount=0.2, lr=0.05, ):
         super().__init__()
 
         self.save_hyperparameters()

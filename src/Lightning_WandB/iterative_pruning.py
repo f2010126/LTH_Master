@@ -90,7 +90,7 @@ def execute_trainer(args):
     test_acc = full_trainer.logged_metrics['test_acc'] * 100
     print(f"Test Acc {test_acc}")
     weight_prune = count_rem_weights(model)
-    print(f"BaseLine Weight % here {weight_prune}")
+    print(f"BaseLine Weight % {weight_prune}")
     wandb.define_metric("weight_pruned")
     wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
     wandb.log({"pruned-test-acc": test_acc * 100, 'weight_pruned': weight_prune})
@@ -103,10 +103,10 @@ def execute_trainer(args):
         # log Test Acc vs weight %
         # PRUNE
         apply_pruning(model, 0.2)
-        # RESET
+        # RESET TO SAVED WEIGHTS
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
-        print(f"Weight % here {weight_prune}")
+        print(f" PRUNING LEVEL #{i+1} Weight % {weight_prune}")
 
         # RETRAIN
         # Reinit the Trainer.
@@ -162,6 +162,8 @@ if __name__ == '__main__':
     parser.add_argument('--early-stop',
                         action='store_true', help='Uses Early Stop if enabled')
     parser.add_argument('--config_file_name', type=str, default='default_lth_reset.yaml', help='Name of config file')
+    parser.add_argument('--reset_epoch', type=int, default=0,
+                        help='epoch reset weights to (default: 0)')
     args = parser.parse_args()
     # Load config path then args
     config_path = os.path.join(os.getcwd(), "src/configs")
