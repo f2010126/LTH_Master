@@ -164,7 +164,7 @@ if __name__ == '__main__':
     parser.add_argument('--config_file_name', type=str, default='default_lth_reset.yaml', help='Name of config file')
     args = parser.parse_args()
     # Load config path then args
-    config_path = os.path.join(os.getcwd(), "/src/configs")
+    config_path = os.path.join(os.getcwd(), "src/configs")
 
     # "/Users/diptisengupa/Desktop/CODEWORK/GitHub/SS2021/LTH_Project/ReproducingResults/LTH_Master/src" \
     #               "/configs"
