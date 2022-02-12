@@ -15,15 +15,14 @@ import copy
 
 try:
     from BaseLightningModule.base_module import LitSystemPrune
-    from utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, count_rem_weights, \
-        check_model_change
+    from utils import checkdir, get_data_module, layer_looper, apply_pruning, \
+        reset_weights, count_rem_weights, check_model_change
     from config import AttrDict
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
-    from src.Lightning_WandB.utils import checkdir, get_data_module, layer_looper, apply_pruning, reset_weights, \
-        count_rem_weights, \
-        check_model_change
+    from src.Lightning_WandB.utils import checkdir, get_data_module, \
+        layer_looper, apply_pruning, reset_weights, count_rem_weights, check_model_change
     from src.Lightning_WandB.config import AttrDict
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune
     from src.Lightning_WandB.BaseLightningModule.callbacks import FullTrainer, PruneTrainer
@@ -32,7 +31,6 @@ except ImportError:
 def set_experiment_run(args):
     exp_dir = os.path.join(os.getcwd(), args.exp_dir)
     checkdir(exp_dir)
-
     trial_dir = path.join(exp_dir, args.trial)
     checkdir(exp_dir)
     return trial_dir

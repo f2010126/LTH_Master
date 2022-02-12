@@ -1,41 +1,24 @@
+import os
+import wandb
+from os import path
+import torch
+import argparse
+import time
+import warnings
+import torch.backends.cudnn as cudnn
+from pytorch_lightning import seed_everything, Trainer
+from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+
 try:
-    import os
-    import wandb
-    from os import path, makedirs
-    import torch
-    import argparse
-    import time
-    import warnings
-    import torch.backends.cudnn as cudnn
-    from pytorch_lightning import seed_everything, Trainer
-    from pl_bolts.datamodules import CIFAR10DataModule
-    import torchvision
-    from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
     from BaseLightningModule.base_module import LitSystem94Base
-    from pytorch_lightning.callbacks import LearningRateMonitor
-    from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-    from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
     from utils import checkdir, get_data_module
 
 except ImportError:
-    import wandb
-    import os
-    from os import path, makedirs
-    import torch
-    import argparse
-    import time
-    import warnings
-    import torch.backends.cudnn as cudnn
-    from pytorch_lightning import seed_everything, Trainer
-    from pl_bolts.datamodules import CIFAR10DataModule
-    import torchvision
-    from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
-    from .BaseLightningModule.base_module import LitSystem94Base
-    from pytorch_lightning.callbacks import LearningRateMonitor
-    from pytorch_lightning.loggers import TensorBoardLogger, WandbLogger
-    from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-    from .utils import checkdir, get_data_module
-    from .BaseLightningModule.base_module import LitSystem94Base
+    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
+    from src.Lightning_WandB.utils import checkdir, get_data_module
+    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
 
 
 def execute_trainer(args=None):
