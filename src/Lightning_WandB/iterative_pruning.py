@@ -87,13 +87,13 @@ def execute_trainer(args):
 
     full_trainer.fit(model, cifar10_module)
     full_trainer.test(model, datamodule=cifar10_module)
-    test_acc = full_trainer.logged_metrics['test_acc'] * 100
+    test_acc = full_trainer.logged_metrics['test_acc']
     print(f"Test Acc {test_acc}")
     weight_prune = count_rem_weights(model)
     print(f"BaseLine Weight % {weight_prune}")
     wandb.define_metric("weight_pruned")
     wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
-    wandb.log({"pruned-test-acc": test_acc * 100, 'weight_pruned': weight_prune})
+    wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
     wandb.finish()
 
     full_cap = copy.deepcopy(model.state_dict())
@@ -125,13 +125,13 @@ def execute_trainer(args):
         )
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module)
-        test_acc = prune_trainer.logged_metrics['test_acc'] * 100
+        test_acc = prune_trainer.logged_metrics['test_acc']
         print(f"Test Acc {test_acc}")
         # do wandb.define_metric() after wandb.init()
         # Define the custom x axis metric, and define which metrics to plot against that x-axis
         wandb.define_metric("weight_pruned")
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
-        wandb.log({"pruned-test-acc": test_acc * 100, 'weight_pruned': weight_prune})
+        wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
         wandb.finish()
         full_cap = copy.deepcopy(model.state_dict())
 
