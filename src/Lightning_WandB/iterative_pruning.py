@@ -114,6 +114,13 @@ def execute_trainer(args):
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
                                    reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
                                    group=args.trial, name=f"run_#_{i}")
+        checkpoint_callback = ModelCheckpoint(
+            monitor='val_acc',
+            mode="max",
+            dirpath=f"{trial_dir}/models",
+            filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
+            save_last=True,
+            verbose=True)
         prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
             max_epochs=args.epochs,
