@@ -67,7 +67,7 @@ def execute_trainer(args):
         monitor='val_acc',
         mode="max",
         dirpath=f"{trial_dir}/models",
-        filename='{args.trial}-cifar10-{epoch:02d}-{val_acc:.2f}',
+        filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
         save_last=True,
         verbose=True)
 
