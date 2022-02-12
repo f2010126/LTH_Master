@@ -4,6 +4,7 @@
 #SBATCH -J LTH_Prune
 #SBATCH -p mlhiwidlc_gpu-rtx2080
 #SBATCH -q dlc-dsengupt
+#SBATCH --gres=gpu:2
 #SBATCH -N 1
 #SBATCH -t 9:59:00
 #SBATCH --mail-type=BEGIN,END,FAIL
