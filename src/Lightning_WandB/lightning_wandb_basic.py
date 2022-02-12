@@ -60,9 +60,9 @@ def execute_trainer(args=None):
         verbose=True)
 
     trainer = Trainer(
+        gpus=8, num_nodes=4, strategy="ddp",
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
-        gpus=AVAIL_GPUS,
         logger=wandb_logger,
         callbacks=[
             LearningRateMonitor(logging_interval="step"),
