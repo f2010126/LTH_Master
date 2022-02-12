@@ -1,19 +1,23 @@
 #######################################
-###       Logging Configuration     ###
+###       Logging Configuration    ###
+###                                ###
 #######################################
-trial: 'lth_params'
+# Taken from 3/42 of https://arxiv.org/pdf/1803.03635.pdf
+trial: 'LTH_OG_Paper'
 model: 'resnet18'
 exp_dir: 'experiments'
-wand_exp_name: 'Looper'
+wand_exp_name: 'LTH_Experiment_OG'
 data_root: 'data'
 seed: 123
-learning_rate: 0.01
+learning_rate: 0.1
 epochs: 30
-levels: 2
-batch_size: 60
+levels: 10
+batch_size: 128
 optimiser: 'sgd'
-reset_epoch: 3
+reset_epoch: 0
 momentum:  0.9
 config_file_name: "default_lth_reset.yaml"
+early_stop: False
+dataset: cifar10
 
 

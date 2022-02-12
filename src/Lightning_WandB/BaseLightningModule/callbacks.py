@@ -14,7 +14,6 @@ class FullTrainer(Callback):
         # If module has reset epoch is same as current epoch, update the weights dict
         if trainer.current_epoch == pl_module.hparams.reset_epoch:
             pl_module.original_wgts = copy.deepcopy(pl_module.state_dict())
-            print(f"In epoch: {trainer.current_epoch} saved copy of weights to use later")
 
 
 # prune model before training.

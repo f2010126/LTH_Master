@@ -180,10 +180,10 @@ if __name__ == '__main__':
     with open(f"{config_path}/{args.config_file_name}", "r") as f:
         config = yaml.safe_load(f)
 
-    config["epochs"] = args.epochs
-    config["trial"] = args.trial
-    config["levels"] = args.levels
-    config["reset_epoch"] = args.reset_epoch
+    # config["epochs"] = args.epochs
+    # config["trial"] = args.trial
+    # config["levels"] = args.levels
+    # config["reset_epoch"] = args.reset_epoch
     config = AttrDict(config)
     # override config values
     execute_trainer(config)

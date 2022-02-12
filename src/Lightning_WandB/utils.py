@@ -68,7 +68,7 @@ def apply_pruning(model, amt=0.0):
         if isinstance(m, torch.nn.Conv2d):
             pruner.apply(m, name='weight', amount=amt)
         if isinstance(m, torch.nn.Linear):
-            pruner.apply(m, name='weight', amount=amt)
+            pruner.apply(m, name='weight', amount=0.0)
 
 
 def count_rem_weights(model):
