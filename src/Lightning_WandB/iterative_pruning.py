@@ -59,7 +59,7 @@ def execute_trainer(args):
 
     cifar10_module = get_data_module(args.data_root, args.batch_size, NUM_WORKERS)
     model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
-                           lr=args.learning_rate, reset_epoch=args.reset_eopch)
+                           lr=args.learning_rate, reset_epoch=args.reset_epoch)
     model.datamodule = cifar10_module
 
     checkpoint_callback = ModelCheckpoint(
