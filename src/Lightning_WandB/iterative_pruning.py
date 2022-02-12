@@ -109,7 +109,11 @@ def execute_trainer(args):
         print(f" PRUNING LEVEL #{i+1} Weight % {weight_prune}")
 
         # RETRAIN
-        # Reinit the Trainer.
+        # Reinit the Trainer and logger.
+        print(f"Reinit Trainer and Logger")
+        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
+                                   reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
+                                   group=args.trial, name=f"run_#_{i}")
         prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
             max_epochs=args.epochs,
@@ -119,9 +123,6 @@ def execute_trainer(args):
             checkpoint_callback=True,
             logger=wandb_logger
         )
-        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
-                                   reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
-                                   group=args.trial, name=f"run_#_{i}")
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module)
         test_acc = prune_trainer.logged_metrics['test_acc'] * 100
