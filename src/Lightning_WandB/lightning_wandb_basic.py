@@ -60,7 +60,7 @@ def execute_trainer(args=None):
         verbose=True)
 
     trainer = Trainer(
-        gpus=8, num_nodes=4, accelerator="ddp",
+        gpus=2, num_nodes=1, accelerator="ddp",
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
         logger=wandb_logger,
