@@ -16,6 +16,6 @@ source lth_env/bin/activate
 pip list
 cd LTH_Master
 # pick config file here
-python3 -m src.Lightning_WandB.iterative_pruning --config_file_name $CONFIG
+python3 -m src.Lightning_WandB.iterative_pruning
 
 deactivate
