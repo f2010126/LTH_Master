@@ -1,0 +1,25 @@
+#######################################
+###       Logging Configuration    ###
+###            4.3                 ###
+#######################################
+# Taken from https://arxiv.org/pdf/1903.01611.pdf
+trial: 'LTH_At_Scale_Paper'
+model: 'resnet18'
+exp_dir: 'experiments'
+wand_exp_name: 'LTH_Experiment_4_3'
+data_root: 'data'
+seed: 123
+learning_rate: 0.1
+epochs: 30
+levels: 10
+batch_size: 128
+optimiser: 'sgd'
+reset_epoch: 2
+momentum:  0.9
+config_file_name: "lth_reset_4_3.yaml"
+early_stop: False
+dataset: cifar10
+gpus: 2
+nodes: 1
+
+
