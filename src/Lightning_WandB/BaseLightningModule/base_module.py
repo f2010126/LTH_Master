@@ -8,13 +8,14 @@ from torchmetrics.functional import accuracy
 from torchsummary import summary
 import copy
 from torch.nn.utils.prune import is_pruned
+import wandb
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-    from src.Lightning_WandB.utils import apply_pruning
+    from src.Lightning_WandB.utils import apply_pruning, plot_grad_flow
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-    from src.Lightning_WandB.utils import apply_pruning
+    from src.Lightning_WandB.utils import apply_pruning, plot_grad_flow
 
 
 def create_model(arch_type):
@@ -59,6 +60,10 @@ class LitSystem94Base(LightningModule):
     def forward(self, x):
         out = self.model(x)
         return F.log_softmax(out, dim=1)
+
+    def on_before_backward(self, loss):
+        fig = plot_grad_flow(self.named_parameters())
+        wandb.log({"Grad_flow": fig})
 
     def training_step(self, batch, batch_idx):
         x, y = batch

@@ -25,6 +25,7 @@ export NCCL_DEBUG=INFO
 export PYTHONFAULTHANDLER=1
 
 pip list
+
 cd LTH_Master
 # pick config file here
 srun python3 -m src.Lightning_WandB.lightning_wandb_basic --config_file_name $config_name
