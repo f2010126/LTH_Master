@@ -110,6 +110,7 @@ if __name__ == '__main__':
 
     # Load config path then args
     config_path = os.path.join(os.getcwd(), "src/configs")
+    print(f"Config path --> {config_path}")
     with open(f"{config_path}/{args.config_file_name}", "r") as f:
         config = yaml.safe_load(f)
     config["config_file_name"] = args.config_file_name

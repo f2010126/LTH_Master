@@ -2,8 +2,6 @@
 #SBATCH -o /work/dlclarge1/dsengupt-lth_ws/slurm_logs/lightning_wandb.out # STDOUT  (the folder log has to be created prior to running or this won't work)
 #SBATCH -e /work/dlclarge1/dsengupt-lth_ws/slurm_logs/lightning_wandb.err # STDERR  (the folder log has to be created prior to running or this won't work)
 #SBATCH -J Lightning_WandB
-#SBATCH --nodes=1
-#SBATCH --gres=gpu:2
 #SBATCH -p mlhiwidlc_gpu-rtx2080
 #SBATCH --mem=0
 #SBATCH -q dlc-dsengupt
@@ -17,7 +15,7 @@ do
         c) config_name=${OPTARG};;
     esac
 done
-echo "# Config file: $config_name";
+echo "# Config file chosen: $config_name";
 
 cd $(ws_find lth_ws)
 # python3 -m venv lth_env
