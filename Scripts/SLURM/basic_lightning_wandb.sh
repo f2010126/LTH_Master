@@ -11,6 +11,14 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=dipti.sengupta@students.uni-freiburg.de
 
+while getopts c: flag
+do
+    case "${flag}" in
+        c) config_name=${OPTARG};;
+    esac
+done
+echo "# Config file: $config_name";
+
 cd $(ws_find lth_ws)
 # python3 -m venv lth_env
 source lth_env/bin/activate
@@ -21,6 +29,6 @@ export PYTHONFAULTHANDLER=1
 pip list
 cd LTH_Master
 # pick config file here
-srun python3 -m src.Lightning_WandB.lightning_wandb_basic --wand_exp_name 94BaseLineTorch --trial Baseline7 --epochs 30 --seed 7 --model torch_resnet
+srun python3 -m src.Lightning_WandB.lightning_wandb_basic
 
 deactivate

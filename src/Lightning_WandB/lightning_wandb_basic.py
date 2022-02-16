@@ -1,4 +1,5 @@
 import os
+import yaml
 import wandb
 from os import path
 import torch
@@ -14,11 +15,13 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 try:
     from BaseLightningModule.base_module import LitSystem94Base
     from utils import checkdir, get_data_module
+    from config import AttrDict
 
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
     from src.Lightning_WandB.utils import checkdir, get_data_module
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
+    from src.Lightning_WandB.config import AttrDict
 
 
 def execute_trainer(args=None):
@@ -60,7 +63,7 @@ def execute_trainer(args=None):
         verbose=True)
 
     trainer = Trainer(
-        gpus=2, num_nodes=1, accelerator="ddp",
+        gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
         logger=wandb_logger,
@@ -72,6 +75,7 @@ def execute_trainer(args=None):
 
     trainer.fit(model, cifar10_module)
     trainer.test(model, datamodule=cifar10_module)
+    wandb.finish()
 
 
 if __name__ == '__main__':
@@ -96,10 +100,22 @@ if __name__ == '__main__':
     parser.add_argument('--wand_exp_name', type=str, default='wandb-lightning_Single',
                         help='Name the project for wandb')
     parser.add_argument('--trial', type=str, default='1', help='trial id')
+    parser.add_argument('--early-stop',
+                        action='store_true', help='Uses Early Stop if enabled')
+    parser.add_argument('--config_file_name', type=str, default='basic_lightning.yaml', help='Name of config file')
+    parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs')
+    parser.add_argument('--nodes', default=1, type=int, metavar='O', help='# of nodes')
 
     args = parser.parse_args()
 
-    execute_trainer(args)
+    # Load config path then args
+    config_path = os.path.join(os.getcwd(), "src/configs")
+    with open(f"{config_path}/{args.config_file_name}", "r") as f:
+        config = yaml.safe_load(f)
+    config["config_file_name"] = args.config_file_name
+    config = AttrDict(config)
+    print(config)
+    execute_trainer(config)
 
     end = time.time()
     hours, rem = divmod(end - start, 3600)

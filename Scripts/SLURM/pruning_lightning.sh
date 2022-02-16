@@ -4,19 +4,27 @@
 #SBATCH -J LTH_Prune
 #SBATCH -p mlhiwidlc_gpu-rtx2080
 #SBATCH -q dlc-dsengupt
+#SBATCH --nodes=1
 #SBATCH --gres=gpu:2
-#SBATCH -N 1
 #SBATCH -t 9:59:00
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=dipti.sengupta@students.uni-freiburg.de
 
-CONFIG = $1
+
+while getopts c: flag
+do
+    case "${flag}" in
+        c) config_name=${OPTARG};;
+    esac
+done
+echo "# Config file: $config_name";
+
 cd $(ws_find lth_ws)
 # python3 -m venv lth_env
 source lth_env/bin/activate
 pip list
 cd LTH_Master
 # pick config file here
-python3 -m src.Lightning_WandB.iterative_pruning
+python3 -m src.Lightning_WandB.iterative_pruning --config_file_name $config_name
 
 deactivate

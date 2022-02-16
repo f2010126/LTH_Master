@@ -171,6 +171,9 @@ if __name__ == '__main__':
     parser.add_argument('--config_file_name', type=str, default='default_lth_reset.yaml', help='Name of config file')
     parser.add_argument('--reset_epoch', type=int, default=0,
                         help='epoch reset weights to (default: 0)')
+    parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs')
+    parser.add_argument('--nodes', default=1, type=int, metavar='O', help='# of nodes')
+
     args = parser.parse_args()
     # Load config path then args
     config_path = os.path.join(os.getcwd(), "src/configs")
@@ -180,10 +183,10 @@ if __name__ == '__main__':
     with open(f"{config_path}/{args.config_file_name}", "r") as f:
         config = yaml.safe_load(f)
 
-    # config["epochs"] = args.epochs
     # config["trial"] = args.trial
     # config["levels"] = args.levels
     # config["reset_epoch"] = args.reset_epoch
+    config["gpus"] = args.epochs
     config = AttrDict(config)
     # override config values
     execute_trainer(config)

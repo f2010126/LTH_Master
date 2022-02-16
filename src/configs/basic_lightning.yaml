@@ -2,24 +2,23 @@
 ###       Logging Configuration    ###
 ###                                ###
 #######################################
-# Taken from 3/42 of https://arxiv.org/pdf/1803.03635.pdf
-trial: 'LTH_OG_Paper'
-model: 'resnet18'
+# Running the model on Lightning https://pytorchlightning.github.io/lightning-tutorials/notebooks/lightning_examples/cifar10-baseline.html
+trial: 'Baseline'
+model: 'torch_resnet'
 exp_dir: 'experiments'
-wand_exp_name: 'LTH_Experiment_OG'
+wand_exp_name: 'Basic_Lightning'
 data_root: 'data'
 seed: 123
 learning_rate: 0.1
 epochs: 30
-levels: 10
 batch_size: 128
 optimiser: 'sgd'
-reset_epoch: 0
 momentum:  0.9
-config_file_name: "default_lth_reset.yaml"
+config_file_name: "basic_lightning.yaml"
 early_stop: False
 dataset: cifar10
 gpus: 2
 nodes: 1
+
 
 
