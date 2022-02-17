@@ -62,10 +62,6 @@ class LitSystem94Base(LightningModule):
         out = self.model(x)
         return F.log_softmax(out, dim=1)
 
-    def on_before_backward(self, loss):
-        fig = plot_grad_flow(self.named_parameters())
-        wandb.log({"Grad_flow": fig})
-
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
