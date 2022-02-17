@@ -11,6 +11,7 @@ from pytorch_lightning import seed_everything, Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+import torch.nn.functional as F
 
 try:
     from BaseLightningModule.base_module import LitSystem94Base
@@ -60,7 +61,8 @@ def execute_trainer(args=None):
     wandb_logger = WandbLogger(project=args.wand_exp_name, job_type='train',
                                save_dir=f"{trial_dir}/wandb_logs",
                                config=args,name=args.trial)
-    wandb_logger.watch(model, log_graph=True, log="all")
+    # wandb_logger.watch(model, log_graph=True, log="all")
+    wandb_logger.watch(model, log="all", log_freq=10)
     # early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
