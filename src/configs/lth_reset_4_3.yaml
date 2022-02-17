@@ -14,12 +14,12 @@ epochs: 30
 levels: 10
 batch_size: 128
 optimiser: 'sgd'
-reset_epoch: 2
+reset_epoch: 3
 momentum:  0.9
 config_file_name: "lth_reset_4_3.yaml"
 early_stop: False
 dataset: cifar10
-gpus: 2
+gpus: 4
 nodes: 1
 
 

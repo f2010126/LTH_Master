@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     # Load config path then args
-    config_path = os.path.join(os.getcwd(), "src/configs")
+    config_path = os.path.join(os.getcwd(), "")
 
     # "/Users/diptisengupa/Desktop/CODEWORK/GitHub/SS2021/LTH_Project/ReproducingResults/LTH_Master/src" \
     #               "/configs"

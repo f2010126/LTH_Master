@@ -139,7 +139,7 @@ class LitSystemPrune(LightningModule):
         # training metrics
         preds = torch.argmax(logits, dim=1)
         acc = accuracy(preds, y)
-        self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
+        # self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
         self.log('train_acc', acc*100, on_step=True, on_epoch=True, logger=True)
 
         return loss
