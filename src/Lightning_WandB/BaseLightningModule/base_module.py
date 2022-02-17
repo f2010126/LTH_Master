@@ -58,7 +58,7 @@ class LitSystem94Base(LightningModule):
         # for Cifar10 now.
         summary(self.model, (3, 32, 32))
 
-    def setup(self, stage):
+    def on_fit_start(self):
         wandb.watch(self, log_graph=True, log_freq=500)
 
     def forward(self, x):
