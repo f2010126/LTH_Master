@@ -80,6 +80,8 @@ def execute_trainer(args=None):
         checkpoint_callback=True
     )
 
+    wandb.watch(model, log_graph=True, log_freq=500)
+
     trainer.fit(model, cifar10_module)
     trainer.test(model, datamodule=cifar10_module)
     wandb.finish()
