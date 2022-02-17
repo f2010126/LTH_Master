@@ -10,7 +10,7 @@ import numpy as np
 from matplotlib.lines import Line2D
 
 
-def get_data_module(path, batch, workers=0):
+def get_data_module(path, batch, seed=123, workers=0):
     train_transforms = torchvision.transforms.Compose(
         [
             torchvision.transforms.RandomCrop(32, padding=4),
@@ -25,10 +25,13 @@ def get_data_module(path, batch, workers=0):
         ]
     )
 
+    # Data split 45k train, 5k val
     cifar10_dm = CIFAR10DataModule(
         data_dir=path,
         batch_size=batch,
         num_workers=workers,
+        val_split=0.1,
+        seed=seed,
         train_transforms=train_transforms,
         test_transforms=test_transforms,
         val_transforms=test_transforms,

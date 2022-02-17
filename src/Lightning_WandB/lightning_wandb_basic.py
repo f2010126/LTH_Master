@@ -14,11 +14,13 @@ from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
 try:
     from BaseLightningModule.base_module import LitSystem94Base
+    from BaseLightningModule.data_module import Custom_CIFAR10DataModule
     from utils import checkdir, get_data_module
     from config import AttrDict
 
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
+    from src.Lightning_WandB.BaseLightningModule.data_module import Custom_CIFAR10DataModule
     from src.Lightning_WandB.utils import checkdir, get_data_module
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
     from src.Lightning_WandB.config import AttrDict
@@ -41,7 +43,9 @@ def execute_trainer(args=None):
     BATCH_SIZE = 256 if AVAIL_GPUS else 64
     NUM_WORKERS = int(os.cpu_count() / 2)
 
-    cifar10_module = get_data_module(PATH_DATASETS, BATCH_SIZE, NUM_WORKERS)
+    cifar10_module = get_data_module(path=PATH_DATASETS, batch=BATCH_SIZE,
+                                     seed=args.seed, workers=NUM_WORKERS)
+    # cifar10_module=Custom_CIFAR10DataModule()
     model = LitSystem94Base(batch_size=BATCH_SIZE, arch=args.model, lr=0.05)
     model.datamodule = cifar10_module
 
@@ -68,6 +72,7 @@ def execute_trainer(args=None):
         gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
+        max_steps=args.max_steps,
         logger=wandb_logger,
         callbacks=[
             LearningRateMonitor(logging_interval="step"),
@@ -84,29 +89,33 @@ if __name__ == '__main__':
     start = time.time()
     parser = argparse.ArgumentParser(description='LTH Model')
     parser.add_argument('--model', type=str, default='resnet18',
-                        help='Class name of model to train',
-                        choices=['resnet18', 'torch_resnet', 'LeNet300', 'Resnets'])
+                        help='Class name of model to train  (default: resnet18)',
+                        choices=['resnet18', 'torch_resnet'])
     parser.add_argument('--epochs', type=int, default=1,
                         help='number of epochs to train (default: 1)')
-    parser.add_argument('--iterations', type=int, default=50000,
-                        help='number of iterations to train (default: 50000)')
-    parser.add_argument('--lr', type=float, default=1.2e-3,
-                        help='learning rate 1.2e-3')
+    parser.add_argument('--lr', type=float, default=0.01,
+                        help='learning rate  (default: 1.2e-3)')
     parser.add_argument('--batch-size', type=int, default=60,
                         help='input batch size for training (default: 60)')
     parser.add_argument('--dataset', type=str, default='cifar10', choices=['mnist', 'cifar10'],
-                        help='Data to use for training')
-    parser.add_argument('--seed', default=123, type=int, metavar='N', help='random seed of numpy and torch')
-    parser.add_argument('--data_root', type=str, default='data', help='path to dataset directory')
-    parser.add_argument('--exp_dir', type=str, default='experiments', help='path to experiment directory')
+                        help='Data to use for training  (default: cifar10 )')
+    parser.add_argument('--seed', default=123, type=int, metavar='N',
+                        help='random seed of numpy and torch  (default: 123)')
+    parser.add_argument('--data_root', type=str, default='data',
+                        help='path to dataset directory (default: data)')
+    parser.add_argument('--exp_dir', type=str, default='experiments',
+                        help='path to experiment directory(default: experiments)')
     parser.add_argument('--wand_exp_name', type=str, default='wandb-lightning_Single',
-                        help='Name the project for wandb')
-    parser.add_argument('--trial', type=str, default='1', help='trial id')
+                        help='Name the project for wandb (default: wandb-lightning_Single)')
+    parser.add_argument('--trial', type=str, default='1', help='trial id (default: 1)')
     parser.add_argument('--early-stop',
-                        action='store_true', help='Uses Early Stop if enabled')
-    parser.add_argument('--config_file_name', type=str, default='basic_lightning.yaml', help='Name of config file')
-    parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs')
-    parser.add_argument('--nodes', default=1, type=int, metavar='O', help='# of nodes')
+                        action='store_true', help='Uses Early Stop if enabled (default: False)')
+    parser.add_argument('--config_file_name', type=str, default='basic_lightning.yaml',
+                        help='Name of config file (default:basic_lightning.yaml)')
+    parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs (default: 1)')
+    parser.add_argument('--nodes', default=1, type=int, metavar='O', help='# of nodes (default: 1)')
+    parser.add_argument('--max_steps', type=int, default=30000,
+                        help='# iterations to train (default: 30k)')
 
     args = parser.parse_args()
 

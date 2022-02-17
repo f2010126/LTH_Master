@@ -5,7 +5,7 @@ from torch.utils.data import random_split, DataLoader
 from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 
 
-class CIFAR10DataModule(pl.LightningDataModule):
+class Custom_CIFAR10DataModule(pl.LightningDataModule):
     def __init__(self, batch_size, data_dir: str = 'data'):
         super().__init__()
         self.data_dir = data_dir
@@ -25,8 +25,6 @@ class CIFAR10DataModule(pl.LightningDataModule):
                 cifar10_normalization(),
             ]
         )
-        self.dims = (3, 32, 32)
-        self.num_classes = 10
         self.save_hyperparameters()
 
 

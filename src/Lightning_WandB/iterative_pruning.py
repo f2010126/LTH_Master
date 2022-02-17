@@ -57,7 +57,9 @@ def execute_trainer(args):
     print(f"All Saved logs at {trial_dir}")
     checkdir(f"{trial_dir}/wandb_logs")
 
-    cifar10_module = get_data_module(args.data_root, args.batch_size, NUM_WORKERS)
+    cifar10_module = get_data_module(path=args.data_root, batch=args.batch_size,
+                                     seed=args.seed, workers=NUM_WORKERS)
+    #
     model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
                            lr=args.learning_rate, reset_epoch=args.reset_epoch)
     model.datamodule = cifar10_module

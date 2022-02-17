@@ -27,6 +27,7 @@ def create_model(arch_type):
             'torch_resnet': torchvision_renet()}[arch_type]
 
 
+# Gaussian Glorot initialization
 def init_weights(m):
     """
         Initialise weights acc the Xavier initialisation and bias set to 0.01
@@ -117,7 +118,7 @@ class LitSystem94Base(LightningModule):
 
 
 class LitSystemPrune(LightningModule):
-    def __init__(self, batch_size, arch, experiment_dir='experiments',reset_epoch=0, prune_amount=0.2, lr=0.05 ):
+    def __init__(self, batch_size, arch, experiment_dir='experiments',reset_epoch=0, prune_amount=0.2, lr=0.05, weight_decay=0.0001 ):
         super().__init__()
 
         self.save_hyperparameters()
@@ -165,7 +166,7 @@ class LitSystemPrune(LightningModule):
 
     def configure_optimizers(self):
         # return the SGD used
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr)
+        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
         return optimizer
 
     # PRUNING FUNCTIONS #
