@@ -10,7 +10,7 @@ wand_exp_name: 'Basic_Lightning'
 data_root: 'data'
 seed: 123
 learning_rate: 0.1
-epochs: 30
+epochs: 86
 batch_size: 128
 optimiser: 'sgd'
 momentum:  0.9
