@@ -60,7 +60,7 @@ def execute_trainer(args=None):
     wandb_logger = WandbLogger(project=args.wand_exp_name, job_type='train',
                                save_dir=f"{trial_dir}/wandb_logs",
                                config=args,name=args.trial)
-    wandb_logger.watch(model, log_graph=True, log_freq=500)
+    wandb_logger.watch(model, log_graph=True, log="all")
     # early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
@@ -70,6 +70,7 @@ def execute_trainer(args=None):
         verbose=True)
 
     trainer = Trainer(
+        num_sanity_val_steps=0,
         gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,

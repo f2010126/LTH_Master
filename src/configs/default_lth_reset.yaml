@@ -1,6 +1,6 @@
 #######################################
 ###       Logging Configuration    ###
-###                                ###
+###           for Exp 4.2          ###
 #######################################
 # Taken from 39/42 of https://arxiv.org/pdf/1803.03635.pdf
 trial: 'LTH_OG_Paper'
