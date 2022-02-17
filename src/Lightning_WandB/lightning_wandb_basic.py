@@ -58,8 +58,9 @@ def execute_trainer(args=None):
     checkdir(f"{trial_dir}/wandb_logs")
 
     wandb_logger = WandbLogger(project=args.wand_exp_name, job_type='train',
-                               save_dir=f"{trial_dir}/wandb_logs", config=args,
-                               name=args.trial, )
+                               save_dir=f"{trial_dir}/wandb_logs",
+                               config=args,name=args.trial)
+    wandb_logger.watch(model, log_graph=True, log_freq=500)
     # early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
