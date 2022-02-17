@@ -47,7 +47,7 @@ def torchvision_renet():
 
 
 class LitSystem94Base(LightningModule):
-    def __init__(self, batch_size, arch, experiment_dir='experiments',reset_epoch=0, prune_amount=0.2, lr=0.05 ):
+    def __init__(self, batch_size, arch, experiment_dir='experiments', reset_epoch=0, prune_amount=0.2, lr=0.05):
         super().__init__()
 
         self.save_hyperparameters()
@@ -70,8 +70,8 @@ class LitSystem94Base(LightningModule):
         # training metrics
         preds = torch.argmax(logits, dim=1)
         acc = accuracy(preds, y)
-        self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True,sync_dist=True)
-        self.log('train_acc', acc, on_step=True, on_epoch=True, logger=True,sync_dist=True)
+        self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True, sync_dist=True)
+        self.log('train_acc', acc, on_step=True, on_epoch=True, logger=True, sync_dist=True)
         return loss
 
     def evaluate(self, batch, stage=None):
@@ -82,8 +82,8 @@ class LitSystem94Base(LightningModule):
         acc = accuracy(preds, y)
 
         if stage:
-            self.log(f"{stage}_loss", loss, prog_bar=True,sync_dist=True)
-            self.log(f"{stage}_acc", acc, prog_bar=True,sync_dist=True)
+            self.log(f"{stage}_loss", loss, prog_bar=True, sync_dist=True)
+            self.log(f"{stage}_acc", acc, prog_bar=True, sync_dist=True)
 
         return loss
 
@@ -114,7 +114,8 @@ class LitSystem94Base(LightningModule):
 
 
 class LitSystemPrune(LightningModule):
-    def __init__(self, batch_size, arch, experiment_dir='experiments',reset_epoch=0, prune_amount=0.2, lr=0.05, weight_decay=0.0001 ):
+    def __init__(self, batch_size, arch, experiment_dir='experiments', reset_epoch=0, prune_amount=0.2, lr=0.05,
+                 weight_decay=0.0001):
         super().__init__()
 
         self.save_hyperparameters()
@@ -137,7 +138,7 @@ class LitSystemPrune(LightningModule):
         preds = torch.argmax(logits, dim=1)
         acc = accuracy(preds, y)
         # self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
-        self.log('train_acc', acc*100, on_step=True, on_epoch=True, logger=True)
+        self.log('train_acc', acc * 100, on_step=True, on_epoch=True, logger=True)
 
         return loss
 
@@ -150,7 +151,7 @@ class LitSystemPrune(LightningModule):
 
         if stage:
             self.log(f"{stage}_loss", loss, prog_bar=True)
-            self.log(f"{stage}_acc", acc*100, prog_bar=True)
+            self.log(f"{stage}_acc", acc * 100, prog_bar=True)
 
         return loss
 
@@ -162,7 +163,10 @@ class LitSystemPrune(LightningModule):
 
     def configure_optimizers(self):
         # return the SGD used
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
+        optimizer = torch.optim.SGD(params=self.model.parameters(),
+                                    lr=self.hparams.lr,
+                                    weight_decay=self.hparams.weight_decay)
+        # torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
         return optimizer
 
     # PRUNING FUNCTIONS #
