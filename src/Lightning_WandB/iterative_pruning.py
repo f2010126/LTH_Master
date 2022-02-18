@@ -35,7 +35,6 @@ def set_experiment_run(args):
     checkdir(exp_dir)
     return trial_dir
 
-
 def execute_trainer(args):
     # loop the trainer n times and log each run separately under exeperiment/trial/log/{run_#}
     if args.seed is not None:
@@ -67,10 +66,12 @@ def execute_trainer(args):
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
         mode="max",
-        dirpath=f"{trial_dir}/models",
+        dirpath=f"{dir}/models/baseline",
         filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
         save_last=True,
         verbose=True)
+    callback_list = [FullTrainer(), checkpoint_callback]
+
 
     # BASELINE RUN
     wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
@@ -82,8 +83,7 @@ def execute_trainer(args):
         max_epochs=args.epochs,
         max_steps=args.max_steps,
         gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
-        callbacks=[FullTrainer(),
-                   checkpoint_callback],
+        callbacks=callback_list,
         checkpoint_callback=True,
         logger=wandb_logger
     )
@@ -118,17 +118,17 @@ def execute_trainer(args):
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
-            dirpath=f"{trial_dir}/models",
+            dirpath=f"{trial_dir}/models/level_{i+1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
             save_last=True,
             verbose=True)
+        callback_list = [checkpoint_callback]
         prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
             max_epochs=args.epochs,
             max_steps=args.max_steps,
             gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
-            callbacks=[
-                checkpoint_callback],
+            callbacks=callback_list,
             checkpoint_callback=True,
             logger=wandb_logger
         )
