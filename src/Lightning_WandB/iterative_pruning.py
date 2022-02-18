@@ -38,7 +38,7 @@ def set_experiment_run(args):
 
 def add_extra_callbacks(args,call_list):
     if args.early_stop:
-        early_stopping = EarlyStopping('val_loss', patience=10, mode='min',min_delta=0.1)
+        early_stopping = EarlyStopping('val_loss', patience=10, mode='min',min_delta=0.1,verbose=True)
         call_list.append(early_stopping)
 
     return call_list
@@ -77,8 +77,7 @@ def execute_trainer(args):
         mode="max",
         dirpath=f"{dir}/models/baseline",
         filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
-        save_last=True,
-        verbose=True)
+        save_last=True)
     callback_list = [FullTrainer(), checkpoint_callback]
     add_extra_callbacks(args,callback_list)
 
@@ -130,8 +129,7 @@ def execute_trainer(args):
             mode="max",
             dirpath=f"{trial_dir}/models/level_{i+1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
-            save_last=True,
-            verbose=True)
+            save_last=True,)
         callback_list = [checkpoint_callback]
         add_extra_callbacks(args, callback_list)
         prune_trainer = Trainer(

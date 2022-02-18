@@ -76,8 +76,7 @@ def execute_trainer(args=None):
         monitor='val_acc',
         mode="max",
         dirpath=f"{trial_dir}/models",
-        filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}',
-        verbose=True)
+        filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}')
     callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"),]
     add_extra_callbacks(args, callback_list)
 
