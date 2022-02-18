@@ -188,6 +188,14 @@ class LitSystemPrune(LightningModule):
             assert not torch.allclose(prev_param, param), 'model not updating'
 
     #
+
+    def on_after_backward(self):
+        # freeze pruned weights by making their gradients 0
+        for module in self.modules():
+            if hasattr(module, "weight_mask"):
+                weight = next(param for name, param in module.named_parameters() if "weight" in name)
+                weight.grad = weight.grad * module.weight_mask
+
     def on_fit_end(self):
         # just store the final weights
         self.final_wgts = copy.deepcopy(self.state_dict())

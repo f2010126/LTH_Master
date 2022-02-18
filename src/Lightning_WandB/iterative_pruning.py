@@ -79,7 +79,8 @@ def execute_trainer(args):
     wandb_logger.watch(model, log="all", log_freq=10)
     full_trainer = Trainer(
         progress_bar_refresh_rate=10,
-        max_steps= args.max_steps,
+        max_epochs=args.epochs,
+        max_steps=args.max_steps,
         gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
         callbacks=[FullTrainer(),
                    checkpoint_callback],
@@ -123,6 +124,7 @@ def execute_trainer(args):
             verbose=True)
         prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
+            max_epochs=args.epochs,
             max_steps=args.max_steps,
             gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
             callbacks=[
