@@ -2,7 +2,7 @@ import os
 import torchvision
 from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 from pl_bolts.datamodules import CIFAR10DataModule
-from torch.nn.utils.prune import L1Unstructured
+from torch.nn.utils.prune import L1Unstructured,RandomUnstructured
 import torch
 from torch.nn.utils.prune import is_pruned
 import matplotlib.pyplot as plt
@@ -67,8 +67,11 @@ def check_pruned_linear(module):
     return params == expected_params
 
 
-def apply_pruning(model, amt=0.0):
-    pruner = L1Unstructured(amt)
+def apply_pruning(model, prune_type, amt=0.0):
+    if prune_type == "lth":
+        pruner = L1Unstructured(amt)
+    elif prune_type == "random":
+        pruner = RandomUnstructured(amt)
     # adds masks of all ones to each of the layers
     for n, m in model.named_modules():
         if isinstance(m, torch.nn.Conv2d):

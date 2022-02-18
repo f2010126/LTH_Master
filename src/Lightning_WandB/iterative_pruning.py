@@ -97,18 +97,15 @@ def execute_trainer(args):
     wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
     wandb.finish()
 
-    full_cap = copy.deepcopy(model.state_dict())
-
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
-        # PRUNE
-        apply_pruning(model, 0.2)
+        # PRUNE L1Unstructured
+        apply_pruning(model, "lth" ,0.2)
         # RESET TO SAVED WEIGHTS
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
         print(f" PRUNING LEVEL #{i+1} Weight % {weight_prune}")
-
         # RETRAIN
         # Reinit the Trainer and logger.
         print(f"Reinit Trainer and Logger")
@@ -140,8 +137,12 @@ def execute_trainer(args):
         wandb.define_metric("weight_pruned")
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
         wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
+
+        # init and train a random model for comparison
+        # reinit the system AND trainer
+
         wandb.finish()
-        full_cap = copy.deepcopy(model.state_dict())
+
 
 
 if __name__ == '__main__':
