@@ -76,6 +76,7 @@ def execute_trainer(args):
     wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
                                reinit=True, config=args, job_type='initial-baseline',
                                group=args.trial, name=f"baseline_run")
+    wandb_logger.watch(model, log="all", log_freq=10)
     full_trainer = Trainer(
         progress_bar_refresh_rate=10,
         max_steps= args.max_steps,
@@ -112,6 +113,7 @@ def execute_trainer(args):
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
                                    reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
                                    group=args.trial, name=f"run_#_{i}")
+        wandb_logger.watch(model, log="all", log_freq=10)
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
