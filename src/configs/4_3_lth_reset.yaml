@@ -9,8 +9,8 @@ exp_dir: 'experiments'
 wand_exp_name: 'LTH_Experiment_4_3'
 data_root: 'data'
 seed: 123
-learning_rate: 0.1
-epochs: 30
+learning_rate: 0.01
+epochs: 86
 levels: 10
 batch_size: 128
 optimiser: 'sgd'
