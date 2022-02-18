@@ -27,6 +27,14 @@ except ImportError:
     from src.Lightning_WandB.config import AttrDict
 
 
+
+def add_extra_callbacks(args,call_list):
+    if args.early_stop:
+        early_stopping = EarlyStopping('val_loss', patience=10, mode='min',min_delta=0.1)
+        call_list.append(early_stopping)
+
+    return call_list
+
 def execute_trainer(args=None):
     if args.seed is not None:
         seed_everything(args.seed)
@@ -70,6 +78,8 @@ def execute_trainer(args=None):
         dirpath=f"{trial_dir}/models",
         filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}',
         verbose=True)
+    callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"),]
+    add_extra_callbacks(args, callback_list)
 
     trainer = Trainer(
         num_sanity_val_steps=0,
@@ -78,9 +88,7 @@ def execute_trainer(args=None):
         max_epochs=args.epochs,
         max_steps=args.max_steps,
         logger=wandb_logger,
-        callbacks=[
-            LearningRateMonitor(logging_interval="step"),
-            checkpoint_callback],
+        callbacks=callback_list,
         checkpoint_callback=True
     )
 

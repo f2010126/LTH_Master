@@ -35,6 +35,15 @@ def set_experiment_run(args):
     checkdir(exp_dir)
     return trial_dir
 
+
+def add_extra_callbacks(args,call_list):
+    if args.early_stop:
+        early_stopping = EarlyStopping('val_loss', patience=10, mode='min',min_delta=0.1)
+        call_list.append(early_stopping)
+
+    return call_list
+
+
 def execute_trainer(args):
     # loop the trainer n times and log each run separately under exeperiment/trial/log/{run_#}
     if args.seed is not None:
@@ -71,6 +80,7 @@ def execute_trainer(args):
         save_last=True,
         verbose=True)
     callback_list = [FullTrainer(), checkpoint_callback]
+    add_extra_callbacks(args,callback_list)
 
 
     # BASELINE RUN
@@ -123,6 +133,7 @@ def execute_trainer(args):
             save_last=True,
             verbose=True)
         callback_list = [checkpoint_callback]
+        add_extra_callbacks(args, callback_list)
         prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
             max_epochs=args.epochs,
