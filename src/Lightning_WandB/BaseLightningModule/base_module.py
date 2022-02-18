@@ -122,7 +122,8 @@ class LitSystemPrune(LightningModule):
         self.model = create_model(arch)
         self.model.apply(init_weights)
         self.final_wgts = None
-        apply_pruning(self, 0.0)
+        # init the masks in the model
+        apply_pruning(self, "lth" ,0.0)
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
 
     def forward(self, x):
