@@ -80,7 +80,7 @@ def execute_trainer(args):
     full_trainer = Trainer(
         progress_bar_refresh_rate=10,
         max_steps= args.max_steps,
-        gpus=AVAIL_GPUS,
+        gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
         callbacks=[FullTrainer(),
                    checkpoint_callback],
         checkpoint_callback=True,
@@ -124,7 +124,7 @@ def execute_trainer(args):
         prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
             max_steps= args.max_steps,
-            gpus=AVAIL_GPUS,
+            gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
             callbacks=[
                 checkpoint_callback],
             checkpoint_callback=True,
@@ -188,9 +188,6 @@ if __name__ == '__main__':
     with open(f"{config_path}/{args.config_file_name}", "r") as f:
         config = yaml.safe_load(f)
 
-    # config["trial"] = args.trial
-    # config["levels"] = args.levels
-    # config["reset_epoch"] = args.reset_epoch
     config["gpus"] = args.epochs
     config = AttrDict(config)
     # override config values
