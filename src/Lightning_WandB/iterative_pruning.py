@@ -49,8 +49,8 @@ def execute_trainer(args):
             'from checkpoints.'
         )
 
-    AVAIL_GPUS = min(1, torch.cuda.device_count())
-    BATCH_SIZE = 256 if AVAIL_GPUS else 64
+    # AVAIL_GPUS = min(1, torch.cuda.device_count())
+    # BATCH_SIZE = 256 if AVAIL_GPUS else 64
     NUM_WORKERS = int(os.cpu_count() / 2)
 
     trial_dir = set_experiment_run(args)
@@ -102,11 +102,11 @@ def execute_trainer(args):
     for i in range(args.levels):
         # log Test Acc vs weight %
         # PRUNE L1Unstructured
-        apply_pruning(model, "lth" ,0.2)
+        apply_pruning(model, "lth", 0.2)
         # RESET TO SAVED WEIGHTS
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
-        print(f" PRUNING LEVEL #{i+1} Weight % {weight_prune}")
+        print(f" PRUNING LEVEL #{i + 1} Weight % {weight_prune}")
         # RETRAIN
         # Reinit the Trainer and logger.
         print(f"Reinit Trainer and Logger")
@@ -123,7 +123,7 @@ def execute_trainer(args):
             verbose=True)
         prune_trainer = Trainer(
             progress_bar_refresh_rate=10,
-            max_steps= args.max_steps,
+            max_steps=args.max_steps,
             gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
             callbacks=[
                 checkpoint_callback],
@@ -144,7 +144,6 @@ def execute_trainer(args):
         # reinit the system AND trainer
 
         wandb.finish()
-
 
 
 if __name__ == '__main__':
@@ -173,7 +172,7 @@ if __name__ == '__main__':
                         help='Prune Levels (default: 1)')
     parser.add_argument('--early-stop',
                         action='store_true', help='Uses Early Stop if enabled')
-    parser.add_argument('--config_file_name', type=str, default='default_lth_reset.yaml', help='Name of config file')
+    parser.add_argument('--config_file_name', type=str, default='lth_default_4_2.yaml', help='Name of config file')
     parser.add_argument('--reset_epoch', type=int, default=0,
                         help='epoch reset weights to (default: 0)')
     parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs')
