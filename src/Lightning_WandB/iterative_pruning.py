@@ -172,7 +172,7 @@ if __name__ == '__main__':
                         help='Prune Levels (default: 1)')
     parser.add_argument('--early-stop',
                         action='store_true', help='Uses Early Stop if enabled')
-    parser.add_argument('--config_file_name', type=str, default='lth_default_4_2.yaml', help='Name of config file')
+    parser.add_argument('--config_file_name', type=str, default='4_2_lth_default.yaml', help='Name of config file')
     parser.add_argument('--reset_epoch', type=int, default=0,
                         help='epoch reset weights to (default: 0)')
     parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs')

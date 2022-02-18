@@ -16,7 +16,7 @@ batch_size: 128
 optimiser: 'sgd'
 reset_epoch: 3
 momentum:  0.9
-config_file_name: "lth_reset_4_3.yaml"
+config_file_name: "4_3_lth_reset.yaml"
 early_stop: False
 dataset: cifar10
 gpus: 4

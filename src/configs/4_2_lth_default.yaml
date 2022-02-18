@@ -17,7 +17,7 @@ optimiser: 'sgd'
 reset_epoch: 0
 momentum:  0.9
 weight_decay: 0.0001
-config_file_name: "default_lth_reset.yaml"
+config_file_name: "4_2_lth_default.yaml"
 early_stop: False
 dataset: cifar10
 gpus: 4
