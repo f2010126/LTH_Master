@@ -1,6 +1,6 @@
 #!/bin/bash -l
-#SBATCH -o /work/dlclarge1/dsengupt-lth_ws/slurm_logs/lightning_wandb.out # STDOUT  (the folder log has to be created prior to running or this won't work)
-#SBATCH -e /work/dlclarge1/dsengupt-lth_ws/slurm_logs/lightning_wandb.err # STDERR  (the folder log has to be created prior to running or this won't work)
+#SBATCH -o /work/dlclarge2/dsengupt-lth_ws/slurm_logs/lightning_wandb.out # STDOUT  (the folder log has to be created prior to running or this won't work)
+#SBATCH -e /work/dlclarge2/dsengupt-lth_ws/slurm_logs/lightning_wandb.err # STDERR  (the folder log has to be created prior to running or this won't work)
 #SBATCH -J Lightning_WandB
 #SBATCH -p mlhiwidlc_gpu-rtx2080
 #SBATCH --mem=0

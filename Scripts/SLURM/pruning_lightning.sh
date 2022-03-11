@@ -1,6 +1,6 @@
 #!/bin/bash -l
-#SBATCH -o /work/dlclarge1/dsengupt-lth_ws/slurm_logs/lth.out # STDOUT  (the folder log has to be created prior to running or this won't work)
-#SBATCH -e /work/dlclarge1/dsengupt-lth_ws/slurm_logs/lth.err # STDERR  (the folder log has to be created prior to running or this won't work)
+#SBATCH -o /work/dlclarge2/dsengupt-lth_ws/slurm_logs/lth.out # STDOUT  (the folder log has to be created prior to running or this won't work)
+#SBATCH -e /work/dlclarge2/dsengupt-lth_ws/slurm_logs/lth.err # STDERR  (the folder log has to be created prior to running or this won't work)
 #SBATCH -J RepExp4_3
 #SBATCH -p mlhiwidlc_gpu-rtx2080
 #SBATCH -q dlc-dsengupt
