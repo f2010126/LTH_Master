@@ -106,6 +106,7 @@ def execute_trainer(args):
     wandb.define_metric("weight_pruned")
     wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
     wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
+    wandb_logger.unwatch(model) # remove from flow
     wandb.finish()
 
     # PRUNING LOOP
@@ -150,6 +151,7 @@ def execute_trainer(args):
         wandb.define_metric("weight_pruned")
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
         wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
+        wandb_logger.unwatch(model)  # remove from flow
 
         # init and train a random model for comparison
         # reinit the system AND trainer
