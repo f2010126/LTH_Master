@@ -2,7 +2,7 @@ from pytorch_lightning.callbacks import Callback
 import copy
 
 try:
-    from ..utils import apply_pruning, count_rem_weights
+    from src.Lightning_WandB.utils import apply_pruning, count_rem_weights
 except ImportError:
     from src.Lightning_WandB.utils import apply_pruning, count_rem_weights
 

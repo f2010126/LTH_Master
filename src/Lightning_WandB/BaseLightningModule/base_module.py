@@ -100,7 +100,7 @@ class LitSystem94Base(LightningModule):
             momentum=0.9,
             weight_decay=5e-4,
         )
-        steps_per_epoch = 45000 // self.hparams.batch_size
+        steps_per_epoch = 45000 # // self.hparams.batch_size
         scheduler_dict = {
             "scheduler": torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
@@ -171,6 +171,7 @@ class LitSystemPrune(LightningModule):
         return optimizer
 
     # PRUNING FUNCTIONS #
+
     def reset_weights(self):
         for name, module in self.model.named_modules():
             if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)) and (
@@ -190,12 +191,19 @@ class LitSystemPrune(LightningModule):
     #
 
     def on_after_backward(self):
-        # freeze pruned weights by making their gradients 0
+        # freeze pruned weights by making their gradients 0. using the Mask.
         for module in self.modules():
             if hasattr(module, "weight_mask"):
                 weight = next(param for name, param in module.named_parameters() if "weight" in name)
                 weight.grad = weight.grad * module.weight_mask
 
-    def on_fit_end(self):
-        # just store the final weights
-        self.final_wgts = copy.deepcopy(self.state_dict())
+        # Alternate way of freezing.
+        # EPS = 1e-6
+        # for name, p in self.named_parameters():
+        #     if 'weight' in name:
+        #         tensor = p.data
+        #         grad_tensor = p.grad
+        #         grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
+        #         p.grad.data = grad_tensor
+
+
