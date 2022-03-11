@@ -3,6 +3,8 @@
 #SBATCH -e /work/dlclarge2/dsengupt-lth_ws/slurm_logs/lth.err # STDERR  (the folder log has to be created prior to running or this won't work)
 #SBATCH -J RepExp4_3
 #SBATCH -p mlhiwidlc_gpu-rtx2080
+#SBATCH --mem=0
+#SBATCH -q dlc-dsengupt
 #SBATCH -t 10:59:00
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=dipti.sengupta@students.uni-freiburg.de
