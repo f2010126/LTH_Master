@@ -88,7 +88,7 @@ def execute_trainer(args=None):
         max_steps=args.max_steps,
         logger=wandb_logger,
         callbacks=callback_list,
-        checkpoint_callback=True
+        enable_checkpointing=True
     )
 
     trainer.fit(model, cifar10_module)

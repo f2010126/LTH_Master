@@ -92,7 +92,7 @@ def execute_trainer(args):
         max_steps=args.max_steps,
         gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
         callbacks=callback_list,
-        checkpoint_callback=True,
+        enable_checkpointing=True,
         logger=wandb_logger
     )
 
@@ -138,7 +138,7 @@ def execute_trainer(args):
             max_steps=args.max_steps,
             gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
             callbacks=callback_list,
-            checkpoint_callback=True,
+            enable_checkpointing=True,
             logger=wandb_logger
         )
         prune_trainer.fit(model, cifar10_module)
