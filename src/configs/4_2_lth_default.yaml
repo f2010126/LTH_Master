@@ -6,7 +6,7 @@
 trial: 'LTH_OG_Paper'
 model: 'resnet18'
 exp_dir: 'experiments'
-wand_exp_name: 'LTH_Experiment_OG'
+wand_exp_name: 'LTH_Experiment_4_2'
 data_root: 'data'
 seed: 123
 epochs: 86
