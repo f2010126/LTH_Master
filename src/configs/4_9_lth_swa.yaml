@@ -1,28 +1,27 @@
 #######################################
 ###       Logging Configuration    ###
-###           for Exp 4.2          ###
+###            4.9                 ###
 #######################################
-# Taken from 39/42 of https://arxiv.org/pdf/1803.03635.pdf
-trial: 'LTH_OG_Paper'
+# Taken from https://arxiv.org/pdf/1903.01611.pdf, Added SWA from https://arxiv.org/pdf/1803.05407.pdf
+trial: 'LTH_SWA_4_9'
 model: 'resnet18'
 exp_dir: 'experiments'
-wand_exp_name: 'LTH_Experiment_4_2'
+wand_exp_name: 'LTH_Experiment_4_9'
 data_root: 'data'
 seed: 123
-epochs: 86
 learning_rate: 0.01
+epochs: 86
 levels: 10
 batch_size: 128
 optimiser: 'sgd'
-reset_itr: 0
+reset_itr: 500
 momentum:  0.9
-weight_decay: 0.0001
-config_file_name: "4_2_lth_default.yaml"
+config_file_name: "4_9_lth_swa.yaml"
 early_stop: False
 dataset: cifar10
 gpus: 4
 nodes: 1
 max_steps: 30000
-swa_enabled: False
+swa_enabled: True
 
 

@@ -88,6 +88,7 @@ def execute_trainer(args=None):
         max_steps=args.max_steps,
         logger=wandb_logger,
         callbacks=callback_list,
+        stochastic_weight_avg=args.swa,
         enable_checkpointing=True
     )
 
@@ -127,6 +128,8 @@ if __name__ == '__main__':
     parser.add_argument('--nodes', default=1, type=int, metavar='O', help='# of nodes (default: 1)')
     parser.add_argument('--max_steps', type=int, default=30000,
                         help='# iterations to train (default: 30k)')
+    parser.add_argument('--swa',
+                        action='store_true', help='Uses SWA as part of optimiser if enabled')
 
     args = parser.parse_args()
 

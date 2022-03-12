@@ -92,6 +92,7 @@ def execute_trainer(args):
         max_steps=args.max_steps,
         gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
         callbacks=callback_list,
+        stochastic_weight_avg=args.swa,
         enable_checkpointing=True,
         logger=wandb_logger
     )
@@ -138,6 +139,7 @@ def execute_trainer(args):
             max_steps=args.max_steps,
             gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
             callbacks=callback_list,
+            stochastic_weight_avg=args.swa,
             enable_checkpointing=True,
             logger=wandb_logger
         )
@@ -188,6 +190,8 @@ if __name__ == '__main__':
                         help='epoch reset weights to (default: 0)')
     parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs')
     parser.add_argument('--nodes', default=1, type=int, metavar='O', help='# of nodes')
+    parser.add_argument('--swa',
+                        action='store_true', help='Uses SWA as part of optimiser if enabled')
 
     args = parser.parse_args()
     # Load config path then args
