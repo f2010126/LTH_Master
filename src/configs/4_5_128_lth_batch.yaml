@@ -1,0 +1,27 @@
+#######################################
+###       Logging Configuration    ###
+###           for Exp 4.5          ###
+#######################################
+# Taken from 39/42 of https://arxiv.org/pdf/1803.03635.pdf , only varying batch size
+trial: 'LTH_Batch'
+model: 'resnet18'
+exp_dir: 'experiments'
+wand_exp_name: 'LTH_Experiment_4_5_128'
+data_root: 'data'
+seed: 123
+epochs: 86
+learning_rate: 0.01
+levels: 10
+batch_size: 128
+optimiser: 'sgd'
+reset_itr: 0
+momentum:  0.9
+weight_decay: 0.0001
+config_file_name: "4_5_128_lth_batch.yaml"
+early_stop: False
+dataset: cifar10
+gpus: 4
+nodes: 1
+max_steps: 30000
+
+
