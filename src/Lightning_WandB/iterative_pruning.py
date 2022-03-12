@@ -69,7 +69,7 @@ def execute_trainer(args):
                                      seed=args.seed, workers=NUM_WORKERS)
     #
     model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
-                           lr=args.learning_rate, reset_epoch=args.reset_epoch)
+                           lr=args.learning_rate, reset_itr=args.reset_itr)
     model.datamodule = cifar10_module
 
     checkpoint_callback = ModelCheckpoint(
@@ -186,7 +186,7 @@ if __name__ == '__main__':
     parser.add_argument('--early-stop',
                         action='store_true', help='Uses Early Stop if enabled')
     parser.add_argument('--config_file_name', type=str, default='4_2_lth_default.yaml', help='Name of config file')
-    parser.add_argument('--reset_epoch', type=int, default=0,
+    parser.add_argument('--reset_itr', type=int, default=0,
                         help='epoch reset weights to (default: 0)')
     parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs')
     parser.add_argument('--nodes', default=1, type=int, metavar='O', help='# of nodes')

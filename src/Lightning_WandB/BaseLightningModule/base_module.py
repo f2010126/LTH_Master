@@ -47,7 +47,7 @@ def torchvision_renet():
 
 
 class LitSystem94Base(LightningModule):
-    def __init__(self, batch_size, arch, experiment_dir='experiments', reset_epoch=0, prune_amount=0.2, lr=0.05):
+    def __init__(self, batch_size, arch, experiment_dir='experiments', reset_itr=0, prune_amount=0.2, lr=0.05):
         super().__init__()
 
         self.save_hyperparameters()
@@ -100,7 +100,7 @@ class LitSystem94Base(LightningModule):
             momentum=0.9,
             weight_decay=5e-4,
         )
-        steps_per_epoch = 45000 # // self.hparams.batch_size
+        steps_per_epoch = 45000  # // self.hparams.batch_size
         scheduler_dict = {
             "scheduler": torch.optim.lr_scheduler.OneCycleLR(
                 optimizer,
@@ -114,7 +114,7 @@ class LitSystem94Base(LightningModule):
 
 
 class LitSystemPrune(LightningModule):
-    def __init__(self, batch_size, arch, experiment_dir='experiments', reset_epoch=0, prune_amount=0.2, lr=0.05,
+    def __init__(self, batch_size, arch, experiment_dir='experiments', reset_itr=0, prune_amount=0.2, lr=0.05,
                  weight_decay=0.0001):
         super().__init__()
 
@@ -123,7 +123,7 @@ class LitSystemPrune(LightningModule):
         self.model.apply(init_weights)
         self.final_wgts = None
         # init the masks in the model
-        apply_pruning(self, "lth" ,0.0)
+        apply_pruning(self, "lth", 0.0)
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
 
     def forward(self, x):
@@ -131,6 +131,10 @@ class LitSystemPrune(LightningModule):
         return F.log_softmax(out, dim=1)
 
     def training_step(self, batch, batch_idx):
+        # # If module has reset itr is same as current itr, update the weights dict
+        if (self.global_step == self.hparams.reset_itr):
+            self.original_wgts = copy.deepcopy(self.state_dict())
+
         x, y = batch
         logits = self(x)
         loss = F.nll_loss(logits, y)
@@ -205,5 +209,3 @@ class LitSystemPrune(LightningModule):
         #         grad_tensor = p.grad
         #         grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
         #         p.grad.data = grad_tensor
-
-

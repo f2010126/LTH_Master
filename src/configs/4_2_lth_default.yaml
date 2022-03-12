@@ -14,7 +14,7 @@ learning_rate: 0.01
 levels: 10
 batch_size: 128
 optimiser: 'sgd'
-reset_epoch: 0
+reset_itr: 0
 momentum:  0.9
 weight_decay: 0.0001
 config_file_name: "4_2_lth_default.yaml"

@@ -14,7 +14,7 @@ epochs: 86
 levels: 10
 batch_size: 128
 optimiser: 'sgd'
-reset_epoch: 3
+reset_itr: 500
 momentum:  0.9
 config_file_name: "4_3_lth_reset.yaml"
 early_stop: False
