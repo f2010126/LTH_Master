@@ -12,19 +12,18 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import torch.nn.functional as F
+from attrdict import AttrDict
 
 try:
     from BaseLightningModule.base_module import LitSystem94Base
     from BaseLightningModule.data_module import Custom_CIFAR10DataModule
     from utils import checkdir, get_data_module
-    from config import AttrDict
 
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
     from src.Lightning_WandB.BaseLightningModule.data_module import Custom_CIFAR10DataModule
     from src.Lightning_WandB.utils import checkdir, get_data_module
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
-    from src.Lightning_WandB.config import AttrDict
 
 
 
