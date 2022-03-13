@@ -8,6 +8,9 @@
 #SBATCH -t 9:59:00
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=dipti.sengupta@students.uni-freiburg.de
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:2
+#SBATCH --ntasks-per-node=1
 
 while getopts c: flag
 do

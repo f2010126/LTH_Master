@@ -131,6 +131,10 @@ class LitSystemPrune(LightningModule):
         return F.log_softmax(out, dim=1)
 
     def training_step(self, batch, batch_idx):
+        # Must clear cache at regular interval
+        if self.global_step % 10 == 0:
+            torch.cuda.empty_cache()
+
         # # If module has reset itr is same as current itr, update the weights dict
         if (self.global_step == self.hparams.reset_itr):
             self.original_wgts = copy.deepcopy(self.state_dict())
@@ -143,7 +147,7 @@ class LitSystemPrune(LightningModule):
         preds = torch.argmax(logits, dim=1)
         acc = accuracy(preds, y)
         # self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
-        self.log('train_acc', acc * 100, on_step=True, on_epoch=True, logger=True)
+        self.log('train_acc', acc * 100, on_step=True, on_epoch=True, logger=True, sync_dist=True)
 
         return loss
 
@@ -155,8 +159,8 @@ class LitSystemPrune(LightningModule):
         acc = accuracy(preds, y)
 
         if stage:
-            self.log(f"{stage}_loss", loss, prog_bar=True)
-            self.log(f"{stage}_acc", acc * 100, prog_bar=True)
+            self.log(f"{stage}_loss", loss, prog_bar=True, sync_dist=True)
+            self.log(f"{stage}_acc", acc * 100, prog_bar=True, sync_dist=True)
 
         return loss
 

@@ -37,7 +37,7 @@ def add_extra_callbacks(args,call_list):
 
 def execute_trainer(args=None):
     if args.seed is not None:
-        seed_everything(args.seed)
+        seed_everything(args.seed, workers=True)
         cudnn.deterministic = True
         warnings.warn(
             'You have chosen to seed training. '
@@ -82,14 +82,15 @@ def execute_trainer(args=None):
 
     trainer = Trainer(
         num_sanity_val_steps=0,
-        gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
+        gpus=-1, num_nodes=1, strategy='ddp',
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,
         max_steps=args.max_steps,
         logger=wandb_logger,
         callbacks=callback_list,
         stochastic_weight_avg=args.swa,
-        enable_checkpointing=True
+        enable_checkpointing=True,
+        deterministic=True
     )
 
     trainer.fit(model, cifar10_module)

@@ -47,7 +47,7 @@ def add_extra_callbacks(args, call_list):
 def execute_trainer(args):
     # loop the trainer n times and log each run separately under exeperiment/trial/log/{run_#}
     if args.seed is not None:
-        seed_everything(args.seed)
+        seed_everything(args.seed, workers=True)
         cudnn.deterministic = True
         warnings.warn(
             'You have chosen to seed training. '
@@ -94,7 +94,8 @@ def execute_trainer(args):
         callbacks=callback_list,
         stochastic_weight_avg=args.swa,
         enable_checkpointing=True,
-        logger=wandb_logger
+        logger=wandb_logger,
+        deterministic=True
     )
 
     full_trainer.fit(model, cifar10_module)
@@ -141,7 +142,8 @@ def execute_trainer(args):
             callbacks=callback_list,
             stochastic_weight_avg=args.swa,
             enable_checkpointing=True,
-            logger=wandb_logger
+            logger=wandb_logger,
+            deterministic=True
         )
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module)
@@ -151,7 +153,7 @@ def execute_trainer(args):
         # Define the custom x axis metric, and define which metrics to plot against that x-axis
         wandb.define_metric("weight_pruned")
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
-        wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
+        wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune}, )
 
         # init and train a random model for comparison
         # reinit the system AND trainer
