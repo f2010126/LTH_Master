@@ -91,7 +91,7 @@ def execute_trainer(args):
         max_steps=args.max_steps,
         gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
         callbacks=callback_list,
-        stochastic_weight_avg=args.swa,
+        stochastic_weight_avg=args.swa_enabled,
         enable_checkpointing=True,
         logger=wandb_logger,
         deterministic=True
@@ -139,7 +139,7 @@ def execute_trainer(args):
             max_steps=args.max_steps,
             gpus=args.gpus, num_nodes=args.nodes, accelerator="ddp",
             callbacks=callback_list,
-            stochastic_weight_avg=args.swa,
+            stochastic_weight_avg=args.swa_enabled,
             enable_checkpointing=True,
             logger=wandb_logger,
             deterministic=True

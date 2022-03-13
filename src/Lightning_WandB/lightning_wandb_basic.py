@@ -87,7 +87,7 @@ def execute_trainer(args=None):
         max_steps=args.max_steps,
         logger=wandb_logger,
         callbacks=callback_list,
-        stochastic_weight_avg=args.swa,
+        stochastic_weight_avg=args.swa_enabled,
         enable_checkpointing=True,
         deterministic=True
     )
