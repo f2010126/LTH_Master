@@ -67,7 +67,7 @@ def execute_trainer(args=None):
 
     wandb_logger = WandbLogger(project=args.wand_exp_name, job_type='train',
                                save_dir=f"{trial_dir}/wandb_logs",
-                               config=args,name=args.trial)
+                               config=args, name=args.trial)
     # wandb_logger.watch(model, log_graph=True, log="all")
     wandb_logger.watch(model, log="all", log_freq=10)
     # early_stop_callback = EarlyStopping('val_loss',min_delta=0.03, verbose=True)
@@ -76,11 +76,14 @@ def execute_trainer(args=None):
         mode="max",
         dirpath=f"{trial_dir}/models",
         filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}')
-    callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"),]
+    callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"), ]
     add_extra_callbacks(args, callback_list)
 
     trainer = Trainer(
         num_sanity_val_steps=0,
+        limit_train_batches=50,
+        limit_val_batches=50,
+        limit_test_batches=50,
         gpus=-1, num_nodes=1, strategy='ddp',
         progress_bar_refresh_rate=10,
         max_epochs=args.epochs,

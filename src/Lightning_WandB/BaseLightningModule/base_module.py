@@ -62,6 +62,8 @@ class LitSystem94Base(LightningModule):
         out = self.model(x)
         return F.log_softmax(out, dim=1)
 
+    def on_fit_start(self):
+        print(f"LOCAL RANK {self.local_rank}")
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
