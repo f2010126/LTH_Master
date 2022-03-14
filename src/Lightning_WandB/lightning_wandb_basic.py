@@ -26,13 +26,13 @@ except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
 
 
-
-def add_extra_callbacks(args,call_list):
+def add_extra_callbacks(args, call_list):
     if args.early_stop:
-        early_stopping = EarlyStopping('val_loss', patience=10, mode='min',min_delta=0.1)
+        early_stopping = EarlyStopping('val_loss', patience=10, mode='min', min_delta=0.01)
         call_list.append(early_stopping)
 
     return call_list
+
 
 def execute_trainer(args=None):
     if args.seed is not None:
@@ -81,11 +81,8 @@ def execute_trainer(args=None):
 
     trainer = Trainer(
         num_sanity_val_steps=0,
-        limit_train_batches=50,
-        limit_val_batches=50,
-        limit_test_batches=50,
         gpus=-1, num_nodes=1, strategy='ddp',
-        progress_bar_refresh_rate=10,
+        progress_bar_refresh_rate=100,
         max_epochs=args.epochs,
         max_steps=args.max_steps,
         logger=wandb_logger,

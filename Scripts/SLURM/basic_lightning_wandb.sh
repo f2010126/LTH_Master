@@ -31,6 +31,6 @@ pip list
 
 cd LTH_Master
 # pick config file here
-python3 -m src.Lightning_WandB.lightning_wandb_basic --trainer.num_nodes 1 --trainer.gpus 2 --config_file_name $config_name
+python3 -m src.Lightning_WandB.lightning_wandb_basic --config_file_name $config_name
 
 deactivate
