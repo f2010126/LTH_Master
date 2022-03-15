@@ -123,13 +123,13 @@ def execute_trainer(args):
         # RESET TO SAVED WEIGHTS
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
-        print(f" PRUNING LEVEL #{i + 1} Weight % {weight_prune}")
+        print(f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune}")
 
         # reinitialise the model with random weights and prune
         randomModel.random_init_weights()
         apply_pruning(randomModel, "random", 0.2)
         weight_prune_rand = count_rem_weights(randomModel)
-        print(f"Weight % here {weight_prune_rand}")
+        print(f"Pruned Random Weight % here {weight_prune_rand}")
 
         print(f"Reinit Trainer and Logger")
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/pruned_models/wandb_logs",
@@ -157,7 +157,7 @@ def execute_trainer(args):
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
         test_acc = prune_trainer.logged_metrics['test_acc']
-        print(f"Test Acc {test_acc}")
+        print(f"Pruned Test Acc {test_acc}")
         # do wandb.define_metric() after wandb.init()
         # Define the custom x axis metric, and define which metrics to plot against that x-axis
         wandb.define_metric("weight_pruned")
@@ -192,8 +192,8 @@ def execute_trainer(args):
         random_test_acc = random_trainer.logged_metrics['test_acc']
         print(f"Random Test Acc {random_test_acc}")
         wandb.define_metric("weight_pruned")
-        wandb.define_metric("random-test-acc", step_metric='weight_pruned')
-        wandb.log({"random-test-acc": random_test_acc, 'weight_pruned': weight_prune}, )
+        wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
+        wandb.log({"pruned-test-acc": random_test_acc, 'weight_pruned': weight_prune}, )
         wandb.finish()
 
 
