@@ -23,7 +23,7 @@ except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
     from src.Lightning_WandB.utils import checkdir, get_data_module, \
         layer_looper, apply_pruning, reset_weights, count_rem_weights, check_model_change
-    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune
+    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune, LitSystemRandom
     from src.Lightning_WandB.BaseLightningModule.callbacks import FullTrainer, PruneTrainer
 
 
@@ -67,7 +67,7 @@ def execute_trainer(args):
     cifar10_module = get_data_module(path=args.data_root, batch=args.batch_size,
                                      seed=args.seed, workers=NUM_WORKERS)
     #
-    model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models", arch=args.model,
+    model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/pruned_models", arch=args.model,
                            lr=args.learning_rate, reset_itr=args.reset_itr)
     model.datamodule = cifar10_module
 
@@ -109,6 +109,12 @@ def execute_trainer(args):
 
     wandb.finish()
 
+    # init and train a random model for comparison
+    randomModel = LitSystemRandom(batch_size=args.batch_size,
+                                  experiment_dir=f"{trial_dir}/random_models",
+                                  arch=args.model, lr=args.learning_rate)
+    randomModel.datamodule = cifar10_module
+
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
@@ -118,8 +124,13 @@ def execute_trainer(args):
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
         print(f" PRUNING LEVEL #{i + 1} Weight % {weight_prune}")
-        # RETRAIN
-        # Reinit the Trainer and logger.
+
+        # reinitialise the model with random weights and prune
+        randomModel.random_init_weights()
+        apply_pruning(randomModel,"random",0.2)
+        weight_prune_rand = count_rem_weights(randomModel)
+        print(f"Weight % here {weight_prune_rand}")
+
         print(f"Reinit Trainer and Logger")
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
                                    reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
@@ -154,9 +165,10 @@ def execute_trainer(args):
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
         wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune}, )
 
-        # init and train a random model for comparison
-        # reinit the system AND trainer
 
+
+
+        # END
         wandb.finish()
 
 

@@ -38,6 +38,9 @@ def init_weights(m):
         torch.nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
 
+def weight_reset(m):
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+        m.reset_parameters()
 
 def torchvision_renet():
     model = torchvision.models.resnet18(pretrained=False, num_classes=10)
@@ -116,8 +119,8 @@ class LitSystem94Base(LightningModule):
 
 
 class LitSystemPrune(LightningModule):
-    def __init__(self, batch_size, arch, experiment_dir='experiments', reset_itr=0, prune_amount=0.2, lr=0.05,
-                 weight_decay=0.0001):
+    def __init__(self, batch_size, arch, experiment_dir='experiments',
+                 reset_itr=0, prune_amount=0.2, lr=0.05,weight_decay=0.0001):
         super().__init__()
 
         self.save_hyperparameters()
@@ -133,10 +136,6 @@ class LitSystemPrune(LightningModule):
         return F.log_softmax(out, dim=1)
 
     def training_step(self, batch, batch_idx):
-        # Must clear cache at regular interval
-        if self.global_step % 10 == 0:
-            torch.cuda.empty_cache()
-
         # # If module has reset itr is same as current itr, update the weights dict
         if (self.global_step == self.hparams.reset_itr):
             self.original_wgts = copy.deepcopy(self.state_dict())
@@ -215,3 +214,58 @@ class LitSystemPrune(LightningModule):
         #         grad_tensor = p.grad
         #         grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
         #         p.grad.data = grad_tensor
+
+class LitSystemRandom(LightningModule):
+    def __init__(self, batch_size, arch, experiment_dir='experiments',
+                 prune_amount=0.2, lr=0.05,weight_decay=0.0001):
+        super().__init__()
+        self.save_hyperparameters()
+        self.model = create_model(arch)
+        # init the masks in the model
+        apply_pruning(self, "random", 0.0)
+
+    def random_init_weights(self):
+        self.model.apply(weight_reset())
+
+    def forward(self, x):
+        out = self.model(x)
+        return F.log_softmax(out, dim=1)
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        logits = self(x)
+        loss = F.nll_loss(logits, y)
+
+        # training metrics
+        preds = torch.argmax(logits, dim=1)
+        acc = accuracy(preds, y)
+        # self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
+        self.log('train_acc', acc * 100, on_step=True, on_epoch=True, logger=True, sync_dist=True)
+        return loss
+
+    def evaluate(self, batch, stage=None):
+        x, y = batch
+        logits = self(x)
+        loss = F.nll_loss(logits, y)
+        preds = torch.argmax(logits, dim=1)
+        acc = accuracy(preds, y)
+
+        if stage:
+            self.log(f"{stage}_loss", loss, prog_bar=True, sync_dist=True)
+            self.log(f"{stage}_acc", acc * 100, prog_bar=True, sync_dist=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        return self.evaluate(batch, "val")
+
+    def test_step(self, batch, batch_idx):
+        return self.evaluate(batch, "test")
+
+    def configure_optimizers(self):
+        # return the SGD used
+        optimizer = torch.optim.SGD(params=self.model.parameters(),
+                                    lr=self.hparams.lr,
+                                    weight_decay=self.hparams.weight_decay)
+        # torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
+        return optimizer
