@@ -8,7 +8,7 @@ import time
 import warnings
 import torch.backends.cudnn as cudnn
 from pytorch_lightning import seed_everything, Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor,TQDMProgressBar
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import torch.nn.functional as F
@@ -76,13 +76,12 @@ def execute_trainer(args=None):
         mode="max",
         dirpath=f"{trial_dir}/models",
         filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}')
-    callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"), ]
+    callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"), TQDMProgressBar(refresh_rate=100) ]
     add_extra_callbacks(args, callback_list)
 
     trainer = Trainer(
         num_sanity_val_steps=0,
         gpus=-1, num_nodes=1, strategy='ddp',
-        progress_bar_refresh_rate=100,
         max_epochs=args.epochs,
         max_steps=args.max_steps,
         logger=wandb_logger,

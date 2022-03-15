@@ -8,7 +8,7 @@ import time
 import warnings
 import torch.backends.cudnn as cudnn
 from pytorch_lightning import seed_everything, Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor
+from pytorch_lightning.callbacks import LearningRateMonitor, TQDMProgressBar
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import copy
@@ -77,7 +77,7 @@ def execute_trainer(args):
         dirpath=f"{dir}/models/baseline",
         filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
         save_last=True)
-    callback_list = [FullTrainer(), checkpoint_callback]
+    callback_list = [FullTrainer(), checkpoint_callback,TQDMProgressBar(refresh_rate=100)]
     add_extra_callbacks(args, callback_list)
 
     # BASELINE RUN
@@ -86,7 +86,7 @@ def execute_trainer(args):
                                group=args.trial, name=f"baseline_run")
 
     full_trainer = Trainer(
-        progress_bar_refresh_rate=10,
+        prepare_data_per_node=False,
         max_epochs=args.epochs,
         max_steps=args.max_steps,
         gpus=-1, num_nodes=1, strategy='ddp',
@@ -142,10 +142,10 @@ def execute_trainer(args):
             dirpath=f"{trial_dir}/pruned_models/level_{i + 1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
-        callback_list = [checkpoint_callback]
-        add_extra_callbacks(args, callback_list)
+        callback_list = [checkpoint_callback,TQDMProgressBar(refresh_rate=100)]
+        add_extra_callbacks(args, callback_list,)
         prune_trainer = Trainer(
-            progress_bar_refresh_rate=10,
+            prepare_data_per_node=False,
             max_epochs=args.epochs,
             max_steps=args.max_steps,
             gpus=-1, num_nodes=1, strategy='ddp',
@@ -176,10 +176,10 @@ def execute_trainer(args):
             dirpath=f"{trial_dir}/random_models/level_{i + 1}",
             filename='resnet-random-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
-        callback_list = [checkpoint_callback]
+        callback_list = [checkpoint_callback,TQDMProgressBar(refresh_rate=100)]
         add_extra_callbacks(args, callback_list)
         random_trainer = Trainer(
-            progress_bar_refresh_rate=10,
+            prepare_data_per_node=False,
             max_epochs=args.epochs,
             max_steps=args.max_steps,
             gpus=-1, num_nodes=1, strategy='ddp',
