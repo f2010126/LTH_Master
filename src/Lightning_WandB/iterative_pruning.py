@@ -87,7 +87,6 @@ def execute_trainer(args):
                                group=args.trial, name=f"baseline_run")
 
     full_trainer = Trainer(
-        prepare_data_per_node=False,
         max_epochs=args.epochs,
         max_steps=args.max_steps,
         gpus=-1, num_nodes=1, strategy='ddp',
@@ -146,7 +145,6 @@ def execute_trainer(args):
         callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
         add_extra_callbacks(args, callback_list, )
         prune_trainer = Trainer(
-            prepare_data_per_node=False,
             max_epochs=args.epochs,
             max_steps=args.max_steps,
             gpus=-1, num_nodes=1, strategy='ddp',
@@ -180,7 +178,6 @@ def execute_trainer(args):
         callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
         add_extra_callbacks(args, callback_list)
         random_trainer = Trainer(
-            prepare_data_per_node=False,
             max_epochs=args.epochs,
             max_steps=args.max_steps,
             gpus=-1, num_nodes=1, strategy='ddp',
