@@ -98,7 +98,7 @@ def execute_trainer(args):
     )
 
     full_trainer.fit(model, cifar10_module)
-    full_trainer.test(model, datamodule=cifar10_module)
+    full_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
     test_acc = full_trainer.logged_metrics['test_acc']
     print(f"Test Acc {test_acc}")
     weight_prune = count_rem_weights(model)
@@ -155,7 +155,7 @@ def execute_trainer(args):
             deterministic=True
         )
         prune_trainer.fit(model, cifar10_module)
-        prune_trainer.test(model, datamodule=cifar10_module)
+        prune_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
         test_acc = prune_trainer.logged_metrics['test_acc']
         print(f"Test Acc {test_acc}")
         # do wandb.define_metric() after wandb.init()
@@ -188,7 +188,7 @@ def execute_trainer(args):
             deterministic=True
         )
         random_trainer.fit(model, cifar10_module)
-        random_trainer.test(model, datamodule=cifar10_module)
+        random_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
         random_test_acc = random_trainer.logged_metrics['test_acc']
         print(f"Random Test Acc {random_test_acc}")
         wandb.define_metric("weight_pruned")

@@ -95,7 +95,7 @@ def execute_trainer(args=None):
     )
 
     trainer.fit(model, cifar10_module)
-    trainer.test(model, datamodule=cifar10_module)
+    trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
     wandb.finish()
 
 
