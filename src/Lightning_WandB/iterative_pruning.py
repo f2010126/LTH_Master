@@ -127,19 +127,19 @@ def execute_trainer(args):
 
         # reinitialise the model with random weights and prune
         randomModel.random_init_weights()
-        apply_pruning(randomModel,"random",0.2)
+        apply_pruning(randomModel, "random", 0.2)
         weight_prune_rand = count_rem_weights(randomModel)
         print(f"Weight % here {weight_prune_rand}")
 
         print(f"Reinit Trainer and Logger")
-        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
+        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/pruned_models/wandb_logs",
                                    reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
                                    group=args.trial, name=f"run_#_{i}")
 
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
-            dirpath=f"{trial_dir}/models/level_{i + 1}",
+            dirpath=f"{trial_dir}/pruned_models/level_{i + 1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
         callback_list = [checkpoint_callback]
@@ -164,11 +164,38 @@ def execute_trainer(args):
         wandb.define_metric("weight_pruned")
         wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
         wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune}, )
+        wandb.finish()
 
-
-
-
-        # END
+        # Randomly inited Trained
+        random_wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/pruned_models/wandb_logs",
+                                          reinit=True, config=args, job_type=f'random_level_{weight_prune}',
+                                          group=args.trial, name=f"run_#_{i}")
+        checkpoint_callback = ModelCheckpoint(
+            monitor='val_acc',
+            mode="max",
+            dirpath=f"{trial_dir}/random_models/level_{i + 1}",
+            filename='resnet-random-{epoch:02d}-{val_acc:.2f}',
+            save_last=True, )
+        callback_list = [checkpoint_callback]
+        add_extra_callbacks(args, callback_list)
+        random_trainer = Trainer(
+            progress_bar_refresh_rate=10,
+            max_epochs=args.epochs,
+            max_steps=args.max_steps,
+            gpus=-1, num_nodes=1, strategy='ddp',
+            callbacks=callback_list,
+            stochastic_weight_avg=args.swa_enabled,
+            enable_checkpointing=True,
+            logger=random_wandb_logger,
+            deterministic=True
+        )
+        random_trainer.fit(model, cifar10_module)
+        random_trainer.test(model, datamodule=cifar10_module)
+        random_test_acc = random_trainer.logged_metrics['test_acc']
+        print(f"Random Test Acc {random_test_acc}")
+        wandb.define_metric("weight_pruned")
+        wandb.define_metric("random-test-acc", step_metric='weight_pruned')
+        wandb.log({"random-test-acc": random_test_acc, 'weight_pruned': weight_prune}, )
         wandb.finish()
 
 

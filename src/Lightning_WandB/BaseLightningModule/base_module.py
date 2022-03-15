@@ -232,6 +232,7 @@ class LitSystemRandom(LightningModule):
         return F.log_softmax(out, dim=1)
 
     def training_step(self, batch, batch_idx):
+        print(f"RANK {self.local_rank}  BATCH ID: {batch_idx}")
         x, y = batch
         logits = self(x)
         loss = F.nll_loss(logits, y)
