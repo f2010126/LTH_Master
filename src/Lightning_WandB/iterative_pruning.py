@@ -84,7 +84,7 @@ def execute_trainer(args):
     # BASELINE RUN
     wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
                                reinit=True, config=args, job_type='initial-baseline',
-                               group=args.trial, name=f"baseline_run")
+                               group='Baseline', name=f"baseline_run")
 
     full_trainer = Trainer(
         max_epochs=args.epochs,
@@ -133,8 +133,8 @@ def execute_trainer(args):
 
         print(f"Reinit Trainer and Logger")
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/pruned_models/wandb_logs",
-                                   reinit=True, config=args, job_type=f'pruning_level_{weight_prune}',
-                                   group=args.trial, name=f"run_#_{i}")
+                                   reinit=True, config=args, job_type=f'level_{weight_prune}',
+                                   group='Pruning', name=f"pruning_#_{i}")
 
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
@@ -167,8 +167,8 @@ def execute_trainer(args):
 
         # Randomly inited Trained
         random_wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/pruned_models/wandb_logs",
-                                          reinit=True, config=args, job_type=f'random_level_{weight_prune}',
-                                          group=args.trial, name=f"run_#_{i}")
+                                          reinit=True, config=args, job_type=f'level_{weight_prune}',
+                                          group='Random', name=f"random_#_{i}")
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
