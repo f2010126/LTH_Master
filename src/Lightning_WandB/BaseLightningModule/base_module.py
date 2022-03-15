@@ -225,7 +225,7 @@ class LitSystemRandom(LightningModule):
         apply_pruning(self, "random", 0.0)
 
     def random_init_weights(self):
-        self.model.apply(weight_reset())
+        self.model.apply(weight_reset)
 
     def forward(self, x):
         out = self.model(x)
