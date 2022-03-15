@@ -12,19 +12,20 @@ from pytorch_lightning.callbacks import LearningRateMonitor, TQDMProgressBar
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import copy
-from attrdict import AttrDict
 
 try:
     from BaseLightningModule.base_module import LitSystemPrune
     from utils import checkdir, get_data_module, layer_looper, apply_pruning, \
         reset_weights, count_rem_weights, check_model_change
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
+    from config import AttrDict
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
     from src.Lightning_WandB.utils import checkdir, get_data_module, \
         layer_looper, apply_pruning, reset_weights, count_rem_weights, check_model_change
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune, LitSystemRandom
     from src.Lightning_WandB.BaseLightningModule.callbacks import FullTrainer, PruneTrainer
+    from src.Lightning_WandB.config import AttrDict
 
 
 def set_experiment_run(args):
@@ -77,7 +78,7 @@ def execute_trainer(args):
         dirpath=f"{dir}/models/baseline",
         filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
         save_last=True)
-    callback_list = [FullTrainer(), checkpoint_callback,TQDMProgressBar(refresh_rate=100)]
+    callback_list = [FullTrainer(), checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
     add_extra_callbacks(args, callback_list)
 
     # BASELINE RUN
@@ -142,8 +143,8 @@ def execute_trainer(args):
             dirpath=f"{trial_dir}/pruned_models/level_{i + 1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
-        callback_list = [checkpoint_callback,TQDMProgressBar(refresh_rate=100)]
-        add_extra_callbacks(args, callback_list,)
+        callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
+        add_extra_callbacks(args, callback_list, )
         prune_trainer = Trainer(
             prepare_data_per_node=False,
             max_epochs=args.epochs,
@@ -176,7 +177,7 @@ def execute_trainer(args):
             dirpath=f"{trial_dir}/random_models/level_{i + 1}",
             filename='resnet-random-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
-        callback_list = [checkpoint_callback,TQDMProgressBar(refresh_rate=100)]
+        callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
         add_extra_callbacks(args, callback_list)
         random_trainer = Trainer(
             prepare_data_per_node=False,

@@ -27,7 +27,6 @@ class Custom_CIFAR10DataModule(pl.LightningDataModule):
         )
         self.save_hyperparameters()
 
-
     def prepare_data(self):
         CIFAR10(self.data_dir, train=True, download=True)
         CIFAR10(self.data_dir, train=False, download=True)

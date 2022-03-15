@@ -38,9 +38,11 @@ def init_weights(m):
         torch.nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
 
+
 def weight_reset(m):
     if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
         m.reset_parameters()
+
 
 def torchvision_renet():
     model = torchvision.models.resnet18(pretrained=False, num_classes=10)
@@ -120,7 +122,7 @@ class LitSystem94Base(LightningModule):
 
 class LitSystemPrune(LightningModule):
     def __init__(self, batch_size, arch, experiment_dir='experiments',
-                 reset_itr=0, prune_amount=0.2, lr=0.05,weight_decay=0.0001):
+                 reset_itr=0, prune_amount=0.2, lr=0.05, weight_decay=0.0001):
         super().__init__()
 
         self.save_hyperparameters()
@@ -215,9 +217,10 @@ class LitSystemPrune(LightningModule):
         #         grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
         #         p.grad.data = grad_tensor
 
+
 class LitSystemRandom(LightningModule):
     def __init__(self, batch_size, arch, experiment_dir='experiments',
-                 prune_amount=0.2, lr=0.05,weight_decay=0.0001):
+                 prune_amount=0.2, lr=0.05, weight_decay=0.0001):
         super().__init__()
         self.save_hyperparameters()
         self.model = create_model(arch)

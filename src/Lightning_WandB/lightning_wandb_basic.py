@@ -8,22 +8,24 @@ import time
 import warnings
 import torch.backends.cudnn as cudnn
 from pytorch_lightning import seed_everything, Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor,TQDMProgressBar
+from pytorch_lightning.callbacks import LearningRateMonitor, TQDMProgressBar
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import torch.nn.functional as F
-from attrdict import AttrDict
+
 
 try:
     from BaseLightningModule.base_module import LitSystem94Base
     from BaseLightningModule.data_module import Custom_CIFAR10DataModule
     from utils import checkdir, get_data_module
+    from config import AttrDict
 
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
     from src.Lightning_WandB.BaseLightningModule.data_module import Custom_CIFAR10DataModule
     from src.Lightning_WandB.utils import checkdir, get_data_module
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
+    from src.Lightning_WandB.config import AttrDict
 
 
 def add_extra_callbacks(args, call_list):
@@ -76,7 +78,8 @@ def execute_trainer(args=None):
         mode="max",
         dirpath=f"{trial_dir}/models",
         filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}')
-    callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"), TQDMProgressBar(refresh_rate=100) ]
+    callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"),
+                     TQDMProgressBar(refresh_rate=100)]
     add_extra_callbacks(args, callback_list)
 
     trainer = Trainer(
