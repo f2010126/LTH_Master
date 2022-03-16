@@ -40,7 +40,7 @@ def add_callbacks(args):
     call_list = [LearningRateMonitor(logging_interval="step"),
                  TQDMProgressBar(refresh_rate=100)]
     if args.early_stop:
-        early_stopping = EarlyStopping('val_loss', patience=10, mode='min', min_delta=0.1, verbose=True)
+        early_stopping = EarlyStopping('val_loss', patience=args.es_patience, mode='min', min_delta=args.es_delta, verbose=True)
         call_list.append(early_stopping)
 
     return call_list
@@ -96,7 +96,8 @@ def execute_trainer(args):
         stochastic_weight_avg=args.swa_enabled,
         enable_checkpointing=True,
         logger=wandb_logger,
-        deterministic=True
+        deterministic=True,
+        check_val_every_n_epoch=args.val_freq,
     )
 
     full_trainer.fit(model, cifar10_module)
@@ -148,7 +149,8 @@ def execute_trainer(args):
             stochastic_weight_avg=args.swa_enabled,
             enable_checkpointing=True,
             logger=wandb_logger,
-            deterministic=True
+            deterministic=True,
+            check_val_every_n_epoch=args.val_freq,
         )
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
@@ -176,7 +178,8 @@ def execute_trainer(args):
             stochastic_weight_avg=args.swa_enabled,
             enable_checkpointing=True,
             logger=random_wandb_logger,
-            deterministic=True
+            deterministic=True,
+            check_val_every_n_epoch=args.val_freq,
         )
         random_trainer.fit(randomModel, cifar10_module)
         random_trainer.test(randomModel, datamodule=cifar10_module, ckpt_path='best')
@@ -220,6 +223,10 @@ if __name__ == '__main__':
                         action='store_true', help='Uses SWA as part of optimiser if enabled')
     parser.add_argument('--prune_global',
                         action='store_false', help='Prune Layer wise or globally. Default global')
+    parser.add_argument('--val_freq', default=1, type=int, metavar='O', help='frequency of validation')
+    parser.add_argument('--es_patience', default=5, type=int, metavar='O', help='when to Early stop')
+    parser.add_argument('--es_delta', type=float, default=0.01,
+                        help='delta for early stopping')
 
     args = parser.parse_args()
     # Load config path then args

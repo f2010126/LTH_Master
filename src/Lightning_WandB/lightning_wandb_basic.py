@@ -31,7 +31,7 @@ def add_callbacks(args):
     call_list = [LearningRateMonitor(logging_interval="step"),
                  TQDMProgressBar(refresh_rate=100)]
     if args.early_stop:
-        early_stopping = EarlyStopping('val_loss', patience=10, mode='min', min_delta=0.1, verbose=True)
+        early_stopping = EarlyStopping('val_loss', patience=args.es_patience, mode='min', min_delta=args.es_delta, verbose=True)
         call_list.append(early_stopping)
 
     return call_list
@@ -91,7 +91,8 @@ def execute_trainer(args=None):
         callbacks=callback_list,
         stochastic_weight_avg=args.swa_enabled,
         enable_checkpointing=True,
-        deterministic=True
+        deterministic=True,
+        check_val_every_n_epoch=args.val_freq,
     )
 
     trainer.fit(model, cifar10_module)
@@ -132,6 +133,10 @@ if __name__ == '__main__':
                         help='# iterations to train (default: 30k)')
     parser.add_argument('--swa',
                         action='store_true', help='Uses SWA as part of optimiser if enabled')
+    parser.add_argument('--val_freq', default=1, type=int, metavar='O', help='frequency of validation')
+    parser.add_argument('--es_patience', default=5, type=int, metavar='O', help='when to Early stop')
+    parser.add_argument('--es_delta', type=float, default=0.01,
+                        help='delta for early stopping')
 
     args = parser.parse_args()
 
