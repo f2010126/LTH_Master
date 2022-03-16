@@ -80,7 +80,7 @@ def execute_trainer(args):
         mode="max",
         dirpath=f"{trial_dir}/models/baseline",
         filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
-        save_last=True)
+        save_last=False)
     callback_list = add_callbacks(args)
     callback_list.extend([checkpoint_callback, FullTrainer()])
 
@@ -122,8 +122,9 @@ def execute_trainer(args):
         # reinit a random model.
         randomModel.random_init_weights()
         apply_prune(randomModel, 0.2, "random", args.prune_global)
+        weight_prune = count_rem_weights(model)
         print(
-            f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
+            f" PRUNING LEVEL #{i + 1} Random Weight % here {count_rem_weights(randomModel)}")
 
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/pruned",
                                    reinit=True, config=args, job_type=f'level_{weight_prune}',
@@ -132,9 +133,10 @@ def execute_trainer(args):
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
+            verbose=True,
             dirpath=f"{trial_dir}/models/pruned/level_{i + 1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
-            save_last=True, )
+            save_last=False,)
         callback_list = add_callbacks(args)
         callback_list.extend([checkpoint_callback])
 
@@ -151,7 +153,7 @@ def execute_trainer(args):
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
         test_acc = prune_trainer.logged_metrics['test_acc']
-        print(f"Pruned Test Acc {test_acc} and best model at {checkpoint_callback.best_model_path}")
+        print(f"Pruned Test Acc {test_acc} and best model score {checkpoint_callback.best_model_score} at {checkpoint_callback.best_model_path}")
         wandb.finish()
 
         # Randomly inited Trained
@@ -163,7 +165,7 @@ def execute_trainer(args):
             mode="max",
             dirpath=f"{trial_dir}/models/random/level_{i + 1}",
             filename='resnet-random-{epoch:02d}-{val_acc:.2f}',
-            save_last=True, )
+            save_last=False, )
         callback_list = add_callbacks(args)
         callback_list.extend([checkpoint_callback])
         random_trainer = Trainer(
@@ -177,9 +179,9 @@ def execute_trainer(args):
             deterministic=True
         )
         random_trainer.fit(randomModel, cifar10_module)
-        random_trainer.test(randomModel, datamodule=cifar10_module,ckpt_path='best')
+        random_trainer.test(randomModel, datamodule=cifar10_module, ckpt_path='best')
         random_test_acc = random_trainer.logged_metrics['test_acc']
-        print(f"Random Test Acc {random_test_acc} and best model at {checkpoint_callback.best_model_path}")
+        print(f"Random Test Acc {random_test_acc} and best model {checkpoint_callback.best_model_score} at {checkpoint_callback.best_model_path}")
         wandb.finish()
 
 
