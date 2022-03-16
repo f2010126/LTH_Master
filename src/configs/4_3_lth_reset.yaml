@@ -4,12 +4,13 @@
 #######################################
 # Taken from https://arxiv.org/pdf/1903.01611.pdf
 trial: 'LTH_At_Scale_Paper'
+notes: 'Setting higher LR =0.1 for resetting, 6 GPUs, 30 epochs and 25 levels'
 model: 'resnet18'
 exp_dir: 'experiments'
 wand_exp_name: 'LTH_Experiment_4_3'
 data_root: 'data'
 seed: 123
-learning_rate: 0.01
+learning_rate: 0.1
 epochs: 86
 levels: 10
 batch_size: 128
@@ -19,12 +20,12 @@ momentum:  0.9
 config_file_name: "4_3_lth_reset.yaml"
 early_stop: False
 dataset: cifar10
-gpus: 4
+gpus: 6
 nodes: 1
 max_steps: 30000
 swa_enabled: False
 prune_global: True
-val_freq: 1
+val_freq: 3
 es_patience: 5
 es_delta: 0.01
 pruning_amt: 0.2

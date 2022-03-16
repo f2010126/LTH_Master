@@ -40,7 +40,8 @@ def add_callbacks(args):
     call_list = [LearningRateMonitor(logging_interval="step"),
                  TQDMProgressBar(refresh_rate=100)]
     if args.early_stop:
-        early_stopping = EarlyStopping('val_loss', patience=args.es_patience, mode='min', min_delta=args.es_delta, verbose=True)
+        early_stopping = EarlyStopping('val_loss', patience=args.es_patience, mode='min', min_delta=args.es_delta,
+                                       verbose=True)
         call_list.append(early_stopping)
 
     return call_list
@@ -123,8 +124,8 @@ def execute_trainer(args):
                                       arch=args.model, lr=args.learning_rate)
         randomModel.datamodule = cifar10_module
         weight_cent *= 1 - args.pruning_amt
-        apply_prune(randomModel,1-weight_cent, "random", args.prune_global)
-        
+        apply_prune(randomModel, 1 - weight_cent, "random", args.prune_global)
+
         print(
             f" PRUNING LEVEL #{i + 1} Model weight % here {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
 
@@ -138,7 +139,7 @@ def execute_trainer(args):
             verbose=True,
             dirpath=f"{trial_dir}/models/pruned/level_{i + 1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
-            save_last=False,)
+            save_last=False, )
         callback_list = add_callbacks(args)
         callback_list.extend([checkpoint_callback])
 
@@ -156,7 +157,8 @@ def execute_trainer(args):
         prune_trainer.fit(model, cifar10_module)
         prune_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
         test_acc = prune_trainer.logged_metrics['test_acc']
-        print(f"Pruned Test Acc {test_acc} and best model score {checkpoint_callback.best_model_score} at {checkpoint_callback.best_model_path}")
+        print(
+            f"Pruned Test Acc {test_acc} and best model score {checkpoint_callback.best_model_score} at {checkpoint_callback.best_model_path}")
         wandb.finish()
 
         # Randomly inited Trained
@@ -185,7 +187,8 @@ def execute_trainer(args):
         random_trainer.fit(randomModel, cifar10_module)
         random_trainer.test(randomModel, datamodule=cifar10_module, ckpt_path='best')
         random_test_acc = random_trainer.logged_metrics['test_acc']
-        print(f"Random Test Acc {random_test_acc} and best model {checkpoint_callback.best_model_score} at {checkpoint_callback.best_model_path}")
+        print(
+            f"Random Test Acc {random_test_acc} and best model {checkpoint_callback.best_model_score} at {checkpoint_callback.best_model_path}")
         wandb.finish()
 
 
