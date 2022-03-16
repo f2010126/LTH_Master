@@ -21,6 +21,6 @@ gpus: 2
 nodes: 1
 max_steps: 30000
 swa_enabled: False
-pruning: 'magnitude'
+pruning: 'global'
 
 
