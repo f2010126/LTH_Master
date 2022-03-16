@@ -180,8 +180,8 @@ def execute_trainer(args):
             logger=random_wandb_logger,
             deterministic=True
         )
-        random_trainer.fit(model, cifar10_module)
-        random_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
+        random_trainer.fit(randomModel, cifar10_module)
+        random_trainer.test(randomModel, datamodule=cifar10_module, ckpt_path='best')
         random_test_acc = random_trainer.logged_metrics['test_acc']
         print(f"Random Test Acc {random_test_acc}")
         wandb.log({"pruned-test-acc": random_test_acc, 'weight_pruned': weight_prune}, )
