@@ -27,5 +27,6 @@ prune_global: True
 val_freq: 1
 es_patience: 5
 es_delta: 0.01
+pruning_amt: 0.2
 
 

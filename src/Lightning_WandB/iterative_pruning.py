@@ -107,23 +107,24 @@ def execute_trainer(args):
     wandb.finish()
 
     model.experiment_dir = f"{trial_dir}/models/pruned"
-    # initialise a model with random weights and prune
-    randomModel = LitSystemRandom(batch_size=args.batch_size,
-                                  experiment_dir=f"{trial_dir}/models/random",
-                                  arch=args.model, lr=args.learning_rate)
-    randomModel.datamodule = cifar10_module
-
+    weight_cent = 1
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
         # PRUNE L1Unstructured, reset weights
-        apply_prune(model, 0.2, "magnitude", args.prune_global)
+        apply_prune(model, args.pruning_amt, "magnitude", args.prune_global)
         reset_weights(model, model.original_wgts)
+        weight_prune = count_rem_weights(model)
 
         # reinit a random model.
-        randomModel.random_init_weights()
-        apply_prune(randomModel, 0.2, "random", args.prune_global)
-        weight_prune = count_rem_weights(model)
+        # initialise a model with random weights and get a randomly pruned model of that sparsity
+        randomModel = LitSystemRandom(batch_size=args.batch_size,
+                                      experiment_dir=f"{trial_dir}/models/random",
+                                      arch=args.model, lr=args.learning_rate)
+        randomModel.datamodule = cifar10_module
+        weight_cent *= 1 - args.pruning_amt
+        apply_prune(randomModel,1-weight_cent, "random", args.prune_global)
+        
         print(
             f" PRUNING LEVEL #{i + 1} Model weight % here {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
 
@@ -227,6 +228,8 @@ if __name__ == '__main__':
     parser.add_argument('--es_patience', default=5, type=int, metavar='O', help='when to Early stop')
     parser.add_argument('--es_delta', type=float, default=0.01,
                         help='delta for early stopping')
+    parser.add_argument('--pruning_amt', type=float, default=0.2,
+                        help='how much to prune a conv layer. (default: 0.2)')
 
     args = parser.parse_args()
     # Load config path then args

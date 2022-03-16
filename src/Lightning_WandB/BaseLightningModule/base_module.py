@@ -237,9 +237,11 @@ class LitSystemRandom(LightningModule):
         super().__init__()
         self.save_hyperparameters()
         self.model = create_model(arch)
+        self.model.apply(weight_reinit)
         # init the masks in the model
         apply_prune(self, 0.0, "random", True)
         self.prepare_data_per_node = False
+
 
     def random_init_weights(self):
         self.model.apply(weight_reinit)
