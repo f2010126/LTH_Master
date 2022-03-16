@@ -137,7 +137,6 @@ class LitSystemPrune(LightningModule):
 
     def on_train_start(self):
         weight_prune = count_rem_weights(self)
-        print(f"After Test Model Weight {weight_prune}")
         self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
 
     def forward(self, x):
@@ -233,7 +232,6 @@ class LitSystemRandom(LightningModule):
 
     def on_train_start(self):
         weight_prune = count_rem_weights(self)
-        print(f"After Test Random Model Weight {weight_prune}")
         self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
 
     def forward(self, x):

@@ -124,7 +124,7 @@ def execute_trainer(args):
         apply_prune(randomModel, 0.2, "random", args.prune_global)
         weight_prune = count_rem_weights(model)
         print(
-            f" PRUNING LEVEL #{i + 1} Random Weight % here {count_rem_weights(randomModel)}")
+            f" PRUNING LEVEL #{i + 1} Model weight % here {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
 
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/pruned",
                                    reinit=True, config=args, job_type=f'level_{weight_prune}',
