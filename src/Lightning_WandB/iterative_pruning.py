@@ -100,7 +100,7 @@ def execute_trainer(args):
     )
 
     full_trainer.fit(model, cifar10_module)
-    full_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
+    full_trainer.test(model, datamodule=cifar10_module)
     test_acc = full_trainer.logged_metrics['test_acc']
     weight_prune = count_rem_weights(model)
     print(f"BaseLine Weight % {weight_prune} with Test Acc {test_acc}")
@@ -181,7 +181,7 @@ def execute_trainer(args):
             deterministic=True
         )
         random_trainer.fit(randomModel, cifar10_module)
-        random_trainer.test(randomModel, datamodule=cifar10_module, ckpt_path='best')
+        random_trainer.test(randomModel, datamodule=cifar10_module,ckpt_path='best')
         random_test_acc = random_trainer.logged_metrics['test_acc']
         print(f"Random Test Acc {random_test_acc} and best model at {checkpoint_callback.best_model_path}")
         wandb.log({"pruned-test-acc": random_test_acc, 'weight_pruned': weight_prune}, )
