@@ -6,12 +6,13 @@
 trial: 'LTH_SWA_4_9'
 model: 'resnet18'
 exp_dir: 'experiments'
+notes: 'Use SWA enabled, high LR, Validation freq set '
 wand_exp_name: 'LTH_Experiment_4_9'
 data_root: 'data'
 seed: 123
-learning_rate: 0.01
-epochs: 86
-levels: 10
+learning_rate: 0.1
+epochs: 30
+levels: 25
 batch_size: 128
 optimiser: 'sgd'
 reset_itr: 500
@@ -19,12 +20,12 @@ momentum:  0.9
 config_file_name: "4_9_lth_swa.yaml"
 early_stop: False
 dataset: cifar10
-gpus: 4
+gpus: 6
 nodes: 1
 max_steps: 30000
 swa_enabled: True
 prune_global: True
-val_freq: 1
+val_freq: 2
 es_patience: 5
 es_delta: 0.01
 pruning_amt: 0.2
