@@ -228,7 +228,7 @@ class LitSystemRandom(LightningModule):
         self.prepare_data_per_node = False
 
     def random_init_weights(self):
-        self.model.apply(weight_reset)
+        self.model.apply(init_weights)
 
     def on_train_start(self):
         weight_prune = count_rem_weights(self)
