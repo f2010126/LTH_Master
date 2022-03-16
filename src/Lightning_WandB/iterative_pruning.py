@@ -108,21 +108,21 @@ def execute_trainer(args):
     wandb.finish()
 
     model.experiment_dir = f"{trial_dir}/models/pruned"
+    # initialise a model with random weights and prune
+    randomModel = LitSystemRandom(batch_size=args.batch_size,
+                                  experiment_dir=f"{trial_dir}/models/random",
+                                  arch=args.model, lr=args.learning_rate)
+    randomModel.datamodule = cifar10_module
 
     # PRUNING LOOP
     for i in range(args.levels):
         # log Test Acc vs weight %
-        # PRUNE L1Unstructured
+        # PRUNE L1Unstructured, reset weights
         apply_prune(model, 0.2, "magnitude", args.prune_global)
-        # RESET TO SAVED WEIGHTS
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
-
-        # initialise a model with random weights and prune
-        randomModel = LitSystemRandom(batch_size=args.batch_size,
-                                      experiment_dir=f"{trial_dir}/models/random",
-                                      arch=args.model, lr=args.learning_rate)
-        randomModel.datamodule = cifar10_module
+        # reinit a random model. 
+        randomModel.random_init_weights()
         apply_prune(randomModel, 0.2, "random", args.prune_global)
         print(
             f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
