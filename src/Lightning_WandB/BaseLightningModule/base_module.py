@@ -135,7 +135,7 @@ class LitSystemPrune(LightningModule):
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
         self.prepare_data_per_node = False
 
-    def on_fit_start(self):
+    def on_train_start(self):
         weight_prune = count_rem_weights(self)
         print(f"After Test Model Weight {weight_prune}")
         self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
@@ -231,7 +231,7 @@ class LitSystemRandom(LightningModule):
     def random_init_weights(self):
         self.model.apply(weight_reset)
 
-    def on_fit_start(self):
+    def on_train_start(self):
         weight_prune = count_rem_weights(self)
         print(f"After Test Random Model Weight {weight_prune}")
         self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
