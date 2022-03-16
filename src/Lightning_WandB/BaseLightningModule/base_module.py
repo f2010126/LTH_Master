@@ -12,10 +12,10 @@ import wandb
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-    from src.Lightning_WandB.utils import pruning_by_layer, plot_grad_flow
+    from src.Lightning_WandB.utils import apply_prune, plot_grad_flow
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-    from src.Lightning_WandB.utils import pruning_by_layer, plot_grad_flow
+    from src.Lightning_WandB.utils import apply_prune, plot_grad_flow
 
 
 def create_model(arch_type):
@@ -131,7 +131,7 @@ class LitSystemPrune(LightningModule):
         self.model.apply(init_weights)
         self.final_wgts = None
         # init the masks in the model
-        pruning_by_layer(self, 0.0, "magnitude")
+        apply_prune(self, 0.0, "magnitude", True)
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
         self.prepare_data_per_node = False
 
@@ -227,7 +227,7 @@ class LitSystemRandom(LightningModule):
         self.save_hyperparameters()
         self.model = create_model(arch)
         # init the masks in the model
-        pruning_by_layer(self, 0.0, "random")
+        apply_prune(self, 0.0, "random", True)
         self.prepare_data_per_node = False
 
     def random_init_weights(self):

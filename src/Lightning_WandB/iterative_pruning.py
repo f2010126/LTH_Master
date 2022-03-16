@@ -15,14 +15,14 @@ import copy
 
 try:
     from BaseLightningModule.base_module import LitSystemPrune
-    from utils import checkdir, get_data_module, layer_looper, pruning_by_layer, \
-        reset_weights, count_rem_weights, check_model_change
+    from utils import checkdir, get_data_module, layer_looper, apply_prune, \
+        reset_weights, count_rem_weights
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     from config import AttrDict
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
     from src.Lightning_WandB.utils import checkdir, get_data_module, \
-        layer_looper, pruning_by_layer, reset_weights, count_rem_weights, check_model_change
+        layer_looper, apply_prune, reset_weights, count_rem_weights
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune, LitSystemRandom
     from src.Lightning_WandB.BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     from src.Lightning_WandB.config import AttrDict
@@ -115,14 +115,14 @@ def execute_trainer(args):
     for i in range(args.levels):
         # log Test Acc vs weight %
         # PRUNE L1Unstructured
-        pruning_by_layer(model, 0.2, "magnitude")
+        apply_prune(model, 0.2, "magnitude",args.prune_global)
         # RESET TO SAVED WEIGHTS
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
 
         # reinitialise the model with random weights and prune
         randomModel.random_init_weights()
-        pruning_by_layer(randomModel, 0.2, "random")
+        apply_prune(randomModel, 0.2, "random",args.prune_global)
         print(
             f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
 
@@ -219,6 +219,8 @@ if __name__ == '__main__':
     parser.add_argument('--nodes', default=1, type=int, metavar='O', help='# of nodes')
     parser.add_argument('--swa',
                         action='store_true', help='Uses SWA as part of optimiser if enabled')
+    parser.add_argument('--prune_global',
+                        action='store_false', help='Prune Layer wise or globally. Default global')
 
     args = parser.parse_args()
     # Load config path then args

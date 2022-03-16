@@ -67,6 +67,13 @@ def check_pruned_linear(module):
     return params == expected_params
 
 
+def apply_prune(model, amt=0.0, prune_type='magnitude', global_prune=True):
+    if global_prune:
+        pruning_global(model, amt, prune_type)
+    else:
+        pruning_by_layer(model, amt, prune_type)
+
+
 def pruning_by_layer(model, amt=0.0, prune_type='magnitude'):
     if prune_type == "magnitude":
         pruner = L1Unstructured(amt)
