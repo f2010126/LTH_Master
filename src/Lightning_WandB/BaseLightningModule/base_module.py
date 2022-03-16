@@ -8,6 +8,7 @@ from torchmetrics.functional import accuracy
 from torchsummary import summary
 import copy
 from torch.nn.utils.prune import is_pruned
+import torch.nn.init as init
 import wandb
 
 try:
@@ -35,13 +36,26 @@ def init_weights(m):
         :return: None
         """
     if isinstance(m, torch.nn.Linear):
-        torch.nn.init.xavier_uniform_(m.weight)
+        init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
 
 
-def weight_reset(m):
-    if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-        m.reset_parameters()
+def weight_reinit(m):
+    if isinstance(m, nn.Conv2d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.ConvTranspose2d):
+        init.xavier_normal_(m.weight.data)
+        if m.bias is not None:
+            init.normal_(m.bias.data)
+    elif isinstance(m, nn.BatchNorm2d):
+        init.normal_(m.weight.data, mean=1, std=0.02)
+        init.constant_(m.bias.data, 0)
+    elif isinstance(m, nn.Linear):
+        init.xavier_normal_(m.weight.data)
+        init.normal_(m.bias.data)
+
 
 
 def torchvision_renet():
@@ -228,7 +242,7 @@ class LitSystemRandom(LightningModule):
         self.prepare_data_per_node = False
 
     def random_init_weights(self):
-        self.model.apply(init_weights)
+        self.model.apply(weight_reinit)
 
     def on_train_start(self):
         weight_prune = count_rem_weights(self)
