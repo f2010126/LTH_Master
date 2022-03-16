@@ -135,6 +135,11 @@ class LitSystemPrune(LightningModule):
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
         self.prepare_data_per_node = False
 
+    def on_fit_start(self):
+        weight_prune = count_rem_weights(self)
+        print(f"After Test Model Weight {weight_prune}")
+        self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
+
     def forward(self, x):
         out = self.model(x)
         return F.log_softmax(out, dim=1)
@@ -196,7 +201,6 @@ class LitSystemPrune(LightningModule):
                     module.weight_orig.copy_(self.original_wgts[f'{name}.weight_orig'])
                     module.bias.copy_(self.original_wgts[f'{name}.bias'])
 
-
     def on_after_backward(self):
         # freeze pruned weights by making their gradients 0. using the Mask.
         for module in self.modules():
@@ -213,14 +217,6 @@ class LitSystemPrune(LightningModule):
         #         grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
         #         p.grad.data = grad_tensor
 
-    def on_test_end(self):
-        weight_prune = count_rem_weights(self)
-        print(f"After Test Model Weight {weight_prune}")
-        self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
-
-
-
-
 
 class LitSystemRandom(LightningModule):
     def __init__(self, batch_size, arch, experiment_dir='experiments',
@@ -234,6 +230,11 @@ class LitSystemRandom(LightningModule):
 
     def random_init_weights(self):
         self.model.apply(weight_reset)
+
+    def on_fit_start(self):
+        weight_prune = count_rem_weights(self)
+        print(f"After Test Random Model Weight {weight_prune}")
+        self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
 
     def forward(self, x):
         out = self.model(x)
@@ -277,8 +278,3 @@ class LitSystemRandom(LightningModule):
                                     weight_decay=self.hparams.weight_decay)
         # torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
         return optimizer
-
-    def on_test_end(self):
-        weight_prune = count_rem_weights(self)
-        print(f"After Test Random Model Weight {weight_prune}")
-        self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
