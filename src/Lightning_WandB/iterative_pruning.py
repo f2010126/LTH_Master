@@ -15,14 +15,14 @@ import copy
 
 try:
     from BaseLightningModule.base_module import LitSystemPrune
-    from utils import checkdir, get_data_module, layer_looper, apply_pruning, \
+    from utils import checkdir, get_data_module, layer_looper, pruning_by_layer, \
         reset_weights, count_rem_weights, check_model_change
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     from config import AttrDict
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
     from src.Lightning_WandB.utils import checkdir, get_data_module, \
-        layer_looper, apply_pruning, reset_weights, count_rem_weights, check_model_change
+        layer_looper, pruning_by_layer, reset_weights, count_rem_weights, check_model_change
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune, LitSystemRandom
     from src.Lightning_WandB.BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     from src.Lightning_WandB.config import AttrDict
@@ -62,12 +62,12 @@ def execute_trainer(args):
     NUM_WORKERS = int(os.cpu_count() / 2)
 
     trial_dir = set_experiment_run(args)
-    print(f"All Saved logs at {trial_dir}")
+    print(f"All Saved logs at {trial_dir} All Models in {dir}/models")
     checkdir(f"{trial_dir}/wandb_logs")
 
     cifar10_module = get_data_module(path=args.data_root, batch=args.batch_size,
                                      seed=args.seed, workers=NUM_WORKERS)
-    #
+
     model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/pruned_models", arch=args.model,
                            lr=args.learning_rate, reset_itr=args.reset_itr)
     model.datamodule = cifar10_module
@@ -82,7 +82,7 @@ def execute_trainer(args):
     add_extra_callbacks(args, callback_list)
 
     # BASELINE RUN
-    wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs",
+    wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/baseline",
                                reinit=True, config=args, job_type='initial-baseline',
                                group='Baseline', name=f"baseline_run")
 
@@ -100,13 +100,9 @@ def execute_trainer(args):
     full_trainer.fit(model, cifar10_module)
     full_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
     test_acc = full_trainer.logged_metrics['test_acc']
-    print(f"Test Acc {test_acc}")
     weight_prune = count_rem_weights(model)
-    print(f"BaseLine Weight % {weight_prune}")
-    wandb.define_metric("weight_pruned")
-    wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
+    print(f"BaseLine Weight % {weight_prune} with Test Acc {test_acc}")
     wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
-
     wandb.finish()
 
     # init and train a random model for comparison
@@ -119,27 +115,26 @@ def execute_trainer(args):
     for i in range(args.levels):
         # log Test Acc vs weight %
         # PRUNE L1Unstructured
-        apply_pruning(model, "lth", 0.2)
+        pruning_by_layer(model, 0.2, "magnitude")
         # RESET TO SAVED WEIGHTS
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
-        print(f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune}")
 
         # reinitialise the model with random weights and prune
         randomModel.random_init_weights()
-        apply_pruning(randomModel, "random", 0.2)
-        weight_prune_rand = count_rem_weights(randomModel)
-        print(f"Pruned Random Weight % here {weight_prune_rand}")
+        pruning_by_layer(randomModel, 0.2, "random")
+        print(
+            f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
 
         print(f"Reinit Trainer and Logger")
-        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/pruned_models/wandb_logs",
+        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/pruned_models",
                                    reinit=True, config=args, job_type=f'level_{weight_prune}',
                                    group='Pruning', name=f"pruning_#_{i}")
 
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
-            dirpath=f"{trial_dir}/pruned_models/level_{i + 1}",
+            dirpath=f"{dir}/models/pruned_models/level_{i + 1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
         callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
@@ -158,21 +153,17 @@ def execute_trainer(args):
         prune_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
         test_acc = prune_trainer.logged_metrics['test_acc']
         print(f"Pruned Test Acc {test_acc}")
-        # do wandb.define_metric() after wandb.init()
-        # Define the custom x axis metric, and define which metrics to plot against that x-axis
-        wandb.define_metric("weight_pruned")
-        wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
         wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune}, )
         wandb.finish()
 
         # Randomly inited Trained
-        random_wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/pruned_models/wandb_logs",
+        random_wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/random_models",
                                           reinit=True, config=args, job_type=f'level_{weight_prune}',
                                           group='Random', name=f"random_#_{i}")
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
-            dirpath=f"{trial_dir}/random_models/level_{i + 1}",
+            dirpath=f"{dir}/models/random_models/level_{i + 1}",
             filename='resnet-random-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
         callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
@@ -191,8 +182,6 @@ def execute_trainer(args):
         random_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
         random_test_acc = random_trainer.logged_metrics['test_acc']
         print(f"Random Test Acc {random_test_acc}")
-        wandb.define_metric("weight_pruned")
-        wandb.define_metric("pruned-test-acc", step_metric='weight_pruned')
         wandb.log({"pruned-test-acc": random_test_acc, 'weight_pruned': weight_prune}, )
         wandb.finish()
 

@@ -2,7 +2,7 @@ import os
 import torchvision
 from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 from pl_bolts.datamodules import CIFAR10DataModule
-from torch.nn.utils.prune import L1Unstructured,RandomUnstructured
+from torch.nn.utils.prune import L1Unstructured, RandomUnstructured, global_unstructured
 import torch
 from torch.nn.utils.prune import is_pruned
 import matplotlib.pyplot as plt
@@ -67,8 +67,8 @@ def check_pruned_linear(module):
     return params == expected_params
 
 
-def apply_pruning(model, prune_type, amt=0.0):
-    if prune_type == "lth":
+def pruning_by_layer(model, amt=0.0, prune_type='magnitude'):
+    if prune_type == "magnitude":
         pruner = L1Unstructured(amt)
     elif prune_type == "random":
         pruner = RandomUnstructured(amt)
@@ -78,6 +78,24 @@ def apply_pruning(model, prune_type, amt=0.0):
             pruner.apply(m, name='weight', amount=amt)
         if isinstance(m, torch.nn.Linear):
             pruner.apply(m, name='weight', amount=0.0)
+
+
+def pruning_global(model, amt=0.0, prune_type='magnitude'):
+    parameters_to_prune = []
+    for module_name, module in model.named_modules():
+        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)):
+            parameters_to_prune.append((module, "weight"))
+
+    if prune_type == 'random':
+        pruner = RandomUnstructured
+    elif prune_type == 'magnitude':
+        pruner = L1Unstructured
+
+    global_unstructured(
+        parameters_to_prune,
+        pruning_method=pruner,
+        amount=amt,
+    )
 
 
 def count_rem_weights(model):
@@ -113,20 +131,17 @@ def reset_weights(model, original_wgts):
                     param_val.data.copy_(original_wgts[f"{name}.{param_name}"])
 
 
-def check_model_change(prev_iter_dict, model):
-    for name, param in model.named_parameters():
-        prev_param = prev_iter_dict[name]
-        assert not torch.allclose(prev_param, param), 'model not updating'
-
 '''
 https://discuss.pytorch.org/t/check-gradient-flow-in-network/15063/10
 '''
+
+
 def plot_grad_flow(named_parameters):
-    '''Plots the gradients flowing through different layers in the net during training.
+    """Plots the gradients flowing through different layers in the net during training.
     Can be used for checking for possible gradient vanishing / exploding problems.
 
     Usage: Plug this function in Trainer class after loss.backwards() as
-    "plot_grad_flow(self.model.named_parameters())" to visualize the gradient flow'''
+    "plot_grad_flow(self.model.named_parameters())" to visualize the gradient flow"""
     ave_grads = []
     max_grads = []
     layers = []

@@ -12,10 +12,10 @@ import wandb
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-    from src.Lightning_WandB.utils import apply_pruning, plot_grad_flow
+    from src.Lightning_WandB.utils import pruning_by_layer, plot_grad_flow
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-    from src.Lightning_WandB.utils import apply_pruning, plot_grad_flow
+    from src.Lightning_WandB.utils import pruning_by_layer, plot_grad_flow
 
 
 def create_model(arch_type):
@@ -69,6 +69,7 @@ class LitSystem94Base(LightningModule):
 
     def on_fit_start(self):
         print(f"LOCAL RANK {self.local_rank}")
+
     def training_step(self, batch, batch_idx):
         x, y = batch
         logits = self(x)
@@ -130,9 +131,9 @@ class LitSystemPrune(LightningModule):
         self.model.apply(init_weights)
         self.final_wgts = None
         # init the masks in the model
-        apply_pruning(self, "lth", 0.0)
+        pruning_by_layer(self, 0.0, "magnitude")
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
-        self.prepare_data_per_node=False
+        self.prepare_data_per_node = False
 
     def forward(self, x):
         out = self.model(x)
@@ -226,7 +227,7 @@ class LitSystemRandom(LightningModule):
         self.save_hyperparameters()
         self.model = create_model(arch)
         # init the masks in the model
-        apply_pruning(self, "random", 0.0)
+        pruning_by_layer(self, 0.0, "random")
         self.prepare_data_per_node = False
 
     def random_init_weights(self):
@@ -237,7 +238,6 @@ class LitSystemRandom(LightningModule):
         return F.log_softmax(out, dim=1)
 
     def training_step(self, batch, batch_idx):
-        print(f"RANK {self.local_rank}  BATCH ID: {batch_idx}")
         x, y = batch
         logits = self(x)
         loss = F.nll_loss(logits, y)
