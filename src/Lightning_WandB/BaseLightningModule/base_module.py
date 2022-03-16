@@ -269,6 +269,13 @@ class LitSystemRandom(LightningModule):
     def test_step(self, batch, batch_idx):
         return self.evaluate(batch, "test")
 
+    def on_after_backward(self):
+        # freeze weights by making their gradients 0. using the Mask.
+        for module in self.modules():
+            if hasattr(module, "weight_mask"):
+                weight = next(param for name, param in module.named_parameters() if "weight" in name)
+                weight.grad = weight.grad * module.weight_mask
+
     def configure_optimizers(self):
         # return the SGD used
         optimizer = torch.optim.SGD(params=self.model.parameters(),
