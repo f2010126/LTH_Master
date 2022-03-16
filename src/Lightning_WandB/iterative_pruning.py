@@ -102,9 +102,7 @@ def execute_trainer(args):
     full_trainer.fit(model, cifar10_module)
     full_trainer.test(model, datamodule=cifar10_module)
     test_acc = full_trainer.logged_metrics['test_acc']
-    weight_prune = count_rem_weights(model)
-    print(f"BaseLine Weight % {weight_prune} with Test Acc {test_acc}")
-    wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
+    print(f"BaseLine Weight % {count_rem_weights(model)} with Test Acc {test_acc}")
     wandb.finish()
 
     model.experiment_dir = f"{trial_dir}/models/pruned"
@@ -120,14 +118,13 @@ def execute_trainer(args):
         # PRUNE L1Unstructured, reset weights
         apply_prune(model, 0.2, "magnitude", args.prune_global)
         reset_weights(model, model.original_wgts)
-        weight_prune = count_rem_weights(model)
+
         # reinit a random model.
         randomModel.random_init_weights()
         apply_prune(randomModel, 0.2, "random", args.prune_global)
         print(
             f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
 
-        print(f"Reinit Trainer and Logger")
         wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/pruned",
                                    reinit=True, config=args, job_type=f'level_{weight_prune}',
                                    group='Pruning', name=f"pruning_#_{i}")
@@ -155,7 +152,6 @@ def execute_trainer(args):
         prune_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
         test_acc = prune_trainer.logged_metrics['test_acc']
         print(f"Pruned Test Acc {test_acc} and best model at {checkpoint_callback.best_model_path}")
-        wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune}, )
         wandb.finish()
 
         # Randomly inited Trained
@@ -184,7 +180,6 @@ def execute_trainer(args):
         random_trainer.test(randomModel, datamodule=cifar10_module,ckpt_path='best')
         random_test_acc = random_trainer.logged_metrics['test_acc']
         print(f"Random Test Acc {random_test_acc} and best model at {checkpoint_callback.best_model_path}")
-        wandb.log({"pruned-test-acc": random_test_acc, 'weight_pruned': weight_prune}, )
         wandb.finish()
 
 

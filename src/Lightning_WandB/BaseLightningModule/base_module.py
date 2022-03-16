@@ -12,10 +12,10 @@ import wandb
 
 try:
     from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-    from src.Lightning_WandB.utils import apply_prune, plot_grad_flow
+    from src.Lightning_WandB.utils import apply_prune, plot_grad_flow, count_rem_weights
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
-    from src.Lightning_WandB.utils import apply_prune, plot_grad_flow
+    from src.Lightning_WandB.utils import apply_prune, plot_grad_flow, count_rem_weights
 
 
 def create_model(arch_type):
@@ -196,12 +196,6 @@ class LitSystemPrune(LightningModule):
                     module.weight_orig.copy_(self.original_wgts[f'{name}.weight_orig'])
                     module.bias.copy_(self.original_wgts[f'{name}.bias'])
 
-    def test_model_change(self):
-        for name, param in self.named_parameters():
-            prev_param = self.final_wgts[name]
-            assert not torch.allclose(prev_param, param), 'model not updating'
-
-    #
 
     def on_after_backward(self):
         # freeze pruned weights by making their gradients 0. using the Mask.
@@ -218,6 +212,14 @@ class LitSystemPrune(LightningModule):
         #         grad_tensor = p.grad
         #         grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
         #         p.grad.data = grad_tensor
+
+    def on_test_end(self):
+        weight_prune = count_rem_weights(self)
+        print(f"After Test Model Weight {weight_prune}")
+        self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
+
+
+
 
 
 class LitSystemRandom(LightningModule):
@@ -275,3 +277,8 @@ class LitSystemRandom(LightningModule):
                                     weight_decay=self.hparams.weight_decay)
         # torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
         return optimizer
+
+    def on_test_end(self):
+        weight_prune = count_rem_weights(self)
+        print(f"After Test Random Model Weight {weight_prune}")
+        self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
