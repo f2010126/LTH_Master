@@ -31,7 +31,7 @@ except ImportError:
 def set_experiment_run(args):
     exp_dir = os.path.join(os.getcwd(), args.exp_dir)
     checkdir(exp_dir)
-    trial_dir = path.join(exp_dir, args.trial)
+    trial_dir = path.join(exp_dir, args.wand_exp_name)
     checkdir(exp_dir)
     return trial_dir
 
@@ -62,26 +62,26 @@ def execute_trainer(args):
     NUM_WORKERS = int(os.cpu_count() / 2)
 
     trial_dir = set_experiment_run(args)
-    print(f"All Saved logs at {trial_dir} All Models in {dir}/models")
+    print(f"All Saved logs at {trial_dir}/wandb_logs All Models in {trial_dir}/models")
     checkdir(f"{trial_dir}/wandb_logs")
 
+    ### BASELINE###
     cifar10_module = get_data_module(path=args.data_root, batch=args.batch_size,
                                      seed=args.seed, workers=NUM_WORKERS)
 
-    model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/pruned_models", arch=args.model,
+    model = LitSystemPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models/baseline", arch=args.model,
                            lr=args.learning_rate, reset_itr=args.reset_itr)
     model.datamodule = cifar10_module
 
     checkpoint_callback = ModelCheckpoint(
         monitor='val_acc',
         mode="max",
-        dirpath=f"{dir}/models/baseline",
+        dirpath=f"{trial_dir}/models/baseline",
         filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
         save_last=True)
     callback_list = [FullTrainer(), checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
     add_extra_callbacks(args, callback_list)
 
-    # BASELINE RUN
     wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/baseline",
                                reinit=True, config=args, job_type='initial-baseline',
                                group='Baseline', name=f"baseline_run")
@@ -105,9 +105,10 @@ def execute_trainer(args):
     wandb.log({"pruned-test-acc": test_acc, 'weight_pruned': weight_prune})
     wandb.finish()
 
+    model.experiment_dir = f"{trial_dir}/models/pruned"
     # init and train a random model for comparison
     randomModel = LitSystemRandom(batch_size=args.batch_size,
-                                  experiment_dir=f"{trial_dir}/random_models",
+                                  experiment_dir=f"{trial_dir}/models/random",
                                   arch=args.model, lr=args.learning_rate)
     randomModel.datamodule = cifar10_module
 
@@ -127,14 +128,14 @@ def execute_trainer(args):
             f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
 
         print(f"Reinit Trainer and Logger")
-        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/pruned_models",
+        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/pruned",
                                    reinit=True, config=args, job_type=f'level_{weight_prune}',
                                    group='Pruning', name=f"pruning_#_{i}")
 
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
-            dirpath=f"{dir}/models/pruned_models/level_{i + 1}",
+            dirpath=f"{trial_dir}/models/pruned/level_{i + 1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
         callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
@@ -157,13 +158,13 @@ def execute_trainer(args):
         wandb.finish()
 
         # Randomly inited Trained
-        random_wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/random_models",
+        random_wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/random",
                                           reinit=True, config=args, job_type=f'level_{weight_prune}',
                                           group='Random', name=f"random_#_{i}")
         checkpoint_callback = ModelCheckpoint(
             monitor='val_acc',
             mode="max",
-            dirpath=f"{dir}/models/random_models/level_{i + 1}",
+            dirpath=f"{trial_dir}/models/random/level_{i + 1}",
             filename='resnet-random-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
         callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
