@@ -16,6 +16,9 @@ do
         c) config_name=${OPTARG};;
     esac
 done
+
+export WANDB_START_METHOD=thread
+
 echo "# Config file: $config_name";
 
 cd $(ws_find lth_ws)

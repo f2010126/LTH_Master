@@ -26,6 +26,7 @@ source lth_env/bin/activate
 # debugging flags (optional)
 export NCCL_DEBUG=INFO
 export PYTHONFAULTHANDLER=1
+export WANDB_START_METHOD=thread
 
 pip list
 
