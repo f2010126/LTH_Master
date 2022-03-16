@@ -13,7 +13,6 @@ from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 import torch.nn.functional as F
 
-
 try:
     from BaseLightningModule.base_module import LitSystem94Base
     from BaseLightningModule.data_module import Custom_CIFAR10DataModule
@@ -28,9 +27,11 @@ except ImportError:
     from src.Lightning_WandB.config import AttrDict
 
 
-def add_extra_callbacks(args, call_list):
+def add_callbacks(args):
+    call_list = [LearningRateMonitor(logging_interval="step"),
+                 TQDMProgressBar(refresh_rate=100)]
     if args.early_stop:
-        early_stopping = EarlyStopping('val_loss', patience=10, mode='min', min_delta=0.01)
+        early_stopping = EarlyStopping('val_loss', patience=10, mode='min', min_delta=0.1, verbose=True)
         call_list.append(early_stopping)
 
     return call_list
@@ -78,9 +79,8 @@ def execute_trainer(args=None):
         mode="max",
         dirpath=f"{trial_dir}/models",
         filename='sample-cifar10-{epoch:02d}-{val_acc:.2f}')
-    callback_list = [checkpoint_callback, LearningRateMonitor(logging_interval="step"),
-                     TQDMProgressBar(refresh_rate=100)]
-    add_extra_callbacks(args, callback_list)
+    callback_list = add_callbacks(args)
+    callback_list.append(checkpoint_callback)
 
     trainer = Trainer(
         num_sanity_val_steps=0,

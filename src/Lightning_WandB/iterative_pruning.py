@@ -36,7 +36,9 @@ def set_experiment_run(args):
     return trial_dir
 
 
-def add_extra_callbacks(args, call_list):
+def add_callbacks(args):
+    call_list = [LearningRateMonitor(logging_interval="step"),
+                 TQDMProgressBar(refresh_rate=100)]
     if args.early_stop:
         early_stopping = EarlyStopping('val_loss', patience=10, mode='min', min_delta=0.1, verbose=True)
         call_list.append(early_stopping)
@@ -79,8 +81,8 @@ def execute_trainer(args):
         dirpath=f"{trial_dir}/models/baseline",
         filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
         save_last=True)
-    callback_list = [FullTrainer(), checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
-    add_extra_callbacks(args, callback_list)
+    callback_list = add_callbacks(args)
+    callback_list.extend([checkpoint_callback, FullTrainer()])
 
     wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/baseline",
                                reinit=True, config=args, job_type='initial-baseline',
@@ -116,14 +118,14 @@ def execute_trainer(args):
     for i in range(args.levels):
         # log Test Acc vs weight %
         # PRUNE L1Unstructured
-        apply_prune(model, 0.2, "magnitude",args.prune_global)
+        apply_prune(model, 0.2, "magnitude", args.prune_global)
         # RESET TO SAVED WEIGHTS
         reset_weights(model, model.original_wgts)
         weight_prune = count_rem_weights(model)
 
         # reinitialise the model with random weights and prune
         randomModel.random_init_weights()
-        apply_prune(randomModel, 0.2, "random",args.prune_global)
+        apply_prune(randomModel, 0.2, "random", args.prune_global)
         print(
             f" PRUNING LEVEL #{i + 1} Pruned Weight % {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
 
@@ -138,8 +140,9 @@ def execute_trainer(args):
             dirpath=f"{trial_dir}/models/pruned/level_{i + 1}",
             filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
-        callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
-        add_extra_callbacks(args, callback_list, )
+        callback_list = add_callbacks(args)
+        callback_list.extend([checkpoint_callback])
+
         prune_trainer = Trainer(
             max_epochs=args.epochs,
             max_steps=args.max_steps,
@@ -167,8 +170,8 @@ def execute_trainer(args):
             dirpath=f"{trial_dir}/models/random/level_{i + 1}",
             filename='resnet-random-{epoch:02d}-{val_acc:.2f}',
             save_last=True, )
-        callback_list = [checkpoint_callback, TQDMProgressBar(refresh_rate=100)]
-        add_extra_callbacks(args, callback_list)
+        callback_list = add_callbacks(args)
+        callback_list.extend([checkpoint_callback])
         random_trainer = Trainer(
             max_epochs=args.epochs,
             max_steps=args.max_steps,
