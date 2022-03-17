@@ -107,8 +107,6 @@ if __name__ == '__main__':
     # Load config path then args
     config_path = os.path.join(os.getcwd(), "src/configs")
 
-    # "/Users/diptisengupa/Desktop/CODEWORK/GitHub/SS2021/LTH_Project/ReproducingResults/LTH_Master/src" \
-    #               "/configs"
     with open(f"{config_path}/{args.config_file_name}", "r") as f:
         config = yaml.safe_load(f)
 

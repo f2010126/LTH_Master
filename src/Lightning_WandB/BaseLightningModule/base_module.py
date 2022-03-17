@@ -307,10 +307,10 @@ class LitSystemSSLPrune(LightningModule):
         # init the fc layer
         model.fc.weight.data.normal_(mean=0.0, std=0.01)
         model.fc.bias.data.zero_()
-        pretrain_path = 'Pretrain_SSL_Model_best.pth' # 'Pretrain_SSL_Model/Pretrain_SSL_Model_best.pth'
+        pretrain_path = 'Pretrain_SSL_Model_best.pth'  # 'Pretrain_SSL_Model/Pretrain_SSL_Model_best.pth'
         if os.path.isfile(pretrain_path):
             print("=> loading checkpoint '{}'".format(pretrain_path))
-            checkpoint = torch.load(pretrain_path, map_location=torch.device('cpu') )
+            checkpoint = torch.load(pretrain_path)
             state_dict = checkpoint['state_dict']
 
             new_state_dict = dict()
@@ -338,4 +338,3 @@ class LitSystemSSLPrune(LightningModule):
         apply_prune(self, 0.0, "magnitude", True)
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
         self.prepare_data_per_node = False
-
