@@ -23,13 +23,13 @@ import copy
 try:
     from BaseLightningModule.base_module import LitSystemPrune, LitSystemSSLPrune
     from utils import checkdir, get_data_module, layer_looper, apply_prune, \
-        reset_weights, count_rem_weights, set_experiment_run, add_callbacks
+        reset_weights, count_rem_weights, set_experiment_run, add_callbacks, remove_pruning
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     from config import AttrDict
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base, LitSystemSSLPrune
     from src.Lightning_WandB.utils import checkdir, get_data_module, \
-        layer_looper, apply_prune, reset_weights, count_rem_weights, set_experiment_run, add_callbacks
+        layer_looper, apply_prune, reset_weights, count_rem_weights, set_experiment_run, add_callbacks, remove_pruning
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune, LitSystemRandom
     from src.Lightning_WandB.BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     from src.Lightning_WandB.config import AttrDict
@@ -101,6 +101,7 @@ def execute_trainer(args):
         # PRUNE L1Unstructured, reset weights
         apply_prune(model, args.pruning_amt, "magnitude", args.prune_global)
         reset_weights(model, model.original_wgts)
+        remove_pruning(model)  # make it permanent
         weight_prune = count_rem_weights(model)
 
         # reinit a random model.
@@ -111,6 +112,7 @@ def execute_trainer(args):
         randomModel.datamodule = cifar10_module
         weight_cent *= 1 - args.pruning_amt
         apply_prune(randomModel, 1 - weight_cent, "random", args.prune_global)
+        remove_pruning(randomModel)  # make it permanent
 
         print(
             f" PRUNING LEVEL #{i + 1} Model weight % here {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")

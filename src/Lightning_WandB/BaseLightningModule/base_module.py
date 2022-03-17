@@ -145,7 +145,7 @@ class LitSystemPrune(LightningModule):
         self.model.apply(init_weights)
         self.final_wgts = None
         # init the masks in the model
-        apply_prune(self, 0.0, "magnitude", True)
+        # apply_prune(self, 0.0, "magnitude", True)
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
         self.prepare_data_per_node = False
 
@@ -216,19 +216,19 @@ class LitSystemPrune(LightningModule):
 
     def on_after_backward(self):
         # freeze pruned weights by making their gradients 0. using the Mask.
-        for module in self.modules():
-            if hasattr(module, "weight_mask"):
-                weight = next(param for name, param in module.named_parameters() if "weight" in name)
-                weight.grad = weight.grad * module.weight_mask
+        # for module in self.modules():
+        #     if hasattr(module, "weight_mask"):
+        #         weight = next(param for name, param in module.named_parameters() if "weight" in name)
+        #         weight.grad = weight.grad * module.weight_mask
 
         # Alternate way of freezing.
-        # EPS = 1e-6
-        # for name, p in self.named_parameters():
-        #     if 'weight' in name:
-        #         tensor = p.data
-        #         grad_tensor = p.grad
-        #         grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
-        #         p.grad.data = grad_tensor
+        EPS = 1e-6
+        for name, p in self.named_parameters():
+            if 'weight' in name:
+                tensor = p.data
+                grad_tensor = p.grad
+                grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
+                p.grad.data = grad_tensor
 
 
 class LitSystemRandom(LightningModule):
@@ -239,7 +239,7 @@ class LitSystemRandom(LightningModule):
         self.model = create_model(arch)
         self.model.apply(weight_reinit)
         # init the masks in the model
-        apply_prune(self, 0.0, "random", True)
+        # apply_prune(self, 0.0, "random", True)
         self.prepare_data_per_node = False
 
     def random_init_weights(self):
@@ -335,7 +335,7 @@ class LitSystemSSLPrune(LightningModule):
         self.save_hyperparameters()
         self.model = self.create_model()
         # init the masks in the model
-        apply_prune(self, 0.0, "magnitude", True)
+        # apply_prune(self, 0.0, "magnitude", True)
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
         self.prepare_data_per_node = False
 
@@ -404,7 +404,15 @@ class LitSystemSSLPrune(LightningModule):
 
     def on_after_backward(self):
         # freeze pruned weights by making their gradients 0. using the Mask.
-        for module in self.modules():
-            if hasattr(module, "weight_mask"):
-                weight = next(param for name, param in module.named_parameters() if "weight" in name)
-                weight.grad = weight.grad * module.weight_mask
+        EPS = 1e-6
+        for name, p in self.named_parameters():
+            if 'weight' in name:
+                tensor = p.data
+                grad_tensor = p.grad
+                grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
+                p.grad.data = grad_tensor
+                
+        # for module in self.modules():
+        #     if hasattr(module, "weight_mask"):
+        #         weight = next(param for name, param in module.named_parameters() if "weight" in name)
+        #         weight.grad = weight.grad * module.weight_mask
