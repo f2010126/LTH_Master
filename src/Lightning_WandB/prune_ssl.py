@@ -16,17 +16,18 @@ import warnings
 import torch.backends.cudnn as cudnn
 from pytorch_lightning import seed_everything, Trainer
 from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint
 
 import copy
 
 try:
-    from BaseLightningModule.base_module import LitSystemPrune,LitSystemSSLPrune
+    from BaseLightningModule.base_module import LitSystemPrune, LitSystemSSLPrune
     from utils import checkdir, get_data_module, layer_looper, apply_prune, \
         reset_weights, count_rem_weights, set_experiment_run, add_callbacks
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     from config import AttrDict
 except ImportError:
-    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base,LitSystemSSLPrune
+    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base, LitSystemSSLPrune
     from src.Lightning_WandB.utils import checkdir, get_data_module, \
         layer_looper, apply_prune, reset_weights, count_rem_weights, set_experiment_run, add_callbacks
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune, LitSystemRandom
@@ -57,9 +58,125 @@ def execute_trainer(args):
     cifar10_module = get_data_module(path=args.data_root, batch=args.batch_size,
                                      seed=args.seed, workers=NUM_WORKERS)
 
-    model = LitSystemSSLPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models/baseline", arch=args.model,
-                           lr=args.learning_rate, reset_itr=args.reset_itr)
+    model = LitSystemSSLPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models/baseline",
+                              arch=args.model,
+                              lr=args.learning_rate, reset_itr=args.reset_itr)
     model.datamodule = cifar10_module
+
+    checkpoint_callback = ModelCheckpoint(
+        monitor='val_acc',
+        mode="max",
+        dirpath=f"{trial_dir}/models/baseline",
+        filename='resnet-cifar10-{epoch:02d}-{val_acc:.2f}',
+        save_last=False)
+    callback_list = add_callbacks(args)
+    callback_list.extend([checkpoint_callback, FullTrainer()])
+
+    wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/baseline",
+                               reinit=True, config=args, job_type='initial-baseline',
+                               group='Baseline', name=f"baseline_run")
+    full_trainer = Trainer(
+        max_epochs=args.epochs,
+        max_steps=args.max_steps,
+        gpus=-1, num_nodes=1, strategy='ddp',
+        callbacks=callback_list,
+        stochastic_weight_avg=args.swa_enabled,
+        enable_checkpointing=True,
+        logger=wandb_logger,
+        deterministic=True,
+        check_val_every_n_epoch=args.val_freq,
+    )
+
+    full_trainer.fit(model, cifar10_module)
+    full_trainer.test(model, datamodule=cifar10_module)
+    test_acc = full_trainer.logged_metrics['test_acc']
+    print(f"BaseLine Weight % {count_rem_weights(model)} with Test Acc {test_acc}")
+    wandb.finish()
+
+    model.experiment_dir = f"{trial_dir}/models/pruned"
+    weight_cent = 1
+    # PRUNING LOOP
+    for i in range(args.levels):
+        # log Test Acc vs weight %
+        # PRUNE L1Unstructured, reset weights
+        apply_prune(model, args.pruning_amt, "magnitude", args.prune_global)
+        reset_weights(model, model.original_wgts)
+        weight_prune = count_rem_weights(model)
+
+        # reinit a random model.
+        # initialise a model with random weights and get a randomly pruned model of that sparsity
+        randomModel = LitSystemRandom(batch_size=args.batch_size,
+                                      experiment_dir=f"{trial_dir}/models/random",
+                                      arch=args.model, lr=args.learning_rate)
+        randomModel.datamodule = cifar10_module
+        weight_cent *= 1 - args.pruning_amt
+        apply_prune(randomModel, 1 - weight_cent, "random", args.prune_global)
+
+        print(
+            f" PRUNING LEVEL #{i + 1} Model weight % here {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
+
+        wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/pruned",
+                                   reinit=True, config=args, job_type=f'level_{weight_prune}',
+                                   group='Pruning', name=f"pruning_#_{i}")
+
+        checkpoint_callback = ModelCheckpoint(
+            monitor='val_acc',
+            mode="max",
+            verbose=True,
+            dirpath=f"{trial_dir}/models/pruned/level_{i + 1}",
+            filename='resnet-pruned-{epoch:02d}-{val_acc:.2f}',
+            save_last=False, )
+        callback_list = add_callbacks(args)
+        callback_list.extend([checkpoint_callback])
+
+        prune_trainer = Trainer(
+            max_epochs=args.epochs,
+            max_steps=args.max_steps,
+            gpus=-1, num_nodes=1, strategy='ddp',
+            callbacks=callback_list,
+            stochastic_weight_avg=args.swa_enabled,
+            enable_checkpointing=True,
+            logger=wandb_logger,
+            deterministic=True,
+            check_val_every_n_epoch=args.val_freq,
+        )
+        prune_trainer.fit(model, cifar10_module)
+        prune_trainer.test(model, datamodule=cifar10_module, ckpt_path='best')
+        test_acc = prune_trainer.logged_metrics['test_acc']
+        print(
+            f"Pruned Test Acc {test_acc} and best model score {checkpoint_callback.best_model_score} at {checkpoint_callback.best_model_path}")
+        wandb.finish()
+
+        # Randomly inited Trained
+        random_wandb_logger = WandbLogger(project=args.wand_exp_name, save_dir=f"{trial_dir}/wandb_logs/random",
+                                          reinit=True, config=args, job_type=f'level_{weight_prune}',
+                                          group='Random', name=f"random_#_{i}")
+        checkpoint_callback = ModelCheckpoint(
+            monitor='val_acc',
+            mode="max",
+            dirpath=f"{trial_dir}/models/random/level_{i + 1}",
+            filename='resnet-random-{epoch:02d}-{val_acc:.2f}',
+            save_last=False, )
+        callback_list = add_callbacks(args)
+        callback_list.extend([checkpoint_callback])
+        random_trainer = Trainer(
+            max_epochs=args.epochs,
+            max_steps=args.max_steps,
+            gpus=-1, num_nodes=1, strategy='ddp',
+            callbacks=callback_list,
+            stochastic_weight_avg=args.swa_enabled,
+            enable_checkpointing=True,
+            logger=random_wandb_logger,
+            deterministic=True,
+            check_val_every_n_epoch=args.val_freq,
+        )
+        random_trainer.fit(randomModel, cifar10_module)
+        random_trainer.test(randomModel, datamodule=cifar10_module, ckpt_path='best')
+        random_test_acc = random_trainer.logged_metrics['test_acc']
+        print(
+            f"Random Test Acc {random_test_acc} and best model {checkpoint_callback.best_model_score} at {checkpoint_callback.best_model_path}")
+        wandb.finish()
+
 
 if __name__ == '__main__':
     start = time.time()
