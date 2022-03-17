@@ -11,8 +11,8 @@ wand_exp_name: 'LTH_Experiment_4_4'
 data_root: 'data'
 seed: 123
 learning_rate: 0.1
-epochs: 30
-levels: 25
+epochs: 40
+levels: 20
 batch_size: 128
 optimiser: 'sgd'
 reset_itr: 500
