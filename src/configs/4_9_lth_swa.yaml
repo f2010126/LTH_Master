@@ -12,7 +12,7 @@ data_root: 'data'
 seed: 123
 learning_rate: 0.1
 epochs: 30
-levels: 20
+levels: 18
 batch_size: 128
 optimiser: 'sgd'
 reset_itr: 500
