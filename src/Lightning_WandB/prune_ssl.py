@@ -1,6 +1,3 @@
-# get the pretrained SSL Model.
-# edit the dict so no more backbone
-# load model weights
 # use the data augmentation from the other repo
 # do a normal LTH workflow
 # add the same trainng workflow from repo
@@ -18,19 +15,18 @@ import time
 import warnings
 import torch.backends.cudnn as cudnn
 from pytorch_lightning import seed_everything, Trainer
-from pytorch_lightning.callbacks import LearningRateMonitor, TQDMProgressBar
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+
 import copy
 
 try:
-    from BaseLightningModule.base_module import LitSystemPrune
+    from BaseLightningModule.base_module import LitSystemPrune,LitSystemSSLPrune
     from utils import checkdir, get_data_module, layer_looper, apply_prune, \
         reset_weights, count_rem_weights, set_experiment_run, add_callbacks
     from BaseLightningModule.callbacks import FullTrainer, PruneTrainer
     from config import AttrDict
 except ImportError:
-    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base
+    from src.Lightning_WandB.BaseLightningModule.base_module import LitSystem94Base,LitSystemSSLPrune
     from src.Lightning_WandB.utils import checkdir, get_data_module, \
         layer_looper, apply_prune, reset_weights, count_rem_weights, set_experiment_run, add_callbacks
     from src.Lightning_WandB.BaseLightningModule.base_module import LitSystemPrune, LitSystemRandom
@@ -61,6 +57,9 @@ def execute_trainer(args):
     cifar10_module = get_data_module(path=args.data_root, batch=args.batch_size,
                                      seed=args.seed, workers=NUM_WORKERS)
 
+    model = LitSystemSSLPrune(batch_size=args.batch_size, experiment_dir=f"{trial_dir}/models/baseline", arch=args.model,
+                           lr=args.learning_rate, reset_itr=args.reset_itr)
+    model.datamodule = cifar10_module
 
 if __name__ == '__main__':
     start = time.time()
@@ -88,7 +87,7 @@ if __name__ == '__main__':
                         help='Prune Levels (default: 1)')
     parser.add_argument('--early-stop',
                         action='store_true', help='Uses Early Stop if enabled')
-    parser.add_argument('--config_file_name', type=str, default='4_10_lth_ssl.yaml', help='Name of config file')
+    parser.add_argument('--config_file_name', type=str, default='4_15_lth_ssl.yaml', help='Name of config file')
     parser.add_argument('--reset_itr', type=int, default=500,
                         help='epoch reset weights to (default: 0)')
     parser.add_argument('--gpus', default=1, type=int, metavar='G', help='# of GPUs')

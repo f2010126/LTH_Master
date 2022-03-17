@@ -48,7 +48,7 @@ def add_callbacks(args):
 
 
 def execute_trainer(args):
-    # loop the trainer n times and log each run separately under exeperiment/trial/log/{run_#}
+    # loop the trainer n times and log each run separately under exeperiment/wand_exp_name/
     if args.seed is not None:
         seed_everything(args.seed, workers=True)
         cudnn.deterministic = True
