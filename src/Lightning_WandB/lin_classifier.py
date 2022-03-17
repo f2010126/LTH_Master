@@ -24,7 +24,10 @@ import torchvision.models as models
 from torch.utils.tensorboard import SummaryWriter
 
 from PIL import Image
-from BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+try:
+    from BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+except ImportError:
+    from src.Lightning_WandB.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
 
 model_names = sorted(name for name in models.__dict__
                      if name.islower() and not name.startswith("__")
