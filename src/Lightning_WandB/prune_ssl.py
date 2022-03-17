@@ -107,7 +107,7 @@ def execute_trainer(args):
         # initialise a model with random weights and get a randomly pruned model of that sparsity
         randomModel = LitSystemRandom(batch_size=args.batch_size,
                                       experiment_dir=f"{trial_dir}/models/random",
-                                      arch=args.model, lr=args.learning_rate)
+                                      arch='resnet18', lr=args.learning_rate)
         randomModel.datamodule = cifar10_module
         weight_cent *= 1 - args.pruning_amt
         apply_prune(randomModel, 1 - weight_cent, "random", args.prune_global)
