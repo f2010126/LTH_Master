@@ -1,4 +1,5 @@
 import os
+from os import path
 import torchvision
 from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 from pl_bolts.datamodules import CIFAR10DataModule
@@ -8,7 +9,25 @@ from torch.nn.utils.prune import is_pruned
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.lines import Line2D
+from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
+from pytorch_lightning.callbacks import LearningRateMonitor, TQDMProgressBar
 
+def set_experiment_run(args):
+    exp_dir = os.path.join(os.getcwd(), args.exp_dir)
+    checkdir(exp_dir)
+    trial_dir = path.join(exp_dir, args.wand_exp_name)
+    checkdir(exp_dir)
+    return trial_dir
+
+def add_callbacks(args):
+    call_list = [LearningRateMonitor(logging_interval="step"),
+                 TQDMProgressBar(refresh_rate=100)]
+    if args.early_stop:
+        early_stopping = EarlyStopping('val_loss', patience=args.es_patience, mode='min', min_delta=args.es_delta,
+                                       verbose=True)
+        call_list.append(early_stopping)
+
+    return call_list
 
 def get_data_module(path, batch, seed=123, workers=0):
     train_transforms = torchvision.transforms.Compose(
