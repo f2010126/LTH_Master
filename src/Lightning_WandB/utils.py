@@ -3,7 +3,7 @@ from os import path
 import torchvision
 from pl_bolts.transforms.dataset_normalizations import cifar10_normalization
 from pl_bolts.datamodules import CIFAR10DataModule
-from torch.nn.utils.prune import L1Unstructured, RandomUnstructured, global_unstructured
+from torch.nn.utils.prune import L1Unstructured, RandomUnstructured, global_unstructured, remove
 import torch
 from torch.nn.utils.prune import is_pruned
 import matplotlib.pyplot as plt
@@ -159,6 +159,16 @@ def reset_weights(model, original_wgts):
                 # copy the named params. no masks
                 for param_name, param_val in module.named_parameters():
                     param_val.data.copy_(original_wgts[f"{name}.{param_name}"])
+
+
+def remove_pruning(model):
+    for name, module in model.named_modules():
+        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear, torch.nn.BatchNorm2d)):
+            # do nothing for unpruned weights?
+            if is_pruned(module) is False:
+                continue
+            with torch.no_grad():
+                remove(module,'weight')
 
 
 '''
