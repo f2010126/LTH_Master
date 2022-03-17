@@ -5,13 +5,14 @@
 # Taken from 39/42 of https://arxiv.org/pdf/1803.03635.pdf
 trial: 'LTH_OG_Paper'
 model: 'resnet18'
+notes: 'High LR, Long training'
 exp_dir: 'experiments'
-wand_exp_name: 'LTH_Experiment_4_2'
+wand_exp_name: 'LTH_Experiment_4_2_LowLR'
 data_root: 'data'
 seed: 123
 epochs: 86
 learning_rate: 0.01
-levels: 10
+levels: 18
 batch_size: 128
 optimiser: 'sgd'
 reset_itr: 0
@@ -20,7 +21,7 @@ weight_decay: 0.0001
 config_file_name: "4_2_lth_default.yaml"
 early_stop: False
 dataset: cifar10
-gpus: 4
+gpus: 6
 nodes: 1
 max_steps: 30000
 swa_enabled: False

@@ -411,7 +411,7 @@ class LitSystemSSLPrune(LightningModule):
                 grad_tensor = p.grad
                 grad_tensor = torch.where(tensor.abs() < EPS, torch.zeros_like(grad_tensor), grad_tensor)
                 p.grad.data = grad_tensor
-                
+
         # for module in self.modules():
         #     if hasattr(module, "weight_mask"):
         #         weight = next(param for name, param in module.named_parameters() if "weight" in name)
