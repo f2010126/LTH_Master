@@ -1,4 +1,5 @@
 import torch
+import os
 import torchvision
 from torch import nn
 import torch.nn.functional as F
@@ -299,3 +300,42 @@ class LitSystemRandom(LightningModule):
                                     weight_decay=self.hparams.weight_decay)
         # torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
         return optimizer
+
+class LitSystemSSLPrune(LightningModule):
+
+    def create_model(self):
+        model = ResNet18(low_dim=10)
+        # init the fc layer
+        model.fc.weight.data.normal_(mean=0.0, std=0.01)
+        model.fc.bias.data.zero_()
+        pretrain_path = 'Pretrain_SSL_Model_best.pth' # 'Pretrain_SSL_Model/Pretrain_SSL_Model_best.pth'
+        if os.path.isfile(pretrain_path):
+            print("=> loading checkpoint '{}'".format(pretrain_path))
+            checkpoint = torch.load(pretrain_path, map_location=torch.device('cpu') )
+            state_dict = checkpoint['state_dict']
+
+            new_state_dict = dict()
+            for old_key, value in state_dict.items():
+                if old_key.startswith('backbone') and 'fc' not in old_key:
+                    new_key = old_key.replace('backbone.', '')
+                    new_state_dict[new_key] = value
+
+            msg = model.load_state_dict(new_state_dict, strict=False)
+            assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+
+            print("=> loaded pre-trained model '{}'".format(pretrain_path))
+        else:
+            print("=> no checkpoint found at '{}'".format(pretrain_path))
+        pass
+
+    def __init__(self, batch_size, arch, experiment_dir='experiments',
+                 reset_itr=0, prune_amount=0.2, lr=0.05, weight_decay=0.0001):
+        super().__init__()
+
+        self.save_hyperparameters()
+        self.model = self.create_model()
+        # init the masks in the model
+        apply_prune(self, 0.0, "magnitude", True)
+        self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
+        self.prepare_data_per_node = False
+
