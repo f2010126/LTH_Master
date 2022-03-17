@@ -12,12 +12,14 @@ from matplotlib.lines import Line2D
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 from pytorch_lightning.callbacks import LearningRateMonitor, TQDMProgressBar
 
+
 def set_experiment_run(args):
     exp_dir = os.path.join(os.getcwd(), args.exp_dir)
     checkdir(exp_dir)
     trial_dir = path.join(exp_dir, args.wand_exp_name)
     checkdir(exp_dir)
     return trial_dir
+
 
 def add_callbacks(args):
     call_list = [LearningRateMonitor(logging_interval="step"),
@@ -28,6 +30,7 @@ def add_callbacks(args):
         call_list.append(early_stopping)
 
     return call_list
+
 
 def get_data_module(path, batch, seed=123, workers=0):
     train_transforms = torchvision.transforms.Compose(
@@ -100,16 +103,17 @@ def pruning_by_layer(model, amt=0.0, prune_type='magnitude'):
         pruner = RandomUnstructured(amt)
     # adds masks of all ones to each of the layers
     for n, m in model.named_modules():
-        if isinstance(m, torch.nn.Conv2d):
+        if isinstance(m, (torch.nn.Conv2d, torch.nn.BatchNorm2d)) and n not in ['model.fc']:
             pruner.apply(m, name='weight', amount=amt)
-        if isinstance(m, torch.nn.Linear):
+        if isinstance(m, torch.nn.Linear) and n not in ['model.fc']:
             pruner.apply(m, name='weight', amount=0.0)
 
 
 def pruning_global(model, amt=0.0, prune_type='magnitude'):
     parameters_to_prune = []
     for module_name, module in model.named_modules():
-        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)):
+        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear, torch.nn.BatchNorm2d)) and module_name not in [
+            'model.fc']:
             parameters_to_prune.append((module, "weight"))
 
     if prune_type == 'random':
@@ -146,7 +150,7 @@ def count_rem_weights(model):
 # So weight_orig needs to be changed.
 def reset_weights(model, original_wgts):
     for name, module in model.named_modules():
-        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)) and (
+        if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear, torch.nn.BatchNorm2d)) and (
                 f"{name}.weight_orig" in original_wgts.keys()):
             # do nothing for unpruned weights?
             if is_pruned(module) is False:

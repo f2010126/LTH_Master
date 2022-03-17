@@ -58,7 +58,6 @@ def weight_reinit(m):
         init.normal_(m.bias.data)
 
 
-
 def torchvision_renet():
     model = torchvision.models.resnet18(pretrained=False, num_classes=10)
     model.conv1 = nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
@@ -243,7 +242,6 @@ class LitSystemRandom(LightningModule):
         apply_prune(self, 0.0, "random", True)
         self.prepare_data_per_node = False
 
-
     def random_init_weights(self):
         self.model.apply(weight_reinit)
 
@@ -301,6 +299,7 @@ class LitSystemRandom(LightningModule):
         # torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
         return optimizer
 
+
 class LitSystemSSLPrune(LightningModule):
 
     def create_model(self):
@@ -326,7 +325,8 @@ class LitSystemSSLPrune(LightningModule):
             print("=> loaded pre-trained model '{}'".format(pretrain_path))
         else:
             print("=> no checkpoint found at '{}'".format(pretrain_path))
-        pass
+
+        return model
 
     def __init__(self, batch_size, arch, experiment_dir='experiments',
                  reset_itr=0, prune_amount=0.2, lr=0.05, weight_decay=0.0001):
