@@ -145,7 +145,7 @@ class LitSystemPrune(LightningModule):
         self.model.apply(init_weights)
         self.final_wgts = None
         # init the masks in the model
-        # apply_prune(self, 0.0, "magnitude", True)
+        apply_prune(self, 0.0, "magnitude", True)
         self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
         self.prepare_data_per_node = False
 
@@ -239,7 +239,7 @@ class LitSystemRandom(LightningModule):
         self.model = create_model(arch)
         self.model.apply(weight_reinit)
         # init the masks in the model
-        # apply_prune(self, 0.0, "random", True)
+        apply_prune(self, 0.0, "random", True)
         self.prepare_data_per_node = False
 
     def random_init_weights(self):

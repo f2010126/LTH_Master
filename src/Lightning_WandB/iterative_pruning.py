@@ -115,7 +115,7 @@ def execute_trainer(args):
         # PRUNE L1Unstructured, reset weights
         apply_prune(model, args.pruning_amt, "magnitude", args.prune_global)
         reset_weights(model, model.original_wgts)
-        remove_pruning(model) # make it permanent
+        # remove_pruning(model) # make it permanent
         weight_prune = count_rem_weights(model)
 
         # reinit a random model.
