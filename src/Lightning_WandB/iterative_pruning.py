@@ -126,7 +126,7 @@ def execute_trainer(args):
         randomModel.datamodule = cifar10_module
         weight_cent *= 1 - args.pruning_amt
         apply_prune(randomModel, 1 - weight_cent, "random", args.prune_global)
-        remove_pruning(randomModel)
+        # remove_pruning(randomModel)
 
         print(
             f" PRUNING LEVEL #{i + 1} Model weight % here {weight_prune} Random Weight % here {count_rem_weights(randomModel)}")
