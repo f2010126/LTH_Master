@@ -1,0 +1,34 @@
+#######################################
+###       Logging Configuration    ###
+###            4.6                 ###
+#######################################
+
+trial: 'LTH_with_Dropout'
+notes: 'Setting Dropout=0.5 for all hidden layers, 6 GPUs, 30 epochs and 25 levels'
+model: 'resnet18_dropout'
+exp_dir: 'experiments'
+wand_exp_name: 'LTH_Experiment_4_6'
+data_root: 'data'
+seed: 123
+learning_rate: 0.1
+epochs: 30
+levels: 25
+batch_size: 128
+optimiser: 'sgd'
+reset_itr: 500
+momentum:  0.9
+config_file_name: "4_6_lth_dropout.yaml"
+early_stop: False
+dataset: cifar10
+gpus: 6
+nodes: 1
+max_steps: 30000
+swa_enabled: False
+prune_global: True
+val_freq: 3
+es_patience: 5
+es_delta: 0.01
+pruning_amt: 0.2
+
+
+

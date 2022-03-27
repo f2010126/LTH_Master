@@ -16,7 +16,9 @@ do
         c) config_name=${OPTARG};;
     esac
 done
-
+# debugging flags (optional)
+export NCCL_DEBUG=INFO
+export PYTHONFAULTHANDLER=1
 export WANDB_START_METHOD=thread
 
 echo "# Config file: $config_name";

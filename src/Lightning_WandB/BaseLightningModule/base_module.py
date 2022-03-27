@@ -13,19 +13,18 @@ import torch.nn.init as init
 import wandb
 
 try:
-    from .ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+    from .ResnetModel import ResNet18
+    from .DropoutResnet import ResNet18_Dropout
     from src.Lightning_WandB.utils import apply_prune, plot_grad_flow, count_rem_weights
 except ImportError:
     from src.Lightning_WandB.BaseLightningModule.ResnetModel import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152
+    from src.Lightning_WandB.BaseLightningModule.DropoutResnet import ResNet18_Dropout
     from src.Lightning_WandB.utils import apply_prune, plot_grad_flow, count_rem_weights
 
 
 def create_model(arch_type):
     return {'resnet18': ResNet18(low_dim=10),
-            'resnet34': ResNet34(low_dim=10),
-            'resnet50': ResNet50(low_dim=10),
-            'resnet101': ResNet101(low_dim=10),
-            'resnet152': ResNet152(low_dim=10),
+            'resnet18_dropout': ResNet18_Dropout(low_dim=10),
             'torch_resnet': torchvision_renet()}[arch_type]
 
 
