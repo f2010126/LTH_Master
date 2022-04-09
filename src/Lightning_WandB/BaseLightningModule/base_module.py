@@ -415,3 +415,66 @@ class LitSystemSSLPrune(LightningModule):
         #     if hasattr(module, "weight_mask"):
         #         weight = next(param for name, param in module.named_parameters() if "weight" in name)
         #         weight.grad = weight.grad * module.weight_mask
+
+
+class LitSystemSWA(LightningModule):
+    def __init__(self, batch_size, arch, experiment_dir='experiments',
+                 reset_itr=0, prune_amount=0.2, lr=0.05, weight_decay=0.0001):
+        super().__init__()
+
+        self.save_hyperparameters()
+        self.model = create_model(arch)
+
+        self.prepare_data_per_node = False
+
+    def on_train_start(self):
+        weight_prune = count_rem_weights(self)
+        self.log('model_weight', weight_prune, on_epoch=True, logger=True, sync_dist=True)
+
+    def forward(self, x):
+        out = self.model(x)
+        return F.log_softmax(out, dim=1)
+
+    def training_step(self, batch, batch_idx):
+        # # If module has reset itr is same as current itr, update the weights dict
+        if (self.global_step == self.hparams.reset_itr):
+            self.original_wgts = copy.deepcopy(self.state_dict())
+
+        x, y = batch
+        logits = self(x)
+        loss = F.nll_loss(logits, y)
+
+        # training metrics
+        preds = torch.argmax(logits, dim=1)
+        acc = accuracy(preds, y)
+        # self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
+        self.log('train_acc', acc * 100, on_step=True, on_epoch=True, logger=True, sync_dist=True)
+
+        return loss
+
+    def evaluate(self, batch, stage=None):
+        x, y = batch
+        logits = self(x)
+        loss = F.nll_loss(logits, y)
+        preds = torch.argmax(logits, dim=1)
+        acc = accuracy(preds, y)
+
+        if stage:
+            self.log(f"{stage}_loss", loss, prog_bar=True, sync_dist=True)
+            self.log(f"{stage}_acc", acc * 100, prog_bar=True, sync_dist=True)
+
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        return self.evaluate(batch, "val")
+
+    def test_step(self, batch, batch_idx):
+        return self.evaluate(batch, "test")
+
+    def configure_optimizers(self):
+        # return the SGD used
+        optimizer = torch.optim.SGD(params=self.model.parameters(),
+                                    lr=self.hparams.lr,
+                                    weight_decay=self.hparams.weight_decay)
+        # torch.optim.Adam(self.model.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
+        return optimizer
