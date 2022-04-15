@@ -424,6 +424,10 @@ class LitSystemSWA(LightningModule):
 
         self.save_hyperparameters()
         self.model = create_model(arch)
+        self.model.apply(init_weights)
+
+        apply_prune(self, 0.0, "magnitude", True)
+        self.original_wgts = copy.deepcopy(self.state_dict())  # maintain the weights
 
         self.prepare_data_per_node = False
 
